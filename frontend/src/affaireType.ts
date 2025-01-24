@@ -120,3 +120,22 @@ export interface Entity {
       nombre_attestations: number;
     };
   }
+
+  export interface User {
+    _id: string;
+    username: string;
+    email: string;
+    departement: string;
+  }
+
+  export interface LoginCredentials {
+    email	: string;
+    password: string;
+  }
+  
+  export interface LoginResponse {
+    message: string;
+    success: boolean;
+    token: string;
+    user: User;
+  }

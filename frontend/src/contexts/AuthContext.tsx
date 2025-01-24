@@ -1,70 +1,111 @@
-import type { ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { LoginCredentials, User } from '@/affaireType';
+import { isAuthenticated, logins, logouts, storeUser } from '@/services/authService';
 
-import { useMemo, useState, useEffect, useContext, createContext } from 'react';
-
-import { isTokenValid } from '../utils/jwt';
-import { logins, logouts } from '../services/authService';
-
-interface AuthContextProps {
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+interface AuthContextType {
+  user: User | null;
+  isAuth: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
+  loading: boolean;
+  error: string | null;
 }
 
-const AuthContext = createContext<AuthContextProps | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Vérifie la validité du token au démarrage
+  // Check authentication status on mount
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token && isTokenValid(token)) {
-      setIsAuthenticated(true);
-    } else {
-      localStorage.removeItem('accessToken'); // Nettoyer le stockage si le token est invalide
+    const checkAuth = () => {
+      try {
+        const authStatus = isAuthenticated();
+        setIsAuth(authStatus);
+        if (authStatus) {
+          setUser(JSON.parse(localStorage.getItem('user') || 'null'));
+        }
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setIsAuth(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await logins(credentials);
+      
+      if (response.success && response.user) {
+        setUser(response.user);
+        storeUser(response.user);
+        setIsAuth(true);
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const tokens = await logins(email, password);
-      localStorage.setItem('accessToken', tokens.access);
-      localStorage.setItem('refreshToken', tokens.refresh);
-      setIsAuthenticated(true);
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    }
-  };
+  const logout = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  const logout = async (): Promise<void> => {
     try {
       await logouts();
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Logout failed:', error);
+      setUser(null);
+      setIsAuth(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Logout failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  const value = {
+    user,
+    isAuth,
+    login,
+    logout,
+    loading,
+    error
   };
 
-  const value = useMemo(
-    () => ({
-      isAuthenticated,
-      login,
-      logout,
-    }),
-    [isAuthenticated]
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+  if (loading && !user && !error) {
+    // You could return a loading spinner here if needed
+    return null;
   }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
   return context;
-}
+};

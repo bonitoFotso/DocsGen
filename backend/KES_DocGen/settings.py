@@ -50,8 +50,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -120,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'FR-fr'
 
 TIME_ZONE = 'UTC'
 
@@ -141,28 +141,33 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configuration de l'authentification
 REST_FRAMEWORK = {
-    #'DEFAULT_AUTHENTICATION_CLASSES': [
-    #   'rest_framework_simplejwt.authentication.JWTAuthentication',
-    #],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+       'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
     #'DEFAULT_PERMISSION_CLASSES': [
     #   'rest_framework.permissions.IsAuthenticated',
-#],
+    #],
 }
-CORS_ALLOW_ALL_ORIGINS=True
 
 CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
     "http://localhost:5173",
     "http://127.0.0.1:8000",
+    "http://192.168.1.160"
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
-
+CORS_ALLOW_CREDENTIALS = True
 
 # Autoriser certains en-têtes personnalisés si nécessaire
 CORS_ALLOW_HEADERS = [
     'content-type',
     'authorization',
     'x-csrf-token',
+    'accept',
+    'accept-encoding',
+    'origin',
+    'user-agent'
 ]
 
 SIMPLE_JWT = {
@@ -184,3 +189,25 @@ CORS_ALLOW_METHODS = [
     'DELETE',
     'OPTIONS',
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:5173",
+    "http://192.168.1.160"
+]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'document.permissions': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

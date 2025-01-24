@@ -29,6 +29,7 @@ const apiClientFile: AxiosInstance = axios.create({
 // 
 const addAuthToken = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
   const auth = localStorage.getItem('accessToken'); // Récupérer les informations d'authentification
+  console.log(auth);
   if (auth && auth) {
     config.headers!.Authorization = `Bearer ${auth}`;
   }
@@ -46,6 +47,8 @@ const handleAuthError = (error: import('axios').AxiosError) => {
 
 // Ajout des intercepteurs sur l'instance principale (apiClient)
 apiClient.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+
+
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response, // Si la requête réussit, retourner la réponse

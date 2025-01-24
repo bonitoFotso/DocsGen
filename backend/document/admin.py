@@ -1,91 +1,144 @@
+# Description: Fichier de configuration de l'interface d'administration de l'application document
 from django.contrib import admin
-from .models import Entity, Client, Site, Category, Product, Offre, Proforma, Facture, Rapport, Formation, Participant, \
-    AttestationFormation, Affaire
+from django.contrib.auth.admin import UserAdmin
 
+from api.user.models import User
+from .models import (
+    ContentType, Entity, Client, Site, Category, Product, Offre, Proforma, 
+    Affaire, Facture, Rapport, Formation, Participant, AttestationFormation,
+     AuditLog
+)
+
+from django.contrib import admin
+
+@admin.register(ContentType)
+class ContentTypeAdmin(admin.ModelAdmin):
+   list_display = ['app_label', 'model']
+   list_filter = ['app_label']
+   search_fields = ['app_label', 'model']
+   ordering = ['app_label', 'model']
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+   list_display = ['timestamp', 'user', 'action', 'content_type', 'object_repr']
+   list_filter = ['action', 'content_type', 'user']
+   search_fields = ['user__username', 'object_repr']
+   readonly_fields = ['timestamp', 'user', 'action', 'content_type', 'object_id', 'object_repr', 'changes']
+   date_hierarchy = 'timestamp'
+
+   def has_add_permission(self, request):
+       return False
+       
+   def has_change_permission(self, request, obj=None):
+       return False
+       
+   def has_delete_permission(self, request, obj=None):
+       return False
+
+@admin.register(User)
+class CustomUserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'departement', 'is_staff', 'is_active')
+    list_filter = ('departement', 'is_active', 'is_staff')
+    search_fields = ('username', 'email')
+    ordering = ('username',)
+
+
+
+class BaseModelAdmin(admin.ModelAdmin):
+    readonly_fields = ('created_by', 'updated_by', 'created_at', 'updated_at')
 
 @admin.register(Entity)
-class EntityAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name']
-    search_fields = ['code', 'name']
-
+class EntityAdmin(BaseModelAdmin):
+    list_display = ('code', 'name')
+    search_fields = ('code', 'name')
 
 @admin.register(Client)
-class ClientAdmin(admin.ModelAdmin):
-    list_display = ['nom', 'email', 'telephone', 'adresse']
-    search_fields = ['nom', 'email', 'telephone']
-
+class ClientAdmin(BaseModelAdmin):
+    list_display = ('nom', 'email', 'telephone')
+    search_fields = ('nom', 'email')
 
 @admin.register(Site)
-class SiteAdmin(admin.ModelAdmin):
-    list_display = ['nom', 'client', 'localisation']
-    search_fields = ['nom', 'client__nom', 'localisation']
-
+class SiteAdmin(BaseModelAdmin):
+    list_display = ('nom', 'client', 'localisation')
+    list_filter = ('client',)
+    search_fields = ('nom', 'localisation')
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'entity']
-    search_fields = ['code', 'name', 'entity__name']
-
+class CategoryAdmin(BaseModelAdmin):
+    list_display = ('code', 'name', 'entity')
+    list_filter = ('entity',)
+    search_fields = ('code', 'name')
 
 @admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ['code', 'name', 'category']
-    search_fields = ['code', 'name', 'category__name']
-
-
+class ProductAdmin(BaseModelAdmin):
+    list_display = ('code', 'name', 'category')
+    list_filter = ('category',)
+    search_fields = ('code', 'name')
 
 @admin.register(Offre)
-class OffreAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'date_creation', 'statut']
-    search_fields = ['reference', 'client__nom', 'produit__name']
-    list_filter = ['statut', 'entity']
-
-@admin.register(Affaire)
-class AffaireAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'date_creation', 'statut']
-    search_fields = ['reference', 'client__nom']
-    list_filter = ['statut', 'entity']
+class OffreAdmin(BaseModelAdmin):
+    list_display = ('reference', 'client', 'statut', 'date_creation')
+    list_filter = ('statut', 'entity')
+    search_fields = ('reference', 'client__nom')
+    readonly_fields = ('reference',)
 
 @admin.register(Proforma)
-class ProformaAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'date_creation', 'statut']
-    search_fields = ['reference', 'client__nom']
-    list_filter = ['statut', 'entity']
+class ProformaAdmin(BaseModelAdmin):
+    list_display = ('reference', 'client', 'statut', 'date_creation')
+    list_filter = ('statut', 'entity')
+    search_fields = ('reference', 'client__nom')
+    readonly_fields = ('reference',)
 
-
-@admin.register(Facture)
-class FactureAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'date_creation', 'statut']
-    search_fields = ['reference', 'client__nom']
-    list_filter = ['statut', 'entity']
-
+@admin.register(Affaire)
+class AffaireAdmin(BaseModelAdmin):
+    list_display = ('reference', 'client', 'statut', 'date_debut', 'date_fin_prevue')
+    list_filter = ('statut', 'entity')
+    search_fields = ('reference', 'client__nom')
+    readonly_fields = ('reference',)
 
 @admin.register(Rapport)
-class RapportAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'date_creation', 'statut']
-    search_fields = ['reference', 'client__nom']
-    list_filter = ['statut', 'entity']
-
+class RapportAdmin(BaseModelAdmin):
+    list_display = ('reference', 'affaire', 'site', 'produit', 'statut')
+    list_filter = ('statut', 'entity', 'site')
+    search_fields = ('reference', 'affaire__reference')
+    readonly_fields = ('reference',)
 
 @admin.register(Formation)
-class FormationAdmin(admin.ModelAdmin):
-    list_display = ['titre', 'client', 'date_debut', 'date_fin', 'description']
-    search_fields = ['titre', 'client__nom']
-    list_filter = ['client']
-
+class FormationAdmin(BaseModelAdmin):
+    list_display = ('titre', 'client', 'affaire', 'date_debut', 'date_fin')
+    list_filter = ('client',)
+    search_fields = ('titre', 'client__nom')
 
 @admin.register(Participant)
-class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ['nom', 'prenom', 'email', 'telephone', 'fonction', 'formation']
-    search_fields = ['nom', 'prenom', 'email', 'fonction', 'formation__titre']
-    list_filter = ['formation']
+class ParticipantAdmin(BaseModelAdmin):
+    list_display = ('nom', 'prenom', 'email', 'formation')
+    list_filter = ('formation',)
+    search_fields = ('nom', 'prenom', 'email')
 
 
 @admin.register(AttestationFormation)
 class AttestationFormationAdmin(admin.ModelAdmin):
-    list_display = ['reference', 'client', 'entity', 'participant', 'formation', 'date_creation']
-    search_fields = ['reference', 'client__nom', 'participant__nom', 'formation__titre']
-    list_filter = ['entity', 'client', 'formation']
+   list_display = ('reference', 'affaire', 'formation', 'participant', 'date_creation')
+   list_filter = ('formation', 'participant', 'affaire')
+   search_fields = ('reference', 'participant__nom', 'formation__titre')
+   readonly_fields = ('reference',)
+   
+   fieldsets = (
+       ('Informations générales', {
+           'fields': ('affaire', 'formation', 'participant')
+       }),
+       ('Détails', {
+           'fields': ('details_formation', 'reference')
+       })
+   )
+
+@admin.register(Facture)
+class FactureAdmin(BaseModelAdmin):
+    list_display = ('reference', 'client', 'statut', 'date_creation')
+    list_filter = ('statut', 'entity')
+    search_fields = ('reference', 'client__nom')
+    readonly_fields = ('reference',)
+
 
 
 # Personnalisation de l'interface d'administration

@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from api.user.models import User
 from document.models import Entity, Category, Product
 
 class Command(BaseCommand):
@@ -154,6 +155,10 @@ class Command(BaseCommand):
             for category_code, code, name in products_kec:
                 category = kec_categories[category_code]
                 Product.objects.create(code=code, name=name, category=category)
+                
+            # creer un utilisateur
+            self.stdout.write('Creating user...')
+            User.objects.create_user(email="r@r.com", password="2016", first_name="Root", last_name="Root", is_superuser=True)
 
             self.stdout.write(self.style.SUCCESS('Data seeding completed successfully!'))
 

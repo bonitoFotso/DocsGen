@@ -41,11 +41,19 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    dep_choices = [
+        ("IT", "IT"),
+        ("HR", "HR"),
+        ("Inspection", "Inspection"),
+        ("Admin", "Admin"),
+        ("Formation", "Formation"),
+    ]
     username = models.CharField(db_index=True, max_length=255, unique=True)
     email = models.EmailField(db_index=True, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
+    departement = models.CharField(choices=dep_choices, max_length=255, default="IT")
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]

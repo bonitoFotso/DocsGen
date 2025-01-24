@@ -3,8 +3,27 @@ from django.core.validators import RegexValidator
 from django.db.models import Max
 from django.utils.timezone import now
 from django_fsm import FSMField, transition
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType 
+class AuditableMixin(models.Model):
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="%(class)s_created"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="%(class)s_updated"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class Entity(models.Model):
+    class Meta:
+        abstract = True
+class Entity(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=3,
         unique=True,
@@ -16,7 +35,7 @@ class Entity(models.Model):
         return self.name
 
 
-class Client(models.Model):
+class Client(AuditableMixin, models.Model):
     nom = models.CharField(max_length=255)
     email = models.EmailField(blank=True, null=True)
     telephone = models.CharField(max_length=15, blank=True, null=True)
@@ -26,7 +45,7 @@ class Client(models.Model):
         return self.nom
 
 
-class Site(models.Model):
+class Site(AuditableMixin, models.Model):
     nom = models.CharField(max_length=255)
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     localisation = models.CharField(max_length=255, blank=True, null=True)
@@ -36,7 +55,7 @@ class Site(models.Model):
         return self.nom
 
 
-class Category(models.Model):
+class Category(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=3,
         validators=[RegexValidator(regex='^[A-Z]{3}$')]
@@ -48,7 +67,7 @@ class Category(models.Model):
         return self.name
 
 
-class Product(models.Model):
+class Product(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=4,
         validators=[RegexValidator(regex='^(VTE|EC)\d+$')]
@@ -58,6 +77,28 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class AuditLog(models.Model):
+    ACTION_TYPES = [
+        ('CREATE', 'Création'),
+        ('UPDATE', 'Modification'),
+        ('DELETE', 'Suppression'),
+        ('VALIDATE', 'Validation'),
+        ('REFUSE', 'Refus'),
+    ]
+    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    action = models.CharField(max_length=50, choices=ACTION_TYPES)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=100)
+    object_repr = models.CharField(max_length=200)
+    changes = models.JSONField(null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+
 
 
 class Document(models.Model):
@@ -78,23 +119,29 @@ class Document(models.Model):
     )  # PRF, FAC, etc.
     sequence_number = models.IntegerField()
 
+    def log_action(self, action, user, changes=None):
+        AuditLog.objects.create(
+            user=user,
+            action=action,
+            content_type=ContentType.objects.get_for_model(self),
+            object_id=str(self.pk),
+            object_repr=str(self),
+            changes=changes
+        )
+
     class Meta:
         abstract = True
 
     @transition(field=statut, source='BROUILLON', target='ENVOYE')
-    def envoyer(self):
-        """Transition vers l'état envoyé"""
-        pass
-
-    @transition(field=statut, source='ENVOYE', target='VALIDE')
-    def valider(self):
-        """Transition vers l'état validé"""
+    def envoyer(self, user):
+        self.log_action('VALIDATE', user)
+    @transition(field=statut, source='ENVOYE', target='VALIDE') 
+    def valider(self, user):
         self.date_validation = now()
-
+        self.log_action('VALIDATE', user)
     @transition(field=statut, source=['ENVOYE', 'BROUILLON'], target='REFUSE')
-    def refuser(self):
-        """Transition vers l'état refusé"""
-        pass
+    def refuser(self, user):
+        self.log_action('REFUSE', user)
 
     def __str__(self):
         return self.reference
@@ -341,7 +388,7 @@ class Rapport(Document):
         super().save(*args, **kwargs)
 
 
-class Formation(models.Model):
+class Formation(AuditableMixin, models.Model):
     titre = models.CharField(max_length=255)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="formations")
     affaire = models.ForeignKey(Affaire, on_delete=models.CASCADE, related_name="formations")
@@ -354,7 +401,7 @@ class Formation(models.Model):
         return f"{self.titre} - {self.client.nom}"
 
 
-class Participant(models.Model):
+class Participant(AuditableMixin, models.Model):
     nom = models.CharField(max_length=255)
     prenom = models.CharField(max_length=255)
     email = models.EmailField(blank=True, null=True)

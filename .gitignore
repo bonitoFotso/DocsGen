@@ -19,6 +19,7 @@ frontend/.parcel-cache
 # django
 backend/.venv/
 backend/venv/
+backend/env/
 backend/venv3/
 backend/.idea/
 backend/.vscode/

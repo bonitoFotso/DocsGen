@@ -1,3 +1,4 @@
+import { LoginCredentials, LoginResponse, User } from '@/affaireType';
 import { apiClient } from './api';
 
 export interface AuthResponse {
@@ -6,16 +7,33 @@ export interface AuthResponse {
 }
 
 // Service pour obtenir le token JWT
-export const logins = async (email: string, password: string): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/token/', {
-        email,
-        password,
+export const logins = async (credentials: LoginCredentials): Promise<LoginResponse> => {
+    const response = await apiClient.post<LoginResponse>('/login', {
+        email	: credentials.email	,
+        password: credentials.password
     });
     // Stocker les tokens dans le stockage local
-    localStorage.setItem('accessToken', response.data.access);
-    localStorage.setItem('refreshToken', response.data.refresh);
-    return response.data;
+    localStorage.setItem('accessToken', response.data.token);
+    return {
+        success: response.data.success,
+        token: response.data.token,
+        user: response.data.user,
+        message: response.data.message
+    };
 };
+
+// service pour stocker l'user dans le stockage local
+export const storeUser = (user: User): void => {
+    localStorage.setItem('user', JSON.stringify(user));
+};
+
+// Service pour obtenir l'utilisateur actuel
+export const getUser = (): User | null => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+};
+
+
 
 // Service pour rafraîchir le token JWT
 export const refreshToken = async (refreshTokens: string): Promise<string> => {
@@ -31,7 +49,7 @@ export const refreshToken = async (refreshTokens: string): Promise<string> => {
 export const logouts = (): void => {
     // Supprimer les tokens du stockage local
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
 };
 
 // Récupérer le token d'accès actuel

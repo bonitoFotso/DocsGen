@@ -1,12 +1,18 @@
-from rest_framework import viewsets, status, filters
+from document.permissions import DepartmentPermission
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import (
-    Entity, Client, Site, Category, Product, Offre, Proforma, 
+    AuditLog, Entity, Client, Site, Category, Product, Offre, Proforma, 
     Affaire, Facture, Rapport, Formation, Participant, AttestationFormation
 )
+from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+
+from django.contrib.contenttypes.models import ContentType 
 from .serializers import (
     # Entity serializers
     EntityListSerializer, EntityDetailSerializer, EntityEditSerializer,
@@ -37,15 +43,64 @@ from .serializers import (
 )
 
 class BaseModelViewSet(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    permission_classes = [IsAuthenticated, DepartmentPermission]
     
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+        self._create_audit_log('CREATE', serializer.instance)
+        
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+        self._create_audit_log('UPDATE', serializer.instance)
+        
+    def perform_destroy(self, instance):
+        self._create_audit_log('DELETE', instance)
+        instance.delete()
+        
+
+    def _get_changes(self, instance):
+       print(instance._state.adding)
+       if not instance._state.adding:
+           old_instance = instance.__class__.objects.get(pk=instance.pk)
+           changes = {}
+           for field in instance._meta.fields:
+               old_value = getattr(old_instance, field.name)
+               new_value = getattr(instance, field.name)
+               if old_value != new_value:
+                   changes[field.name] = {
+                       'old': str(old_value),
+                       'new': str(new_value)
+                   }
+           return changes
+       return None
+    def _create_audit_log(self, action, instance):
+        print(instance)
+        AuditLog.objects.create(
+            user=self.request.user,
+            action=action,
+            content_type=ContentType.objects.get_for_model(instance.__class__),
+            object_id=str(instance.pk),
+            object_repr=str(instance),
+            changes=self._get_changes(instance) if action == 'UPDATE' else None
+        )
+
     def get_serializer_class(self):
         if self.action == 'list':
             return self.serializer_class
         elif self.action in ['create', 'update', 'partial_update']:
             return self.edit_serializer_class
         return self.detail_serializer_class
+    
+    def handle_exception(self, exc):
+       if isinstance(exc, ( DjangoPermissionDenied)):
+           return DepartmentPermission().get_error_response(
+               self.request.user,
+               self.action,
+               self.__class__.__name__.replace('ViewSet', '')
+           )
+       return super().handle_exception(exc)
+    
+
 
 class EntityViewSet(BaseModelViewSet):
     queryset = Entity.objects.all()
