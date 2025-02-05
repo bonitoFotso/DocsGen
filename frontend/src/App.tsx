@@ -13,6 +13,8 @@ import FormationManagement from './views/formations/formations';
 import LoginPage from './views/auth/login';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
+import { ContactsPage } from './views/contacts/ContactsPage';
+import ContactsGridView from './views/contacts/ContactsGridView';
 
 function App() {
   return (
@@ -35,6 +37,9 @@ function App() {
             <Route path="rapports" element={<RapportManagement/>} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="formations" element={<FormationManagement />} />
+            <Route path="contacts" element={<ContactsPage />} />
+            <Route path="contacts_grid" element={<ContactsGridView />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -156,9 +156,7 @@ class Command(BaseCommand):
                 category = kec_categories[category_code]
                 Product.objects.create(code=code, name=name, category=category)
                 
-            # creer un utilisateur
-            self.stdout.write('Creating user...')
-            User.objects.create_user(email="r@r.com", password="2016", first_name="Root", last_name="Root", is_superuser=True)
+            
 
             self.stdout.write(self.style.SUCCESS('Data seeding completed successfully!'))
 

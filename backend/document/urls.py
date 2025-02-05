@@ -21,8 +21,6 @@ router = DefaultRouter()
 
 # Enregistrement des routes
 router.register(r'entities', EntityViewSet, basename='entity')
-router.register(r'clients', ClientViewSet, basename='client')
-router.register(r'sites', SiteViewSet, basename='site')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'offres', OffreViewSet, basename='offre')

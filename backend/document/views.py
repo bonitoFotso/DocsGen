@@ -90,7 +90,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return self.edit_serializer_class
         return self.detail_serializer_class
-    
+
     def handle_exception(self, exc):
        if isinstance(exc, ( DjangoPermissionDenied)):
            return DepartmentPermission().get_error_response(
@@ -99,7 +99,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
                self.__class__.__name__.replace('ViewSet', '')
            )
        return super().handle_exception(exc)
-    
+
 
 
 class EntityViewSet(BaseModelViewSet):
@@ -126,7 +126,7 @@ class ClientViewSet(BaseModelViewSet):
         sites = Site.objects.filter(client=client)
         serializer = SiteListSerializer(sites, many=True)
         return Response(serializer.data)
-    
+
 class SiteViewSet(BaseModelViewSet):
     queryset = Site.objects.all()
     serializer_class = SiteListSerializer

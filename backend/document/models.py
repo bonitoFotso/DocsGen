@@ -4,25 +4,11 @@ from django.db.models import Max
 from django.utils.timezone import now
 from django_fsm import FSMField, transition
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType 
-class AuditableMixin(models.Model):
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="%(class)s_created"
-    )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name="%(class)s_updated"
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+from django.contrib.contenttypes.models import ContentType
 
-    class Meta:
-        abstract = True
+from client.models import AuditableMixin, Client, Site
+
+
 class Entity(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=3,
@@ -35,24 +21,6 @@ class Entity(AuditableMixin, models.Model):
         return self.name
 
 
-class Client(AuditableMixin, models.Model):
-    nom = models.CharField(max_length=255)
-    email = models.EmailField(blank=True, null=True)
-    telephone = models.CharField(max_length=15, blank=True, null=True)
-    adresse = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.nom
-
-
-class Site(AuditableMixin, models.Model):
-    nom = models.CharField(max_length=255)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
-    localisation = models.CharField(max_length=255, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.nom
 
 
 class Category(AuditableMixin, models.Model):
@@ -118,6 +86,7 @@ class Document(models.Model):
         validators=[RegexValidator(regex='^[A-Z]{3}$')]
     )  # PRF, FAC, etc.
     sequence_number = models.IntegerField()
+    fichier = models.FileField(upload_to='documents/', blank=True, null=True)
 
     def log_action(self, action, user, changes=None):
         AuditLog.objects.create(
@@ -151,7 +120,8 @@ class Document(models.Model):
 
 
 class Offre(Document):
-    produit = models.ManyToManyField(Product)
+    produits = models.ManyToManyField(Product)
+    produit = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offres")
     date_modification = models.DateTimeField(auto_now=True)
     date_validation = models.DateTimeField(blank=True, null=True)  # Date d'acceptation
     sites = models.ManyToManyField(Site)
@@ -170,7 +140,7 @@ class Offre(Document):
                 print(self.sequence_number, last_sequence)
             total_offres_client = Offre.objects.filter(client=self.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/OFF/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{total_offres_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/OFF/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.produit.code}/{total_offres_client}/{self.sequence_number:04d}"
 
         if self.statut == 'VALIDE' and not self.date_validation:
             self.date_validation = now() 
@@ -205,6 +175,14 @@ class Offre(Document):
             entity=self.entity,
             doc_type='PRO',
         )
+        
+        # Créer l'affaire
+        affaire = Affaire.objects.create(
+            offre=self,
+            client=self.client,
+            entity=self.entity,
+            doc_type='AFF',
+        )
 
         return proforma
 
@@ -225,38 +203,12 @@ class Proforma(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_proformas_client = Proforma.objects.filter(client=self.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/PRO/{self.offre.id}/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{total_proformas_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/PRO/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{total_proformas_client}/{self.sequence_number:04d}"
         if self.statut == 'VALIDE':
             self.date_validation = now()
-            self.creer_affaire()
 
         super().save(*args, **kwargs)
 
-    def creer_affaire(self):
-            """
-            Crée l'affaire et le proforma associés à l'offre.
-            Cette méthode est appelée automatiquement quand le statut passe à 'VALIDE'.
-            """
-            if self.statut != 'VALIDE':
-                raise ValueError("L'offre doit être en statut 'VALIDE' pour créer une affaire.")
-
-            if hasattr(self, 'affaire'):
-                raise ValueError("Une affaire existe déjà pour cette offre.")
-
-            if not self.date_validation:
-                raise ValueError("L'offre n'a pas de date de validation.")
-
-            # Créer l'affaire
-            affaire = Affaire.objects.create(
-                offre=self.offre,
-                client=self.client,
-                entity=self.entity,
-                doc_type='AFF',
-            )
-
-
-
-            return affaire
 
 class Affaire(Document):
     offre = models.OneToOneField(Offre, on_delete=models.CASCADE, related_name="affaire")
@@ -311,17 +263,14 @@ class Affaire(Document):
             description=f"Formation {produit.name} pour le site {self.client.nom}"
         )
         return formation
-    
-
-
 
     def save(self, *args, **kwargs):
         creating = not self.pk  # Vérifie si c'est une création
-        
+
         if creating:
             # Synchronise avec l'offre lors de la création
             self.sync_with_offre()
-            
+
             # Génère la référence
             if not self.reference:
                 if not self.sequence_number:
@@ -332,10 +281,8 @@ class Affaire(Document):
                         date_creation__month=now().month
                     ).aggregate(Max('sequence_number'))['sequence_number__max']
                     self.sequence_number = (last_sequence or 0) + 1
-
-                total_affaires_client = Affaire.objects.filter(client=self.client).count() + 1
                 date = self.date_creation or now()
-                self.reference = f"{self.entity.code}/AFF/{self.offre.id}/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{total_affaires_client}/{self.sequence_number:04d}"
+                self.reference = f"AFF/{str(date.year)[-2:]}{date.month:02d}{date.day}/{self.sequence_number:04d}"
 
         super().save(*args, **kwargs)
 
@@ -361,7 +308,7 @@ class Facture(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_factures_client = Facture.objects.filter(client=self.affaire.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/FAC/{self.affaire.id}/{self.affaire.offre.id}/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{total_factures_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.affaire.reference}/{self.affaire.offre.produit}/{total_factures_client}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 
@@ -384,7 +331,7 @@ class Rapport(Document):
             total_rapports_client = Rapport.objects.filter(client=self.affaire.client).count() + 1
             total_category_rapports = Rapport.objects.filter(client=self.affaire.client,produit__category=self.produit.category).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/RAP/{self.affaire.id}/{self.affaire.offre.id}/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{self.produit.category.code}/{total_category_rapports}/{self.produit.code}/{total_rapports_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/RAP/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.affaire.reference}/{total_category_rapports}/{self.produit.code}/{total_rapports_client}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 
@@ -433,7 +380,7 @@ class AttestationFormation(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_attestations_client = AttestationFormation.objects.filter(client=self.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/ATT/{self.affaire.id}/{str(date.year)[-2:]}{date.month:02d}/{self.client.id}/{total_attestations_client}/{self.formation.id}/{self.participant.id}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/ATT/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.affaire.reference}/{total_attestations_client}/{self.formation.id}/{self.participant.id}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 

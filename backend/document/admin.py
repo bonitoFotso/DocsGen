@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from api.user.models import User
 from .models import (
-    ContentType, Entity, Client, Site, Category, Product, Offre, Proforma, 
+    ContentType, Entity, Category, Product, Offre, Proforma, 
     Affaire, Facture, Rapport, Formation, Participant, AttestationFormation,
      AuditLog
 )
@@ -52,16 +52,6 @@ class EntityAdmin(BaseModelAdmin):
     list_display = ('code', 'name')
     search_fields = ('code', 'name')
 
-@admin.register(Client)
-class ClientAdmin(BaseModelAdmin):
-    list_display = ('nom', 'email', 'telephone')
-    search_fields = ('nom', 'email')
-
-@admin.register(Site)
-class SiteAdmin(BaseModelAdmin):
-    list_display = ('nom', 'client', 'localisation')
-    list_filter = ('client',)
-    search_fields = ('nom', 'localisation')
 
 @admin.register(Category)
 class CategoryAdmin(BaseModelAdmin):

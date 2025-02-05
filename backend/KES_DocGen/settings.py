@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     "api",
     "api.user",
     "api.authentication",
+    "client",
+    "courrier",
 ]
 
 MIDDLEWARE = [
