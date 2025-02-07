@@ -13,8 +13,8 @@ import FormationManagement from './views/formations/formations';
 import LoginPage from './views/auth/login';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
-import { ContactsPage } from './views/contacts/ContactsPage';
 import ContactsGridView from './views/contacts/ContactsGridView';
+import { ContactsPage } from './views/contacts/ContactsPage';
 
 function App() {
   return (

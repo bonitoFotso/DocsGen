@@ -164,7 +164,7 @@ export interface Auditable {
   }
 
   export interface ContactEdit {
-    nom: string;
+    nom?: string;
     prenom?: string;
     email?: string;
     telephone?: string;
@@ -181,3 +181,8 @@ export interface Auditable {
     bp?: string;
     notes?: string;
   }
+
+export interface MailEdit {
+  email?: string;
+  client?: number;
+}

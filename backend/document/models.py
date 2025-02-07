@@ -124,7 +124,7 @@ class Offre(Document):
     produit = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offres")
     date_modification = models.DateTimeField(auto_now=True)
     date_validation = models.DateTimeField(blank=True, null=True)  # Date d'acceptation
-    sites = models.ManyToManyField(Site)
+    #sites = models.ManyToManyField(Site)
 
 
     def save(self, *args, **kwargs):
@@ -184,7 +184,7 @@ class Offre(Document):
             doc_type='AFF',
         )
 
-        return proforma
+        return proforma,affaire
 
 
 
@@ -236,28 +236,26 @@ class Affaire(Document):
         Rapport.objects.filter(affaire=self).delete()
         
         # Crée un rapport pour chaque combinaison site-produit
-        for site in self.offre.sites.all():
-            for produit in self.offre.produit.all():
-                Rapport.objects.create(
-                    affaire=self,
-                    site=site,
-                    produit=produit,
-                    client=self.client,
-                    entity=self.entity,
-                    doc_type='RAP',
-                    statut='BROUILLON'
-                )
-                if produit.category.code == 'FOR':
-                    self.cree_formation(site, produit)
+        for produit in self.offre.produit.all():
+            Rapport.objects.create(
+                affaire=self,
+                produit=produit,
+                client=self.client,
+                entity=self.entity,
+                doc_type='RAP',
+                statut='BROUILLON'
+            )
+            if produit.category.code == 'FOR':
+                self.cree_formation(produit)
 
-    def cree_formation(self, site, produit):
+    def cree_formation(self, produit):
         """Crée une formation pour le site et le produit donnés"""
         from .models import Formation
         formation = Formation.objects.create(
             titre=f"Formation {produit.name}",
             client=self.client,
             affaire=self,
-            rapport=Rapport.objects.get(affaire=self, site=site, produit=produit),
+            rapport=Rapport.objects.get(affaire=self, produit=produit),
             date_debut=self.date_debut,
             date_fin=self.date_fin_prevue,
             description=f"Formation {produit.name} pour le site {self.client.nom}"
@@ -314,11 +312,14 @@ class Facture(Document):
 
 class Rapport(Document):
     affaire = models.ForeignKey(Affaire, on_delete=models.CASCADE, related_name="rapports")
-    site = models.ForeignKey(Site, on_delete=models.CASCADE)
+    #site = models.ForeignKey(Site, on_delete=models.CASCADE)
     produit = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="rapports")
+    numero = models.CharField(max_length=10, blank=True, null=True)
 
 
     def save(self, *args, **kwargs):
+        if not self.numero:
+            self.numero = f"RAP{self.affaire.client.c_num}/{self.produit.code}/{self.id}"
         if not self.reference:
             if not self.sequence_number:
                 last_sequence = Rapport.objects.filter(
@@ -365,6 +366,7 @@ class AttestationFormation(Document):
     formation = models.ForeignKey(Formation, on_delete=models.CASCADE, related_name="attestations")
     participant = models.ForeignKey(Participant, on_delete=models.CASCADE, related_name= "attestation")
     details_formation = models.TextField()
+    rapport = models.ForeignKey(Rapport, on_delete=models.CASCADE, related_name="attestations")
 
     def save(self, *args, **kwargs):
         if not self.reference:

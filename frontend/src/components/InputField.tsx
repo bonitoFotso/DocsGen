@@ -1,5 +1,5 @@
 import React from 'react';
-import { DivideIcon as LucideIcon } from 'lucide-react';
+import { DivideIcon as LucideIcon, Loader2 } from 'lucide-react';
 
 interface InputFieldProps {
   label: string;
@@ -14,6 +14,8 @@ interface InputFieldProps {
   autoComplete?: string;
   description?: string;
   className?: string;
+  options?: { value: string; label: string | null }[];
+  isLoading?: boolean;
 }
 
 const InputField = ({
@@ -29,9 +31,61 @@ const InputField = ({
   autoComplete,
   description,
   className = '',
+  options = [],
+  isLoading = false,
 }: InputFieldProps) => {
   const id = React.useId();
   const [isFocused, setIsFocused] = React.useState(false);
+
+  const renderInput = () => {
+    const commonProps = {
+      id,
+      value,
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => onChange(e.target.value),
+      required,
+      placeholder,
+      disabled: disabled || isLoading,
+      autoComplete,
+      onFocus: () => setIsFocused(true),
+      onBlur: () => setIsFocused(false),
+      className: `
+        block w-full rounded-md shadow-sm text-sm
+        ${disabled || isLoading ? 'bg-gray-50 text-gray-500' : 'bg-white'}
+        ${error
+          ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500'
+          : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
+        }
+        transition-shadow duration-150
+        ${isFocused ? 'ring-2 ring-opacity-50' : ''}
+      `,
+      'aria-invalid': error ? true : false,
+      'aria-describedby': error ? `${id}-error` : undefined,
+    };
+
+    if (type === 'select') {
+      return (
+        <select {...commonProps}>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (type === 'textarea') {
+      return (
+        <textarea
+          {...commonProps}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
+          rows={3}
+        />
+      );
+    }
+
+    return <input {...commonProps} type={type} />;
+  };
 
   return (
     <div className={`space-y-1 ${className}`}>
@@ -54,32 +108,15 @@ const InputField = ({
       )}
 
       <div className="relative">
-        <input
-          id={id}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          required={required}
-          placeholder={placeholder}
-          disabled={disabled}
-          autoComplete={autoComplete}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          className={`
-            block w-full rounded-md shadow-sm text-sm
-            ${disabled ? 'bg-gray-50 text-gray-500' : 'bg-white'}
-            ${error
-              ? 'border-red-300 text-red-900 placeholder-red-300 focus:border-red-500 focus:ring-red-500'
-              : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'
-            }
-            transition-shadow duration-150
-            ${isFocused ? 'ring-2 ring-opacity-50' : ''}
-          `}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? `${id}-error` : undefined}
-        />
+        {renderInput()}
 
-        {error && (
+        {isLoading && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+          </div>
+        )}
+
+        {error && !isLoading && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <svg
               className="h-5 w-5 text-red-500"

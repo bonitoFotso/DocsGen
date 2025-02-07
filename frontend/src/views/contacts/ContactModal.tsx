@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ContactEdit } from '@/itf';
 import InputField from '@/components/InputField';
 import { Building, Mail, Phone, User, Briefcase, Calendar, MapPin, FileText } from 'lucide-react';
+import { useServices } from '@/AppHooks';
+import { ClientBase } from '@/interfaces';
 
 interface ContactModalProps {
   title: string;
@@ -20,6 +22,30 @@ const ContactModal = ({
 }: ContactModalProps) => {
   const [formData, setFormData] = useState<ContactEdit>(initialData);
   const [activeTab, setActiveTab] = useState<'info' | 'entreprise' | 'adresse'>('info');
+  const { clientService } = useServices();
+  const [clients, setClients] = useState<ClientBase[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchClients = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await clientService.getAll();
+      setClients(response);
+    } catch (error) {
+      console.error('Error fetching contacts:', error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [clientService]);
+
+  // Fetch clients on mount
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,12 +92,10 @@ const ContactModal = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-6">
                   <InputField
-                    label="Nom*"
-                    value={formData.nom}
+                    label="Nom"
+                    value={formData.nom || ""}
                     onChange={(v) => setFormData({ ...formData, nom: v })}
-                    required
                     icon={User}
-                    error={formData.nom.length === 0 ? "Le nom est requis" : undefined}
                   />
                   <InputField
                     label="Prénom"
@@ -112,6 +136,24 @@ const ContactModal = ({
 
             {activeTab === 'entreprise' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <InputField
+                    label="Client"
+                    type="select"
+                    value={formData.client?.toString() || ''}
+                    onChange={(v) => setFormData({ ...formData, client: v ? parseInt(v) : undefined })}
+                    icon={Building}
+                    options={[
+                      { value: '', label: 'Sélectionner un client' },
+                      ...clients.map(client => ({
+                        value: client.id.toString(),
+                        label: client.email ?? ''
+                      }))
+                    ]}
+                    isLoading={isLoading}
+                    error={isError ? "Erreur lors du chargement des clients" : undefined}
+                  />
+                </div>
                 <div className="space-y-6">
                   <InputField
                     label="Service"
@@ -200,7 +242,7 @@ const ContactModal = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || formData.nom.length === 0}
+              disabled={isSubmitting || !formData.email}
               className="inline-flex justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}

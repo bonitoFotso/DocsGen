@@ -88,8 +88,8 @@ class AffaireAdmin(BaseModelAdmin):
 
 @admin.register(Rapport)
 class RapportAdmin(BaseModelAdmin):
-    list_display = ('reference', 'affaire', 'site', 'produit', 'statut')
-    list_filter = ('statut', 'entity', 'site')
+    list_display = ('reference', 'affaire', 'produit', 'statut')
+    list_filter = ('statut', 'entity', )
     search_fields = ('reference', 'affaire__reference')
     readonly_fields = ('reference',)
 

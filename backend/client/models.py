@@ -126,7 +126,7 @@ class Site(AuditableMixin, models.Model):
 
 class Contact(models.Model):
     # Informations de base
-    nom = models.CharField(max_length=255, verbose_name="Nom")
+    nom = models.CharField(max_length=255, verbose_name="Nom",blank=True, null=True,)
     prenom = models.CharField(max_length=255, blank=True, null=True, verbose_name="Prénom")
     email = models.EmailField(blank=True, null=True, verbose_name="Email")
     telephone = models.CharField(max_length=15, blank=True, null=True, verbose_name="Téléphone")
@@ -144,6 +144,15 @@ class Contact(models.Model):
         blank=True,
         null=True,
         verbose_name="Client associé"
+    )
+    
+    site = models.ForeignKey(
+        'Site',  # Remplacez 'Site' par le nom de votre modèle Site si nécessaire
+        on_delete=models.CASCADE,
+        related_name='contacts',
+        blank=True,
+        null=True,
+        verbose_name="Site associé"
     )
 
     # Informations supplémentaires

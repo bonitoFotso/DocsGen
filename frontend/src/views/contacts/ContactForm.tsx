@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ContactEdit } from '@/itf';
 
 const contactSchema = z.object({
-  nom: z.string().min(1, 'Le nom est requis'),
+  nom: z.string().optional(),
   prenom: z.string().optional(),
   email: z.string().email('Email invalide').optional().nullable(),
   telephone: z.string().optional().nullable(),
@@ -68,7 +68,7 @@ export default function ContactForm() {
                 <div className="grid grid-cols-6 gap-6">
                   <div className="col-span-6 sm:col-span-3">
                     <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
-                      Nom*
+                      Nom
                     </label>
                     <input
                       type="text"

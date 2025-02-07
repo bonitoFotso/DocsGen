@@ -1,4 +1,4 @@
-import { Client, ClientEdit, ClientList, Contact, ContactEdit, ContactList, Pays, Region, Site, SiteEdit, SiteList, Ville } from "./itf";
+import { Client, ClientEdit, ClientList, Contact, ContactEdit, ContactList, MailEdit, Pays, Region, Site, SiteEdit, SiteList, Ville } from "./itf";
 import { api } from "./services";
 
 
@@ -131,6 +131,10 @@ export const contactService = {
   },
 
   create: async (contact: ContactEdit) => {
+    const { data } = await api.post<ContactList>('/contacts/', contact);
+    return data;
+  },
+  addmail: async (contact: MailEdit) => {
     const { data } = await api.post<ContactList>('/contacts/', contact);
     return data;
   },
