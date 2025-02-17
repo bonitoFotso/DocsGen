@@ -8,6 +8,7 @@ interface InfoTabProps {
   setFormData: React.Dispatch<React.SetStateAction<OffreEdit>>;
   clients: ClientBase[];
   entities: EntityBase[];
+  contacts: ContactBase[];
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({
@@ -29,33 +30,7 @@ export const InfoTab: React.FC<InfoTabProps> = ({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-2 gap-8">
-        <FormField label="Client" required>
-          <div className="group relative">
-            <select
-              value={formData.client}
-              onChange={(e) => {
-                const newClientId = Number(e.target.value);
-                setFormData({
-                  ...formData,
-                  client: newClientId,
-                  sites: []
-                });
-              }}
-              required
-              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 appearance-none transition-all duration-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-            >
-              <option value="">Sélectionnez un client</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.nom}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 pointer-events-none h-5 w-5" />
-          </div>
-        </FormField>
-
-        <FormField label="Entité" required>
+      <FormField label="Entité" required>
           <div className="group relative">
             <select
               value={formData.entity}
@@ -73,7 +48,58 @@ export const InfoTab: React.FC<InfoTabProps> = ({
             <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 pointer-events-none h-5 w-5" />
           </div>
         </FormField>
+
+
       </div>
+      <div className="grid grid-cols-2 gap-8">
+      
+        <FormField label="Client" required>
+          <div className="group relative">
+            <select
+              value={formData.client}
+              onChange={(e) => {
+                const newClientId = Number(e.target.value);
+                setFormData({
+                  ...formData,
+                  client: newClientId,
+                });
+              }}
+              required
+              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 appearance-none transition-all duration-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+            >
+              <option value="">Sélectionnez un client</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.nom}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 pointer-events-none h-5 w-5" />
+          </div>
+        </FormField>
+
+        <FormField label="Contant" required>
+          <div className="group relative">
+            <select
+              value={formData.contact}
+              onChange={(e) => setFormData({ ...formData, contact: Number(e.target.value) })}
+              required
+              className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 appearance-none transition-all duration-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+            >
+              <option value="">Sélectionnez une entité</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>
+                  {contact.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 pointer-events-none h-5 w-5" />
+          </div>
+        </FormField>
+
+
+      </div>
+
 
       <FormField label="Statut">
         <div className="group relative">

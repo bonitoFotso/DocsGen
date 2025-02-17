@@ -20,6 +20,7 @@ import {
   ArrowUpAZ
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TableHeader } from '@/components/TableHeader';
 
 type SortField = keyof Contact | 'ville_nom' | 'client_nom';
 
@@ -33,7 +34,7 @@ const ContactsGridView = () => {
   const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [selectedColumns, setSelectedColumns] = React.useState<Set<string>>(new Set([
-    'region', 'ville_nom', 'entreprise', 'secteur', 'prenom', 'nom', 'poste',
+    'region', 'ville_nom','secteur', 'entreprise',  'prenom', 'nom', 'poste',
     'service', 'role_achat', 'telephone', 'email', 'status', 'agrement'
   ]));
 
@@ -124,6 +125,10 @@ const ContactsGridView = () => {
     );
   }
 
+  function onSort(field: SortField): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div className="p-4 space-y-6">
       {/* Header */}
@@ -195,18 +200,13 @@ const ContactsGridView = () => {
           <thead className="bg-gray-50">
             <tr>
               {selectedColumns.has('region') && (
-                <th
-                  onClick={() => handleSort('region')}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="h-4 w-4" />
-                    <span>Région</span>
-                    {sortBy === 'region' && (
-                      sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />
-                    )}
-                  </div>
-                </th>
+                <TableHeader
+                column="region"
+                icon={<MapPin className="h-4 w-4" />}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={onSort}
+              />
               )}
               {selectedColumns.has('ville_nom') && (
                 <th
@@ -217,20 +217,6 @@ const ContactsGridView = () => {
                     <MapPin className="h-4 w-4" />
                     <span>Ville</span>
                     {sortBy === 'ville_nom' && (
-                      sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />
-                    )}
-                  </div>
-                </th>
-              )}
-              {selectedColumns.has('entreprise') && (
-                <th
-                  onClick={() => handleSort('entreprise')}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                >
-                  <div className="flex items-center space-x-1">
-                    <Building className="h-4 w-4" />
-                    <span>Entreprise</span>
-                    {sortBy === 'entreprise' && (
                       sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />
                     )}
                   </div>
@@ -250,6 +236,21 @@ const ContactsGridView = () => {
                   </div>
                 </th>
               )}
+              {selectedColumns.has('entreprise') && (
+                <th
+                  onClick={() => handleSort('entreprise')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center space-x-1">
+                    <Building className="h-4 w-4" />
+                    <span>Entreprise</span>
+                    {sortBy === 'entreprise' && (
+                      sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />
+                    )}
+                  </div>
+                </th>
+              )}
+              
               {selectedColumns.has('prenom') && (
                 <th
                   onClick={() => handleSort('prenom')}
@@ -353,7 +354,7 @@ const ContactsGridView = () => {
                 >
                   <div className="flex items-center space-x-1">
                     <FileText className="h-4 w-4" />
-                    <span>Statut</span>
+                    <span>status</span>
                     {sortBy === 'status' && (
                       sortOrder === 'asc' ? <ArrowDownAZ className="h-4 w-4" /> : <ArrowUpAZ className="h-4 w-4" />
                     )}
@@ -389,16 +390,17 @@ const ContactsGridView = () => {
                     {contact.ville_nom || 'N/A'}
                   </td>
                 )}
+                 {selectedColumns.has('secteur') && (
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {contact.secteur || 'N/A'}
+                  </td>
+                )}
                 {selectedColumns.has('entreprise') && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {contact.entreprise || 'N/A'}
                   </td>
                 )}
-                {selectedColumns.has('secteur') && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {contact.secteur || 'N/A'}
-                  </td>
-                )}
+               
                 {selectedColumns.has('prenom') && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {contact.prenom || 'N/A'}

@@ -42,6 +42,22 @@ from .serializers import (
     AttestationFormationListSerializer, AttestationFormationDetailSerializer, AttestationFormationEditSerializer,
 )
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.utils import timezone
+
+@api_view(['GET'])
+def check_relances_today(request):
+    """
+    Vérifie les offres qui ont une relance aujourd'hui
+    """
+    today = timezone.now().date()
+    relances = Offre.objects.filter(
+        relance=today,
+    ).values('reference', 'client__nom', 'montant')
+    
+    return Response(relances)
+
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, DepartmentPermission]
     

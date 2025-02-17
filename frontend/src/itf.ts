@@ -148,6 +148,12 @@ export interface Auditable {
     quartier: string | null;
     bp: string | null;
     notes: string | null;
+    entreprise: string | null;
+    ville_nom: string | null;
+    region: string | null;
+    secteur: string | null;
+    status: string | null;
+    agrement: string | null;
     
     created_at: string;
     updated_at: string;
@@ -165,6 +171,24 @@ export interface Auditable {
 
   export interface ContactEdit {
     nom?: string;
+    prenom?: string;
+    email?: string;
+    telephone?: string;
+    mobile?: string;
+    poste?: string;
+    service?: string;
+    role_achat?: string;
+    date_envoi?: string;
+    relance?: boolean;
+    client?: number;
+    adresse?: string;
+    ville?: number;
+    quartier?: string;
+    bp?: string;
+    notes?: string;
+  }
+  export interface ContactBase {
+    nom: string;
     prenom?: string;
     email?: string;
     telephone?: string;

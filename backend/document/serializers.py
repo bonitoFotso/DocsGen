@@ -86,9 +86,9 @@ class OffreListSerializer(serializers.ModelSerializer):
 class OffreDetailSerializer(serializers.ModelSerializer):
     entity = EntityDetailSerializer(read_only=True)
     client = ClientDetailSerializer(read_only=True)
-    sites = SiteListSerializer(many=True, read_only=True)
-    produit = ProductListSerializer(many=True, read_only=True)
-    
+    # sites = SiteListSerializer(many=True, read_only=True)
+    produits = ProductListSerializer(many=True, read_only=True)
+    produit = EntityDetailSerializer(read_only=True)
     class Meta:
         model = Offre
         fields = '__all__'
@@ -96,7 +96,7 @@ class OffreDetailSerializer(serializers.ModelSerializer):
 class OffreEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offre
-        fields = ['client', 'entity', 'statut', 'sites', 'produit','doc_type']
+        fields = ['client', 'entity', 'statut','produit', 'produits','doc_type']
 
 # Proforma Serializers
 class ProformaListSerializer(serializers.ModelSerializer):
@@ -111,6 +111,7 @@ class ProformaDetailSerializer(serializers.ModelSerializer):
     offre = OffreListSerializer(read_only=True)
     entity = EntityDetailSerializer(read_only=True)
     client = ClientDetailSerializer(read_only=True)
+    fichier = serializers.FileField(read_only=True)
     
     class Meta:
         model = Proforma
@@ -272,7 +273,7 @@ class RapportEditSerializer(serializers.ModelSerializer):
 class FormationEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = Formation
-        fields = ['affaire', 'client', 'titre', 'description', 'date_debut', 'date_fin']
+        fields = ['affaire', 'client', 'titre', 'description', 'date_debut', 'date_fin','rapport']
 
 # Participant Edit Serializer
 class ParticipantEditSerializer(serializers.ModelSerializer):

@@ -1,6 +1,6 @@
 import React from 'react';
 import { OffreDetail } from '@/interfaces';
-import { X, Building2, Package, MapPin, Calendar, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { X, Building2, Package, Calendar, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { formatDate } from '@/utils/dateHelpers';
 import { getStatusBadgeClass, getStatusIcon, getStatusLabel } from '@/utils/statusHelpers';
 
@@ -61,7 +61,7 @@ export const OffreDetails: React.FC<OffreDetailsProps> = ({
 
               <DetailSection icon={<Package className="h-5 w-5 text-gray-400" />} title="Produits">
                 <ul className="space-y-2">
-                  {offre.produit.map((product) => (
+                  {offre.produits.map((product) => (
                     <li key={product.id} className="flex items-center gap-2 text-gray-600">
                       <span className="w-2 h-2 bg-purple-400 rounded-full" />
                       {product.name}
@@ -70,16 +70,6 @@ export const OffreDetails: React.FC<OffreDetailsProps> = ({
                 </ul>
               </DetailSection>
 
-              <DetailSection icon={<MapPin className="h-5 w-5 text-gray-400" />} title="Sites">
-                <ul className="space-y-2">
-                  {offre.sites.map((site) => (
-                    <li key={site.id} className="flex items-center gap-2 text-gray-600">
-                      <span className="w-2 h-2 bg-indigo-400 rounded-full" />
-                      {site.nom}
-                    </li>
-                  ))}
-                </ul>
-              </DetailSection>
 
               <DetailSection icon={<Calendar className="h-5 w-5 text-gray-400" />} title="Dates">
                 <div className="space-y-2 text-sm text-gray-600">

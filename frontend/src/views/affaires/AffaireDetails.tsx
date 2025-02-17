@@ -220,7 +220,6 @@ export const AffaireDetails = ({ affaire, onClose }: AffaireDetailsProps) => {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">{rapport.reference}</p>
-                              <p className="text-sm text-gray-500">{rapport.site.nom}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useServices } from '@/AppHooks';
-import { RapportBase, RapportDetail, RapportEdit, AffaireBase, SiteBase, ProductBase, DocumentStatus } from '@/interfaces';
+import { RapportBase, RapportDetail, RapportEdit, AffaireBase, ProductBase, DocumentStatus } from '@/interfaces';
 import { PlusCircle, Pencil, Trash2, X, AlertCircle, Loader2, FileText, Building2, Calendar, CheckCircle2, Clock, Send, XCircle, MapPin, Package } from 'lucide-react';
 
 const getStatusLabel = (status: DocumentStatus): string => {
@@ -62,7 +62,7 @@ const RapportManagement = () => {
   const { rapportService, affaireService, siteService, productService } = useServices();
   const [rapports, setRapports] = useState<RapportBase[]>([]);
   const [affaires, setAffaires] = useState<AffaireBase[]>([]);
-  const [sites, setSites] = useState<SiteBase[]>([]);
+  // const [sites, setSites] = useState<SiteBase[]>([]);
   const [products, setProducts] = useState<ProductBase[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentRapport, setCurrentRapport] = useState<RapportDetail | null>(null);
@@ -73,7 +73,7 @@ const RapportManagement = () => {
 
   const [formData, setFormData] = useState<RapportEdit>({
     affaire: 0,
-    site: 0,
+    // site: 0,
     produit: 0,
     statut: 'BROUILLON'
   });
@@ -81,7 +81,7 @@ const RapportManagement = () => {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rapportsData, affairesData, sitesData, productsData] = await Promise.all([
+      const [rapportsData, affairesData, productsData] = await Promise.all([
         rapportService.getAll(),
         affaireService.getAll(),
         siteService.getAll(),
@@ -89,7 +89,7 @@ const RapportManagement = () => {
       ]);
       setRapports(rapportsData);
       setAffaires(affairesData);
-      setSites(sitesData);
+      // setSites(sitesData);
       setProducts(productsData);
     } catch (err) {
       console.error(err);
@@ -130,7 +130,7 @@ const RapportManagement = () => {
       setCurrentRapport(detailedRapport);
       setFormData({
         affaire: detailedRapport.affaire.id,
-        site: detailedRapport.site.id,
+        // site: detailedRapport.site.id,
         produit: detailedRapport.produit.id,
         statut: detailedRapport.statut
       });
@@ -160,7 +160,7 @@ const RapportManagement = () => {
     setCurrentRapport(null);
     setFormData({
       affaire: 0,
-      site: 0,
+      // site: 0,
       produit: 0,
       statut: 'BROUILLON'
     });
@@ -270,12 +270,7 @@ const RapportManagement = () => {
                         <span>{rapport.affaire.reference}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        <span>{rapport.site.nom}</span>
-                      </div>
-                    </td>
+                    
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <Package className="h-4 w-4 mr-2" />
@@ -357,20 +352,7 @@ const RapportManagement = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Site</label>
-                    <select
-                      value={formData.site}
-                      onChange={(e) => setFormData({ ...formData, site: Number(e.target.value) })}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200"
-                    >
-                      <option value="">Sélectionnez un site</option>
-                      {sites.map(site => (
-                        <option key={site.id} value={site.id}>{site.nom}</option>
-                      ))}
-                    </select>
-                  </div>
+              
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Produit</label>

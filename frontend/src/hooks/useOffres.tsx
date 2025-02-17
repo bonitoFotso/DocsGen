@@ -23,8 +23,9 @@ export const useOffres = () => {
     client: 0,
     entity: 0,
     doc_type: 'OFF',
-    produit: [],
-    sites: [],
+    produit: 0,
+    produits: [],
+    // sites: [],
     statut: 'BROUILLON',
   });
 
@@ -64,9 +65,9 @@ export const useOffres = () => {
     console.log('Submitting form', formData);
     try {
       if (currentOffre) {
-        await offreService.update(currentOffre.id, { ...formData, doc_type: 'OFF' });
+        await offreService.update(currentOffre.id, { ...formData, doc_type: 'OFF', produit:formData.produits[0] });
       } else {
-        await offreService.create({ ...formData, doc_type: 'OFF' });
+        await offreService.create({ ...formData, doc_type: 'OFF' , produit:formData.produits[0] });
       }
       setIsModalOpen(false);
       await loadData();
@@ -100,8 +101,9 @@ export const useOffres = () => {
       setFormData({
         client: detailedOffre.client.id,
         entity: detailedOffre.entity.id,
-        produit: detailedOffre.produit.map((p) => p.id),
-        sites: detailedOffre.sites.map((s) => s.id),
+        produit: detailedOffre.produit?.id,
+        produits: detailedOffre.produits.map((p) => p.id),
+        // sites: detailedOffre.sites.map((s) => s.id),
         statut: detailedOffre.statut,
         doc_type: detailedOffre.doc_type,
       });
@@ -132,8 +134,9 @@ export const useOffres = () => {
     setFormData({
       client: 0,
       entity: 0,
-      produit: [],
-      sites: [],
+      produit: 0,
+      produits: [],
+      // sites: [],
       statut: 'BROUILLON',
       doc_type: 'OFF',
     });

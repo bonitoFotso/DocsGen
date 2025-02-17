@@ -1,6 +1,5 @@
 from django.db import models
 
-from document import AuditableMixin
 from django.core.validators import RegexValidator
 from django.utils.timezone import now
 

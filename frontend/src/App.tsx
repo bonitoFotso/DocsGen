@@ -15,6 +15,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
 import ContactsGridView from './views/contacts/ContactsGridView';
 import { ContactsPage } from './views/contacts/ContactsPage';
+import FactureManagement from './views/factures/Facture';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="sites" element={<SiteManagement />} />
             <Route path="offres" element={<OffreManagement/>} />
             <Route path="affaires" element={<AffaireManagement/>} />
+            <Route path="factures" element={<FactureManagement/>} />
             <Route path="proformas" element={<ProformaManagement/>} />
             <Route path="rapports" element={<RapportManagement/>} />
             <Route path="products" element={<ProductManagement />} />

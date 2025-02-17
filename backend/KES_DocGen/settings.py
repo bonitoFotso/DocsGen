@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'channels',
 
 
     'document.apps.DocumentConfig',
@@ -50,7 +51,6 @@ INSTALLED_APPS = [
     "client",
     "courrier",
 ]
-
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
     'django.middleware.security.SecurityMiddleware',
@@ -67,7 +67,14 @@ ROOT_URLCONF = 'KES_DocGen.urls'
 # Configuration de l'authentification
 AUTH_USER_MODEL = "api_user.User"
 
-
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        #'CONFIG': {
+        #    "hosts": [('127.0.0.1', 6379)],
+        #},
+    },
+}
 
 TEMPLATES = [
     {
@@ -87,6 +94,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'KES_DocGen.wsgi.application'
+ASGI_APPLICATION = "KES_DocGen.asgi.application"
 
 
 # Database

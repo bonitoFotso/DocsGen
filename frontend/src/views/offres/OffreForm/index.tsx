@@ -52,15 +52,14 @@ export const OffreForm: React.FC<OffreFormProps> = ({
 
   const tabs = [
     { id: 'info', label: 'Informations générales' },
-    { id: 'products', label: 'Produits', count: formData.produit.length },
-    { id: 'sites', label: 'Sites', count: formData.sites?.length },
+    { id: 'products', label: 'Produits', count: formData.produits.length },
   ] as const;
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl transform transition-all animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-3xl w-full max-w-6xl shadow-2xl transform transition-all animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-8 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-sm z-20">
+        <div className="p-6 border-b border-gray-100 sticky top-0 bg-white/80 backdrop-blur-sm z-20">
           <div className="flex justify-between items-center">
             <div className="space-y-1.5">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
@@ -115,7 +114,7 @@ export const OffreForm: React.FC<OffreFormProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="p-8 border-t sticky bottom-0 bg-white/80 backdrop-blur-sm z-20">
+        <div className="p-4 border-t sticky bottom-0 bg-white/80 backdrop-blur-sm z-20">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Info className="w-4 h-4" />

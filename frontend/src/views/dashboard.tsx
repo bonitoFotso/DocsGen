@@ -26,7 +26,6 @@ import {
   Bar
 } from 'recharts';
 import { Card } from '@/common/CustomCard';
-
 const mockMonthlyData = [
   { month: 'Jan', documents: 65 },
   { month: 'Fév', documents: 59 },

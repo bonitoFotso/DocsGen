@@ -1,14 +1,16 @@
+from datetime import timedelta
 from django.db import models, transaction
 from django.core.validators import RegexValidator
 from django.db.models import Max
+from django.dispatch import receiver
 from django.utils.timezone import now
 from django_fsm import FSMField, transition
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-
-from client.models import AuditableMixin, Client, Site
-
-
+from client.models import AuditableMixin, Client, Contact, Site
+from django.db.models import signals
+import channels.layers
+from asgiref.sync import async_to_sync
 class Entity(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=3,
@@ -85,6 +87,11 @@ class Document(models.Model):
         max_length=3,
         validators=[RegexValidator(regex='^[A-Z]{3}$')]
     )  # PRF, FAC, etc.
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
     sequence_number = models.IntegerField()
     fichier = models.FileField(upload_to='documents/', blank=True, null=True)
 
@@ -120,14 +127,79 @@ class Document(models.Model):
 
 
 class Offre(Document):
+    
+    STATUS_CHOICES = [
+        ('BROUILLON', 'Brouillon'),
+        ('ENVOYE', 'Envoyé'),
+        ('GAGNE', 'Gagné'),
+        ('PERDU', 'Perdu'),
+    ]
+    
     produits = models.ManyToManyField(Product)
     produit = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offres")
     date_modification = models.DateTimeField(auto_now=True)
     date_validation = models.DateTimeField(blank=True, null=True)  # Date d'acceptation
-    #sites = models.ManyToManyField(Site)
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="offres")
+    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='BROUILLON'
+    )
+    
+    relance = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Date de la prochaine relance si l'offre n'est pas encore gagnée"
+    )
+    
+    DELAIS_RELANCE = {
+        'ENVOYE': 7,  # Première relance après 7 jours
+        'EN_NEGOCIATION': 5,  # Relance tous les 5 jours pendant la négociation
+    }
+
+    def set_relance(self):
+        """
+        Configure la prochaine date de relance si l'offre n'est pas gagnée/perdue
+        """
+        if self.statut in ['GAGNE', 'PERDU']:
+            self.relance = None
+            return
+
+        if self.statut in self.DELAIS_RELANCE:
+            # Si une relance existe déjà, on ajoute le délai à la date actuelle
+            # Sinon on l'ajoute à la dernière modification
+            base_date = now() if not self.relance else self.relance
+            self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
 
 
+    @property
+    def necessite_relance(self):
+        """
+        Indique si l'offre nécessite une relance maintenant
+        """
+        return (
+            self.relance 
+            and self.relance <= now() 
+            and self.statut not in ['GAGNE', 'PERDU']
+        )
+        
+    @transaction.atomic
     def save(self, *args, **kwargs):
+        
+        if self.statut == 'GAGNE':
+            self.date_validation = self.date_validation or now()
+            self.relance = None  # Plus besoin de relance si validée
+            self.creer_affaire()
+        elif self.statut == 'PERDU':
+            self.relance = None  # Plus besoin de relance si perdue
+        else:
+            # Met à jour la date de relance pour les autres statuts
+            self.set_relance()
+
+        
+        
         if not self.reference:
             if not self.sequence_number:
                 last_sequence = Offre.objects.filter(
@@ -186,7 +258,26 @@ class Offre(Document):
 
         return proforma,affaire
 
-
+# Signal pour notifier le frontend quand une relance est nécessaire
+@receiver(signals.post_save, sender=Offre)
+def notify_frontend_relance(sender, instance, **kwargs):
+    if instance.necessite_relance:
+        channel_layer = channels.layers.get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "notifications",  # Nom du groupe de notification
+            {
+                "type": "send_notification",
+                "message": {
+                    "type": "RELANCE_REQUISE",
+                    "offre_id": instance.id,
+                    "reference": instance.reference,
+                    "client": instance.client.nom,
+                    "date_relance": instance.relance.isoformat(),
+                    "montant": str(instance.montant),
+                    "statut": instance.statut,
+                }
+            }
+        )
 
 class Proforma(Document):
     offre = models.OneToOneField(Offre, on_delete=models.CASCADE, related_name="proforma")
@@ -236,7 +327,7 @@ class Affaire(Document):
         Rapport.objects.filter(affaire=self).delete()
         
         # Crée un rapport pour chaque combinaison site-produit
-        for produit in self.offre.produit.all():
+        for produit in self.offre.produits.all():
             Rapport.objects.create(
                 affaire=self,
                 produit=produit,
@@ -261,6 +352,18 @@ class Affaire(Document):
             description=f"Formation {produit.name} pour le site {self.client.nom}"
         )
         return formation
+    
+    def cree_facture(self):
+        """Crée une facture pour l'affaire"""
+        from .models import Facture
+        facture = Facture.objects.create(
+            affaire=self,
+            client=self.client,
+            entity=self.entity,
+            doc_type='FAC',
+            statut='BROUILLON'
+        )
+        return facture
 
     def save(self, *args, **kwargs):
         creating = not self.pk  # Vérifie si c'est une création
@@ -280,13 +383,14 @@ class Affaire(Document):
                     ).aggregate(Max('sequence_number'))['sequence_number__max']
                     self.sequence_number = (last_sequence or 0) + 1
                 date = self.date_creation or now()
-                self.reference = f"AFF/{str(date.year)[-2:]}{date.month:02d}{date.day}/{self.sequence_number:04d}"
+                self.reference = f"AFF{str(date.year)[-2:]}{date.month:02d}{date.day}{self.sequence_number:04d}"
 
         super().save(*args, **kwargs)
 
-        if creating:
+        if self.statut == 'VALIDE':
             # Crée les rapports après la sauvegarde initiale
             self.cree_rapports()
+            self.cree_facture()
 
     def __str__(self):
         return f"Affaire {self.reference} - {self.offre.client.nom}"
@@ -306,7 +410,7 @@ class Facture(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_factures_client = Facture.objects.filter(client=self.affaire.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.affaire.reference}/{self.affaire.offre.produit}/{total_factures_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{self.affaire.reference}/{self.affaire.offre.produit}/{total_factures_client}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 
@@ -332,7 +436,7 @@ class Rapport(Document):
             total_rapports_client = Rapport.objects.filter(client=self.affaire.client).count() + 1
             total_category_rapports = Rapport.objects.filter(client=self.affaire.client,produit__category=self.produit.category).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/RAP/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.affaire.reference}/{total_category_rapports}/{self.produit.code}/{total_rapports_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/RAP/{self.client.c_num}/{self.affaire.reference}/{total_category_rapports}/{self.produit.code}/{total_rapports_client}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 
@@ -355,6 +459,7 @@ class Participant(AuditableMixin, models.Model):
     email = models.EmailField(blank=True, null=True)
     telephone = models.CharField(max_length=15, blank=True, null=True)
     fonction = models.CharField(max_length=100, blank=True, null=True)
+    photo = models.ImageField(upload_to='participants/', blank=True, null=True)
     formation = models.ForeignKey(Formation, on_delete=models.CASCADE, related_name="participants")
 
     def __str__(self):

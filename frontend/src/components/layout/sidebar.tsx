@@ -37,6 +37,7 @@ const navigation = [
       { name: 'Offres', href: '/offres', icon: FileText },
       { name: 'Affaires', href: '/affaires', icon: FileText },
       { name: 'Proformas', href: '/proformas', icon: FileText },
+      { name: 'Factures', href: '/factures', icon: FileText },
     ]
   },
   { name: 'Produits', href: '/products', icon: Package, category: 'business' },

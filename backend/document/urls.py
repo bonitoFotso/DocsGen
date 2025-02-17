@@ -1,5 +1,7 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
+
+from document import consumers
 from .views import (
     EntityViewSet,
     ClientViewSet,
@@ -14,6 +16,7 @@ from .views import (
     FormationViewSet,
     ParticipantViewSet,
     AttestationFormationViewSet,
+    check_relances_today,
 )
 
 # Création du router
@@ -41,7 +44,11 @@ urlpatterns = [
     
     # URLs d'authentification de DRF
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
-]
+    path('check-relances/', check_relances_today, name='check-relances'),
+    #re_path(r'ws/notifications/$', consumers.NotificationConsumer.as_asgi()),
+
+    ]
+
 
 # Les URLs générées seront du type :
 # /api/entities/

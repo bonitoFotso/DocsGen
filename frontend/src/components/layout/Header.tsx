@@ -2,6 +2,7 @@ import React from 'react';
 import { Bell, LogOut, Search, User, Moon, Sun, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { OffresNotifications } from '../OffresNotifications';
 
 interface HeaderProps {
   isScrolled?: boolean;
@@ -183,6 +184,7 @@ export function Header({ isScrolled }: HeaderProps) {
               </div>
             )}
           </div>
+          
 
           {/* Logout */}
           <button

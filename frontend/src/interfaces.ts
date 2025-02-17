@@ -107,6 +107,7 @@ interface DocumentBase extends BaseModel {
   statut: DocumentStatus;
   doc_type: string;
   sequence_number: number;
+  fichier?:string;
 }
 
 // Offre Interfaces
@@ -118,10 +119,12 @@ interface OffreBase extends DocumentBase {
 
 interface OffreDetail extends OffreBase {
   client_nom: string;
-  produit: ProductBase[];
-  sites: SiteBase[];
+  produit?: ProductBase;
+  produits: ProductBase[];
+  // sites: SiteBase[];
   client: ClientBase;
   entity: EntityBase;
+  contact: ContactBase[];
   proforma?: ProformaBase;
   affaire?: AffaireBase;
 }
@@ -129,8 +132,9 @@ interface OffreDetail extends OffreBase {
 interface OffreEdit {
   client: number;
   entity: number;
-  produit: number[];
-  sites: number[];
+  produit?: number;
+  produits: number[];
+  contact: number[];
   statut: DocumentStatus;
   doc_type: string;
 }
@@ -211,7 +215,7 @@ interface FactureEdit {
 // Rapport Interfaces
 interface RapportBase extends DocumentBase {
   affaire: AffaireBase;
-  site: SiteBase;
+  // site: SiteBase;
   produit: ProductBase;
 }
 
@@ -221,7 +225,7 @@ interface RapportDetail extends RapportBase {
 
 interface RapportEdit {
   affaire: number;
-  site: number;
+  // site: number;
   produit: number;
   statut: DocumentStatus;
 }
