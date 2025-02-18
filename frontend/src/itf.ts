@@ -154,6 +154,7 @@ export interface Auditable {
     secteur: string | null;
     status: string | null;
     agrement: string | null;
+    categorie: string | null;
     
     created_at: string;
     updated_at: string;

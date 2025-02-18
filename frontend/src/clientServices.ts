@@ -119,6 +119,10 @@ export const contactService = {
     const { data } = await api.get<ContactList[]>('/contacts/');
     return data;
   },
+  getAllcc: async () => {
+    const { data } = await api.get<ContactList[]>('/contact2/');
+    return data;
+  },
 
   getAlls: async () => {
     const { data } = await api.get<Contact[]>('/contacts-detailles/');

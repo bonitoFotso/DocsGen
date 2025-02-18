@@ -70,21 +70,33 @@ class Ville(models.Model):
     def description(self):
         return f"La ville de {self.nom} est située dans la région de {self.region.nom}, dans le pays de {self.region.pays.nom}. Sa population est estimée à {self.population if self.population is not None else 'inconnue'}."
 
-from django.db import models
-from django.utils.timezone import now
+class Categorie(models.Model):
+    cat_choice = (
+        ('PME', 'PME'),
+        ('TPE', 'TPE'),
+        ('PE', 'PE'),
+        ('GE', 'GE'),
+    )
+    nom = models.CharField(max_length=255, choices=cat_choice)
+
+    def __str__(self):
+        return self.nom
+
 
 class Client(AuditableMixin, models.Model):
     nom = models.CharField(max_length=255)
     email = models.EmailField(blank=True, null=True)
-    telephone = models.CharField(max_length=15, blank=True, null=True)
+    telephone = models.CharField(max_length=20, blank=True, null=True)
     adresse = models.TextField(blank=True, null=True)
     c_num = models.CharField(max_length=10, blank=True, null=True)
     ville = models.ForeignKey(Ville, on_delete=models.CASCADE, blank=True, null=True)
+    is_client = models.BooleanField(default=False)
     
     # Nouveaux champs
     secteur_activite = models.CharField(max_length=255, blank=True, null=True, verbose_name="Secteur d'activité")
+    categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, blank=True, null=True, verbose_name="Catégorie")
     address = models.TextField(blank=True, null=True, verbose_name="Adresse")
-    bp = models.CharField(max_length=10, blank=True, null=True, verbose_name="Boîte Postale")
+    bp = models.CharField(max_length=20, blank=True, null=True, verbose_name="Boîte Postale")
     quartier = models.CharField(max_length=255, blank=True, null=True, verbose_name="Quartier")
     matricule = models.CharField(max_length=20, blank=True, null=True, verbose_name="Matricule")
     agreer = models.BooleanField(default=False, verbose_name="Agréé")
@@ -107,7 +119,7 @@ class Site(AuditableMixin, models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     localisation = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    s_num = models.CharField(max_length=10, blank=True, null=True)
+    s_num = models.CharField(max_length=15, blank=True, null=True)
     ville = models.ForeignKey(Ville, on_delete=models.CASCADE, blank=True, null=True)
 
     def save(self, *args, **kwargs):
@@ -128,13 +140,15 @@ class Contact(models.Model):
     nom = models.CharField(max_length=255, verbose_name="Nom",blank=True, null=True,)
     prenom = models.CharField(max_length=255, blank=True, null=True, verbose_name="Prénom")
     email = models.EmailField(blank=True, null=True, verbose_name="Email")
-    telephone = models.CharField(max_length=15, blank=True, null=True, verbose_name="Téléphone")
-    mobile = models.CharField(max_length=15, blank=True, null=True, verbose_name="Mobile")
+    telephone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Téléphone")
+    mobile = models.CharField(max_length=20, blank=True, null=True, verbose_name="Mobile")
     poste = models.CharField(max_length=255, blank=True, null=True, verbose_name="Poste")
     service = models.CharField(max_length=255, blank=True, null=True, verbose_name="Service")
     role_achat = models.CharField(max_length=255, blank=True, null=True, verbose_name="Rôle dans les achats")
     date_envoi = models.DateField(blank=True, null=True, verbose_name="Date d'envoi")
     relance = models.BooleanField(default=False, verbose_name="Relance")
+    source = models.CharField(max_length=255, blank=True, null=True, verbose_name="Source")
+    valide = models.BooleanField(default=True, verbose_name="Valide")
     # Relation avec le modèle Client
     client = models.ForeignKey(
         'Client',  # Remplacez 'Client' par le nom de votre modèle Client si nécessaire

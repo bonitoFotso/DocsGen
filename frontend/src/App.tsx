@@ -14,8 +14,11 @@ import LoginPage from './views/auth/login';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
 import ContactsGridView from './views/contacts/ContactsGridView';
-import { ContactsPage } from './views/contacts/ContactsPage';
+// mport { ContactsPage } from './views/contacts/Contacts';
 import FactureManagement from './views/factures/Facture';
+import DataTable from './views/contacts/DataTable';
+import ContactsPage from './views/contacts/contacts2';
+import ClientTable from './views/contacts/components/ClientTable';
 
 function App() {
   return (
@@ -39,8 +42,8 @@ function App() {
             <Route path="rapports" element={<RapportManagement/>} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="formations" element={<FormationManagement />} />
-            <Route path="contacts" element={<ContactsPage />} />
-            <Route path="contacts_grid" element={<ContactsGridView />} />
+            <Route path="contacts" element={<ClientTable />} />
+            <Route path="contacts_grid" element={<ContactsPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

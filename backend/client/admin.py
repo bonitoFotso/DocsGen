@@ -1,7 +1,7 @@
 # admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Pays, Region, Ville, Client, Site, Contact
+from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
 @admin.register(Pays)
 class PaysAdmin(admin.ModelAdmin):
@@ -42,10 +42,17 @@ class SiteInline(admin.TabularInline):
     model = Site
     extra = 0
     fields = ('nom', 's_num', 'localisation', 'ville')
+    
+@admin.register(Categorie)
+class CategorieAdmin(admin.ModelAdmin):
+    list_display = ('nom',)
+    search_fields = ('nom',)
+    ordering = ('nom',)
+    
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'c_num', 'email', 'telephone', 'ville', 'secteur_activite', 
+    list_display = ('nom', 'c_num', 'email','is_client' , 'telephone', 'ville', 'secteur_activite', 'categorie', 
                    'agreer', 'agreement_fournisseur', 'get_contacts_count', 'get_created_at')
     list_filter = ('ville__region__pays', 'ville__region', 'ville', 'agreer', 
                   'agreement_fournisseur', 'created_at')
@@ -59,7 +66,7 @@ class ClientAdmin(admin.ModelAdmin):
             'fields': ('address', 'bp', 'quartier', 'ville')
         }),
         ('Informations commerciales', {
-            'fields': ('secteur_activite', 'matricule', 'agreer', 'agreement_fournisseur', 'entite')
+            'fields': ('secteur_activite', 'matricule', 'agreer', 'agreement_fournisseur', 'entite', 'is_client', 'categorie')
         }),
         ('Audit', {
             'classes': ('collapse',),

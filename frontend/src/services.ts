@@ -67,6 +67,10 @@ export const clientService = {
     const { data } = await api.get<ClientBase[]>('/clients/');
     return data;
   },
+  getAllcc: async () => {
+    const { data } = await api.get<ClientBase[]>('/clientsContacts/');
+    return data;
+  },
   getById: async (id: number) => {
     const { data } = await api.get<ClientDetail>(`/clients/${id}/`);
     return data;

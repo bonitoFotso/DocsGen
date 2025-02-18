@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TableHeader } from '@/components/TableHeader';
+import ExportDialog from './ExportDialog';
 
 type SortField = keyof Contact | 'ville_nom' | 'client_nom';
 
@@ -171,9 +172,10 @@ const ContactsGridView = () => {
               </div>
             </div>
           </div>
-          <button className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors" title="Exporter">
-            <Download className="h-5 w-5 text-gray-500" />
-          </button>
+          <ExportDialog
+  contacts={filteredAndSortedContacts}
+  selectedColumns={selectedColumns}
+/>
           <button className="p-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors" title="Importer">
             <Upload className="h-5 w-5 text-gray-500" />
           </button>

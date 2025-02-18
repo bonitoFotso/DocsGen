@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Pays, Region, Ville, Client, Site, Contact
+from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
 class PaysListSerializer(serializers.ModelSerializer):
     nombre_de_regions = serializers.IntegerField(read_only=True)
@@ -159,6 +159,7 @@ class ContactDetailedSerializer(serializers.ModelSerializer):
    secteur = serializers.CharField(source='client.secteur_activite', default='N/A')
    agrement = serializers.BooleanField(source='client.agreer', default=False)
    status = serializers.SerializerMethodField()
+   categorie = serializers.CharField(source='client.categorie', default='N/A')
 
    def get_status(self, obj):
        return 'Actif' if obj.relance else 'Inactif'
@@ -166,7 +167,38 @@ class ContactDetailedSerializer(serializers.ModelSerializer):
    class Meta:
        model = Contact
        fields = [
-           'id', 'region', 'ville_nom', 'entreprise', 'secteur',
+           'id', 'region', 'ville_nom', 'entreprise', 'secteur','categorie',
            'prenom', 'nom', 'poste', 'service', 'role_achat',
            'telephone', 'email', 'status', 'agrement'
        ]
+
+class CategoryListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Categorie
+        fields = ['id', 'nom']
+
+class ContactSerializer(serializers.ModelSerializer):
+    site = SiteListSerializer(read_only=True)
+    class Meta:
+        model = Contact
+        fields = ['id', 'nom', 'prenom', 'email', 'telephone', 'poste', 'service', 
+                 'role_achat', 'source', 'valide', 'date_envoi', 'relance','site']
+class ClientWithContactsListSerializer(serializers.ModelSerializer):
+    contacts_count = serializers.IntegerField(source='contacts.count', read_only=True)
+    contacts = ContactSerializer(many=True, read_only=True)
+    ville = VilleListSerializer(read_only=True)
+    categorie = CategoryListSerializer(read_only=True)
+
+    class Meta:
+        model = Client
+        fields = ['id', 'nom', 'c_num', 'email', 'telephone', 'matricule', 'categorie',
+                 'ville', 'agreer', 'agreement_fournisseur', 'secteur_activite',
+                 'contacts_count', 'contacts', 'entite']
+
+class ClientWithContactsDetailSerializer(serializers.ModelSerializer):
+    contacts = ContactSerializer(many=True, read_only=True)
+    contacts_count = serializers.IntegerField(source='contacts.count', read_only=True)
+
+    class Meta:
+        model = Client
+        fields = '__all__'

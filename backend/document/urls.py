@@ -4,8 +4,6 @@ from rest_framework.routers import DefaultRouter
 from document import consumers
 from .views import (
     EntityViewSet,
-    ClientViewSet,
-    SiteViewSet,
     CategoryViewSet,
     ProductViewSet,
     OffreViewSet,
