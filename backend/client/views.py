@@ -1,6 +1,10 @@
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 
+from client.ser import ClientDetailSerializer
+
+
+
 
 from .models import Pays, Region, Ville, Client, Site, Contact
 from rest_framework import viewsets
@@ -10,7 +14,7 @@ from .serializers import (
     ClientWithContactsDetailSerializer, ClientWithContactsListSerializer, ContactDetailedSerializer, PaysListSerializer, PaysDetailSerializer, PaysEditSerializer,
     RegionListSerializer, RegionDetailSerializer, RegionEditSerializer,
     VilleListSerializer, VilleDetailSerializer, VilleEditSerializer,
-    ClientListSerializer, ClientDetailSerializer, ClientEditSerializer,
+    ClientListSerializer, ClientEditSerializer,
     SiteListSerializer, SiteDetailSerializer, SiteEditSerializer,
     ContactListSerializer, ContactDetailSerializer, ContactEditSerializer
 )
@@ -64,6 +68,7 @@ class ClientViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'list':
+            print('List')
             return ClientListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
             return ClientEditSerializer

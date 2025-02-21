@@ -16,6 +16,7 @@ const contactSchema = z.object({
   date_envoi: z.string().optional().nullable(),
   relance: z.boolean().optional(),
   client: z.number().optional().nullable(),
+  site: z.number().optional().nullable(),
   adresse: z.string().optional().nullable(),
   ville: z.number().optional().nullable(),
   quartier: z.string().optional().nullable(),

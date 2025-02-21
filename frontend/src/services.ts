@@ -16,6 +16,7 @@ import type {
   ProformaEditStatus,
 } from './interfaces';
 import { AffaireDetails } from './affaireType';
+import { Client } from './views/contacts/components/ClientTable';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -68,7 +69,7 @@ export const clientService = {
     return data;
   },
   getAllcc: async () => {
-    const { data } = await api.get<ClientBase[]>('/clientsContacts/');
+    const { data } = await api.get<Client[]>('/clientsContacts/');
     return data;
   },
   getById: async (id: number) => {

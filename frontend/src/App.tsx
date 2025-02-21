@@ -42,7 +42,7 @@ function App() {
             <Route path="rapports" element={<RapportManagement/>} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="formations" element={<FormationManagement />} />
-            <Route path="contacts" element={<ClientTable />} />
+            <Route path="contacts" element={<ContactsPage />} />
             <Route path="contacts_grid" element={<ContactsPage />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

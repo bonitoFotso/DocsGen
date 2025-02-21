@@ -102,6 +102,21 @@ class Client(AuditableMixin, models.Model):
     agreer = models.BooleanField(default=False, verbose_name="Agréé")
     agreement_fournisseur = models.BooleanField(default=False, verbose_name="Agreement Fournisseur")
     entite = models.CharField(max_length=255, blank=True, null=True, verbose_name="Entité")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="clients_created"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="clients_updated"
+    )
 
     def __str__(self):
         return self.nom
@@ -122,6 +137,20 @@ class Site(AuditableMixin, models.Model):
     s_num = models.CharField(max_length=15, blank=True, null=True)
     ville = models.ForeignKey(Ville, on_delete=models.CASCADE, blank=True, null=True)
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="sites_created"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="sites_updated"
+    )
     def save(self, *args, **kwargs):
         if not self.s_num:
             last_site = Site.objects.filter(
@@ -184,9 +213,21 @@ class Contact(models.Model):
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Date de mise à jour")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="contacts_created"
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="contacts_updated"
+    )
 
     def __str__(self):
-        return f"{self.nom} {self.prenom}" if self.prenom else self.nom
+        return f"{self.nom} {self.prenom}" if self.prenom else self.email
 
     class Meta:
         verbose_name = "Contact"

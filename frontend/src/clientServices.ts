@@ -18,7 +18,7 @@ export const paysService = {
 
 export const regionService = {
   getAll: async () => {
-    const { data } = await api.get<Region>('/regions/');
+    const { data } = await api.get<Region[]>('/regions/');
     return data;
   },
 
@@ -36,7 +36,7 @@ export const regionService = {
 
 export const villeService = {
   getAll: async () => {
-    const { data } = await api.get<Ville>('/villes/');
+    const { data } = await api.get<Ville[]>('/villes/');
     return data;
   },
 
@@ -148,7 +148,7 @@ export const contactService = {
     return data;
   },
 
-  delete: async (id: number) => {
+  delete: async (id: string | number) => {
     await api.delete(`/contacts/${id}/`);
   }
 };

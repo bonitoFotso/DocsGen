@@ -35,7 +35,7 @@ export interface Auditable {
   export interface Ville {
     id: number;
     nom: string;
-    region: number;
+    region: Region;
     region_details?: Region;
     nom_complet?: string;
   }
@@ -187,6 +187,7 @@ export interface Auditable {
     quartier?: string;
     bp?: string;
     notes?: string;
+    site?: number;
   }
   export interface ContactBase {
     nom: string;

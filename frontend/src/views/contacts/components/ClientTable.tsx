@@ -1,25 +1,36 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  ChevronDown,
-  ChevronUp,
   Users,
   Building2,
   MapPin,
   Briefcase,
   ArrowUpDown,
 } from 'lucide-react';
-import { _ } from 'lodash';
+import _  from 'lodash';
 import { useServices } from '@/AppHooks';
-import ContactsTable from './ContactsTable2'; // Corrected import path
+import ContactsTable from './ContactsTable2';
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import ClientSearch from './ClientSearch';
+import ContactModal from '../ContactModal';
+import { ContactEdit } from '@/itf';
+
+import { useFilters } from '@/hooks/useFilters';
 
 interface Contact {
   id: number;
@@ -30,6 +41,11 @@ interface Contact {
   poste: string;
   service: string;
   role_achat: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
 }
 
 interface Client {
@@ -52,7 +68,12 @@ interface Client {
   secteur_activite: string;
   contacts: Contact[];
   agreer: boolean;
-    entite: string;
+  entite: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
 }
 
 interface SortConfig {
@@ -60,18 +81,49 @@ interface SortConfig {
   direction: 'asc' | 'desc';
 }
 
-// Subcomponents
-const TableHeader = ({ 
-  label, 
-  sortKey, 
-  sortConfig, 
-  onSort 
-}: { 
-  label: string; 
+interface DeleteConfirmationModalProps {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isSubmitting: boolean;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  isSubmitting
+}) => (
+  <AlertDialog open={true}>
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>{title}</AlertDialogTitle>
+        <AlertDialogDescription>{message}</AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel onClick={onCancel} disabled={isSubmitting}>
+          Annuler
+        </AlertDialogCancel>
+        <AlertDialogAction 
+          onClick={onConfirm}
+          disabled={isSubmitting}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          Supprimer
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+);
+
+const TableHeader: React.FC<{
+  label: string;
   sortKey?: keyof Client;
   sortConfig: SortConfig;
   onSort: (key: keyof Client) => void;
-}) => (
+}> = ({ label, sortKey, sortConfig, onSort }) => (
   <th className="p-4 text-left">
     <button
       className="flex items-center gap-2 hover:text-gray-700"
@@ -87,63 +139,83 @@ const TableHeader = ({
   </th>
 );
 
-
-const ClientTable = () => {
+const ClientTable: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [groupBy, setGroupBy] = useState<string>('');
+  const [groupBy, setGroupBy] = useState<'none' | 'region' | 'ville_nom' | 'entreprise' | 'secteur' | 'categorie'>('none');
   const [expandedRows, setExpandedRows] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-  };
-
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategories(prev => [...prev, category]);
-  };
-
-  const handleCategoryRemove = (category: string) => {
-    setSelectedCategories(prev => prev.filter(c => c !== category));
-  };
-
-  const handleVilleSelect = (ville: string) => {
-    setSelectedVilles(prev => [...prev, ville]);
-  };
-
-  const handleVilleRemove = (ville: string) => {
-    setSelectedVilles(prev => prev.filter(v => v !== ville));
-  };
-
-  const handleSecteurSelect = (secteur: string) => {
-    setSelectedSecteurs(prev => [...prev, secteur]);
-  };
-
-  const [selectedSecteurs, setSelectedSecteurs] = useState<string[]>([]);
-
-  const handleSecteurRemove = (secteur: string) => {
-    setSelectedSecteurs(prev => prev.filter(s => s !== secteur));
-  };
-
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedVilles, setSelectedVilles] = useState<string[]>([]);
-  const { clientService } = useServices();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [contactToEdit, setContactToEdit] = useState<ContactEdit & { id?: number }>({ nom: '' });
+  const [contactToDelete, setContactToDelete] = useState<string | number | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await clientService.getAllcc();
-        setClients(response);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
+  const { clientService, contactService } = useServices();
+
+  const {
+    selectedFilters,
+    handleSelect,
+    handleRemove
+  } = useFilters();
+
+  // Contact CRUD operations
+  const handleCreate = async (formData: ContactEdit) => {
+    setIsSubmitting(true);
+    try {
+      await contactService.create(formData);
+      await refreshClients();
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error('Creation error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEdit = async (id: number, formData: ContactEdit) => {
+    setIsSubmitting(true);
+    console.log('handleform', formData);
+    try {
+      await contactService.update(id, formData);
+      await refreshClients();
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('Update error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string | number) => {
+    setIsSubmitting(true);
+    try {
+      await contactService.delete(id);
+      await refreshClients();
+      setContactToDelete(null);
+    } catch (error) {
+      console.error('Deletion error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Client data loading
+  const refreshClients = useCallback(async () => {
+    try {
+      const response = await clientService.getAllcc();
+      setClients(response);
+    } catch (error) {
+      console.error('Error refreshing clients:', error);
+    }
   }, [clientService]);
 
+  useEffect(() => {
+    refreshClients().finally(() => setLoading(false));
+  }, [clientService, refreshClients]);
+
+  // Memoized values
   const uniqueCategories = useMemo(() => {
     const categories = new Set(clients.map(client => client.categorie?.nom).filter((nom): nom is string => Boolean(nom)));
     return Array.from(categories);
@@ -154,18 +226,53 @@ const ClientTable = () => {
     return Array.from(villes);
   }, [clients]);
 
-  const uniqueSecteur = useMemo(() => {
+  const uniqueSecteurs = useMemo(() => {
     const secteurs = new Set(clients.map(client => client.secteur_activite));
     return Array.from(secteurs);
   }, [clients]);
 
-  const toggleRow = (clientId: number) => {
-    setExpandedRows(prev =>
-      prev.includes(clientId)
-        ? prev.filter(id => id !== clientId)
-        : [...prev, clientId]
-    );
-  };
+  // Filter and sort logic
+  const filteredAndSortedClients = useMemo(() => {
+    const filtered = clients.filter(client => {
+      const searchFields = [
+        client.nom,
+        client.secteur_activite,
+        client.ville.nom,
+        client.ville.region_nom,
+        client.categorie?.nom || '',
+        client.c_num,
+        
+        // client.entite,
+      ].map(field => field.toLowerCase());
+      
+      const matchesSearch = searchFields.some(field => 
+        field.includes(searchTerm.toLowerCase())
+      );
+      
+     
+
+      return matchesSearch;
+    });
+    
+
+    if (sortConfig.key) {
+
+      return _.orderBy<Client>(
+        filtered,
+        [(client: Client): string => {
+          const key: keyof Client = sortConfig.key as keyof Client;
+          return key === 'categorie' 
+            ? client.categorie?.nom?.toLowerCase() || '' 
+            : key === 'ville'
+            ? client.ville.nom.toLowerCase()
+            : String(client[key]).toLowerCase();
+        }],
+        [sortConfig.direction]
+      );
+    }
+
+    return filtered;
+  }, [clients, sortConfig, searchTerm]);
 
   const handleSort = (key: keyof Client) => {
     setSortConfig(current => ({
@@ -174,83 +281,29 @@ const ClientTable = () => {
     }));
   };
 
-  const filteredAndSortedClients = useMemo(() => {
-    const filtered = clients.filter(client => {
-      const searchFields = [
-        client.nom,
-        client.secteur_activite,
-        client.ville.nom
-      ].map(field => field.toLowerCase());
-      
-      const matchesSearch = searchFields.some(field => 
-        field.includes(searchTerm.toLowerCase())
-      );
-      
-      const matchesCategories = selectedCategories.length === 0 || 
-        selectedCategories.includes(client.categorie?.nom || 'Non catégorisé');
-      
-      const matchesVilles = selectedVilles.length === 0 || 
-        selectedVilles.includes(client.ville.nom);
-
-        const matchesSecteurs = selectedSecteurs.length === 0 ||
-        selectedSecteurs.includes(client.secteur_activite);
-
-      return matchesSearch && matchesCategories && matchesVilles && matchesSecteurs;
-    });
-
-    if (sortConfig.key) {
-      const compareValues = (a: string | number | boolean, b: string | number | boolean) => {
-        if (a < b) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (a > b) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      };
-
-      filtered.sort((a, b) => {
-        const key = sortConfig.key as keyof Client;
-        const aValue = key === 'categorie' ? a.categorie?.nom || '' 
-                    : key === 'ville' ? a.ville.nom 
-                    : a[key];
-        const bValue = key === 'categorie' ? b.categorie?.nom || ''
-                    : key === 'ville' ? b.ville.nom
-                    : b[key];
-        return compareValues(aValue, bValue);
-      });
-    }
-
-    return filtered;
-  }, [clients, sortConfig.key, sortConfig.direction, selectedCategories, selectedVilles, selectedSecteurs, searchTerm]);
-
-  const getGroupValue = (client: Client, groupType: string) => {
-    switch (groupType) {
-      case 'categorie':
-        return client.categorie?.nom || 'Non catégorisé';
-      case 'ville':
-        return client.ville.nom;
-      case 'secteur':
-        return client.secteur_activite;
-      default:
-        return 'Tous les clients';
-    }
-  };
-
+  // Group clients based on selected grouping
   const groupedClients: Record<string, Client[]> = useMemo(() => {
+    const getGroupValue = (client: Client) => {
+      switch (groupBy) {
+        case 'categorie':
+          return client.categorie?.nom || 'Non catégorisé';
+        case 'ville_nom':
+          return client.ville.nom;
+        case 'secteur':
+          return client.secteur_activite;
+        case 'region':
+          return client.ville.region_nom;
+        case 'entreprise':
+          return client.nom;
+        default:
+          return 'Tous les clients';
+      }
+    };
+
     return groupBy
-      ? _.groupBy(filteredAndSortedClients, (client: Client) => getGroupValue(client, groupBy))
+      ? _.groupBy(filteredAndSortedClients, getGroupValue)
       : { 'Tous les clients': filteredAndSortedClients };
   }, [filteredAndSortedClients, groupBy]);
-
-  const renderGroupIcon = (groupType: string) => {
-    switch (groupType) {
-      case 'categorie':
-        return <Building2 className="w-4 h-4" />;
-      case 'ville':
-        return <MapPin className="w-4 h-4" />;
-      case 'secteur':
-        return <Briefcase className="w-4 h-4" />;
-      default:
-        return null;
-    }
-  };
 
   if (loading) {
     return (
@@ -266,33 +319,44 @@ const ClientTable = () => {
     );
   }
 
-  
-
-
   return (
-    <div className="w-full space-y-4">
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      
+
+      {/* Search and filters */}
       <ClientSearch 
-  searchTerm={searchTerm}
-  onSearchChange={handleSearchChange}
-  selectedCategories={selectedCategories}
-  selectedVilles={selectedVilles}
-  selectedSecteurs={selectedSecteurs}
-  onCategorySelect={handleCategorySelect}
-  onVilleSelect={handleVilleSelect}
-  onSecteurSelect={handleSecteurSelect}
-  onCategoryRemove={handleCategoryRemove}
-  onVilleRemove={handleVilleRemove}
-  onSecteurRemove={handleSecteurRemove}
-  uniqueCategories={uniqueCategories}
-  uniqueVilles={uniqueVilles}
-  uniqueSecteurs={uniqueSecteur}
-/>
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedCategories={selectedFilters.categories}
+        selectedVilles={selectedFilters.villes}
+        selectedSecteurs={selectedFilters.secteurs}
+        onCategorySelect={(category) => handleSelect('categories', category)}
+        onVilleSelect={(ville) => handleSelect('villes', ville)}
+        onSecteurSelect={(secteur) => handleSelect('secteurs', secteur)}
+        onCategoryRemove={(category) => handleRemove('categories', category)}
+        onVilleRemove={(ville) => handleRemove('villes', ville)}
+        onSecteurRemove={(secteur) => handleRemove('secteurs', secteur)}
+        uniqueCategories={uniqueCategories}
+        uniqueVilles={uniqueVilles}
+        uniqueSecteurs={uniqueSecteurs}
+        setGroupBy={setGroupBy}
+        groupBy={groupBy}
+
+      />
 
       {/* Client groups */}
       {Object.entries(groupedClients).map(([group, groupClients]) => (
         <Card key={group}>
           <div className="bg-muted p-4 font-medium flex items-center gap-2">
-            {renderGroupIcon(groupBy)}
+            {(() => {
+              switch (groupBy) {
+                case 'categorie': return <Building2 className="w-4 h-4" />;
+                case 'ville_nom': return <MapPin className="w-4 h-4" />;
+                case 'secteur': return <Briefcase className="w-4 h-4" />;
+                default: return null;
+              }
+            })()}
             <span>{group}</span>
             <Badge variant="secondary">
               {groupClients.length} client{groupClients.length > 1 ? 's' : ''}
@@ -303,20 +367,18 @@ const ClientTable = () => {
             <table className="w-full">
               <thead className="bg-muted/50">
                 <tr>
-                <TableHeader 
+                  <TableHeader 
                     label="Ville" 
                     sortKey="ville"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
-                  
                   <TableHeader 
                     label="Secteur" 
                     sortKey="secteur_activite"
                     sortConfig={sortConfig}
                     onSort={handleSort}
                   />
-                  
                   <TableHeader 
                     label="Catégorie" 
                     sortKey="categorie"
@@ -341,21 +403,24 @@ const ClientTable = () => {
               <tbody className="divide-y">
                 {groupClients.map((client) => (
                   <React.Fragment key={client.id}>
-                    <tr className={`
-        transition-colors hover:bg-muted/50
-        ${client.agreer ? 'bg-green-100' : ''}
-      `}
-      onClick={() => toggleRow(client.id)}
-      >
-        <td className="p-4">
+                    <tr 
+                      className={`
+                        transition-colors hover:bg-muted/50
+                        ${client.agreer ? 'bg-green-100' : ''}
+                      `}
+                      onClick={() => setExpandedRows(prev =>
+                        prev.includes(client.id)
+                          ? prev.filter(id => id !== client.id)
+                          : [...prev, client.id]
+                      )}
+                    >
+                      <td className="p-4">
                         <div>{client.ville.nom}</div>
                         <div className="text-sm text-muted-foreground">
                           {client.ville.region_nom}
                         </div>
                       </td>
-                      
                       <td className="p-4">{client.secteur_activite}</td>
-                      
                       <td className="p-4">
                         <Badge variant="outline">
                           {client.categorie?.nom || 'Non catégorisé'}
@@ -367,7 +432,6 @@ const ClientTable = () => {
                       </td>
                       <td className="p-4">
                         <div>{client.entite}</div>
-                       
                       </td>
                       <td className="p-4">
                         <Button
@@ -379,7 +443,6 @@ const ClientTable = () => {
                           {client.contacts.length}
                         </Button>
                       </td>
-                      
                     </tr>
                     {expandedRows.includes(client.id) && (
                       <tr>
@@ -392,6 +455,11 @@ const ClientTable = () => {
                             <ContactsTable 
                               contacts={client.contacts} 
                               itemsPerPage={5}
+                              onEdit={(contact) => {
+                                setContactToEdit({ ...contact });
+                                setIsEditModalOpen(true);
+                              }}
+                              onDelete={(id) => setContactToDelete(id)}
                             />
                           </div>
                         </td>
@@ -404,8 +472,40 @@ const ClientTable = () => {
           </div>
         </Card>
       ))}
+
+      {/* Modals */}
+      {isCreateModalOpen && (
+        <ContactModal
+          title="Nouveau contact"
+          initialData={{ nom: '' }}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreate}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {isEditModalOpen && (
+        <ContactModal
+          title="Modifier contact"
+          initialData={contactToEdit}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={(data) => contactToEdit.id && handleEdit(contactToEdit.id, data)}
+          isSubmitting={isSubmitting}
+        />
+      )}
+
+      {contactToDelete && (
+        <DeleteConfirmationModal
+          title="Supprimer le contact"
+          message="Êtes-vous sûr de vouloir supprimer ce contact ? Cette action est irréversible."
+          onConfirm={() => handleDelete(contactToDelete)}
+          onCancel={() => setContactToDelete(null)}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </div>
   );
 };
 
 export default ClientTable;
+

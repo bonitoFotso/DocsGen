@@ -78,9 +78,13 @@ class Document(models.Model):
         ('VALIDE', 'Validé'),
         ('REFUSE', 'Refusé'),
     ]
-    entity = models.ForeignKey(Entity, on_delete=models.CASCADE)
+    entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='%(class)ss')
     reference = models.CharField(max_length=50, unique=True, editable=False)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    client = models.ForeignKey(
+        Client, 
+        on_delete=models.CASCADE,
+        related_name='%(class)ss'   # Cela créera automatiquement des related_names uniques
+    )
     date_creation = models.DateTimeField(auto_now_add=True)
     statut = models.CharField(choices=STATUTS, default='BROUILLON', max_length=20)
     doc_type = models.CharField(
@@ -90,7 +94,7 @@ class Document(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True, blank=True,
+        null=True, blank=True, related_name='%(class)ss'
     )
     sequence_number = models.IntegerField()
     fichier = models.FileField(upload_to='documents/', blank=True, null=True)
@@ -410,7 +414,7 @@ class Facture(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_factures_client = Facture.objects.filter(client=self.affaire.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{self.affaire.reference}/{self.affaire.offre.produit}/{total_factures_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{self.affaire.reference}/{self.affaire.offre.produit.code}/{total_factures_client}/{self.sequence_number:04d}"
         super().save(*args, **kwargs)
 
 

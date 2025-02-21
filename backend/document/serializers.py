@@ -138,12 +138,12 @@ class AffaireDetailSerializer(serializers.ModelSerializer):
 
 # Facture Serializers
 class FactureListSerializer(serializers.ModelSerializer):
-    client_nom = serializers.CharField(source='client.nom', read_only=True)
-    affaire_reference = serializers.CharField(source='affaire.reference', read_only=True)
+    client = ClientListSerializer(read_only=True)
+    affaire = AffaireListSerializer(read_only=True)
     
     class Meta:
         model = Facture
-        fields = ['id', 'reference', 'client_nom', 'affaire_reference', 'statut', 'date_creation']
+        fields = ['id', 'reference', 'client', 'affaire', 'statut', 'date_creation']
 
 class FactureDetailSerializer(serializers.ModelSerializer):
     affaire = AffaireListSerializer(read_only=True)
