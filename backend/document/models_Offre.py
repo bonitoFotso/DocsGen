@@ -105,7 +105,7 @@ class OpportuniteViewSet(viewsets.ModelViewSet):
             return Response({'status': 'opportunité perdue'})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        
     @action(detail=True, methods=['post'])
     def creer_offre(self, request, pk=None):
         """

@@ -508,7 +508,8 @@ class Opportunite(Document):
         ('GAGNEE', 'Gagnée'),
         ('PERDUE', 'Perdue'),
     ]
-    
+    #entity = models.ForeignKey(Entity, on_delete=models.CASCADE, related_name='opportunites')
+
     produits = models.ManyToManyField(Product, related_name="opportunites")
     produit_principal = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="opportunites_principales")
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="opportunites")
@@ -518,11 +519,11 @@ class Opportunite(Document):
     date_modification = models.DateTimeField(auto_now=True)
     date_cloture = models.DateTimeField(blank=True, null=True)
     
-    statut = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='PROSPECT'
-    )
+    statut = FSMField(
+    max_length=20,
+    choices=STATUS_CHOICES,
+    default='PROSPECT'
+)
     
     montant_estime = models.DecimalField(max_digits=10, decimal_places=2)
     probabilite = models.IntegerField(default=0, help_text="Probabilité de conversion en %")

@@ -286,3 +286,153 @@ class AttestationFormationEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttestationFormation
         fields = ['participant', 'formation', 'affaire', 'contenu']
+        
+        
+from rest_framework import serializers
+from .models import Opportunite, Product, Client, Contact, Entity
+
+
+class OpportuniteListSerializer(serializers.ModelSerializer):
+    """
+    Sérialiseur allégé pour la liste des opportunités
+    """
+    client_nom = serializers.CharField(source='client.nom', read_only=True)
+    produit_principal_nom = serializers.CharField(source='produit_principal.name', read_only=True)
+    entity_code = serializers.CharField(source='entity.code', read_only=True)
+    statut_display = serializers.CharField(source='get_statut_display', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Opportunite
+        fields = [
+            'id', 'reference', 'client', 'client_nom', 'produit_principal', 
+            'produit_principal_nom', 'entity', 'entity_code', 'statut', 
+            'statut_display', 'date_creation', 'date_modification', 'date_cloture',
+            'montant_estime', 'probabilite', 'created_by', 'created_by_name',
+            'relance', 'necessite_relance'
+        ]
+    
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.username}".strip() or obj.created_by.username
+        return None
+
+
+class OpportuniteDetailSerializer(serializers.ModelSerializer):
+    """
+    Sérialiseur complet pour les détails d'une opportunité
+    """
+    client_details = serializers.SerializerMethodField()
+    contact_details = serializers.SerializerMethodField()
+    entity_details = serializers.SerializerMethodField()
+    produit_principal_details = serializers.SerializerMethodField()
+    produits_details = serializers.SerializerMethodField()
+    statut_display = serializers.CharField(source='get_statut_display', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    transitions_possibles = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Opportunite
+        fields = [
+            'id', 'reference', 'client', 'client_details', 'contact', 'contact_details',
+            'entity', 'entity_details', 'produit_principal', 'produit_principal_details',
+            'produits', 'produits_details', 'statut', 'statut_display', 
+            'date_creation', 'date_modification', 'date_cloture', 'montant_estime', 
+            'probabilite', 'description', 'besoins_client', 'created_by', 
+            'created_by_name', 'relance', 'necessite_relance', 'transitions_possibles'
+        ]
+        read_only_fields = ['reference', 'date_creation', 'date_modification', 'created_by', 'probabilite']
+    
+    def get_client_details(self, obj):
+        return {
+            'id': obj.client.id,
+            'nom': obj.client.nom,
+            'c_num': obj.client.c_num
+        } if obj.client else None
+    
+    def get_contact_details(self, obj):
+        return {
+            'id': obj.contact.id,
+            'nom': obj.contact.nom,
+            'prenom': obj.contact.prenom,
+            'email': obj.contact.email,
+            'telephone': obj.contact.telephone
+        } if obj.contact else None
+    
+    def get_entity_details(self, obj):
+        return {
+            'id': obj.entity.id,
+            'code': obj.entity.code,
+            'name': obj.entity.name
+        } if obj.entity else None
+    
+    def get_produit_principal_details(self, obj):
+        return {
+            'id': obj.produit_principal.id,
+            'code': obj.produit_principal.code,
+            'name': obj.produit_principal.name,
+            'category': {
+                'id': obj.produit_principal.category.id,
+                'code': obj.produit_principal.category.code,
+                'name': obj.produit_principal.category.name
+            }
+        } if obj.produit_principal else None
+    
+    def get_produits_details(self, obj):
+        return [
+            {
+                'id': produit.id,
+                'code': produit.code,
+                'name': produit.name,
+                'category': {
+                    'id': produit.category.id,
+                    'code': produit.category.code,
+                    'name': produit.category.name
+                }
+            } 
+            for produit in obj.produits.all()
+        ]
+    
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return f"{obj.created_by.username}".strip() or obj.created_by.username
+        return None
+    
+    def get_transitions_possibles(self, obj):
+        """
+        Retourne la liste des transitions possibles pour l'état actuel
+        """
+        transitions = []
+        
+        # Vérification des transitions possibles
+        if hasattr(obj, 'can_qualifier') and obj.can_qualifier():
+            transitions.append('qualifier')
+        if hasattr(obj, 'can_proposer') and obj.can_proposer():
+            transitions.append('proposer')
+        if hasattr(obj, 'can_negocier') and obj.can_negocier():
+            transitions.append('negocier')
+        if hasattr(obj, 'can_gagner') and obj.can_gagner():
+            transitions.append('gagner')
+        if hasattr(obj, 'can_perdre') and obj.can_perdre():
+            transitions.append('perdre')
+            
+        # Vérifier si on peut créer une offre
+        if obj.statut in ['QUALIFICATION', 'PROPOSITION', 'NEGOCIATION', 'GAGNEE']:
+            transitions.append('creer_offre')
+            
+        return transitions
+
+
+class OpportuniteSerializer(serializers.ModelSerializer):
+    """
+    Sérialiseur de base pour les opérations CRUD
+    """
+    class Meta:
+        model = Opportunite
+        fields = [
+            'id', 'reference', 'client', 'contact', 'entity', 'produit_principal',
+            'produits', 'statut', 'date_creation', 'date_modification', 'date_cloture',
+            'montant_estime', 'probabilite', 'description', 'besoins_client', 
+            'created_by', 'relance'
+        ]
+        read_only_fields = ['reference', 'date_creation', 'date_modification', 'created_by', 'probabilite']

@@ -74,10 +74,11 @@ class VilleEditSerializer(serializers.ModelSerializer):
 
 class ContactListSerializer(serializers.ModelSerializer):
     client_nom = serializers.CharField(source='client.nom', read_only=True)
+    client_id = serializers.CharField(source='client.id', read_only=True)
     
     class Meta:
         model = Contact
-        fields = ['id', 'nom', 'prenom', 'email', 'telephone', 'client_nom', 'poste']
+        fields = ['id', 'nom', 'prenom', 'email', 'telephone', 'client_nom', 'poste','client_id']
 
 class ContactDetailSerializer(serializers.ModelSerializer):
     client_details = serializers.SerializerMethodField()
@@ -113,6 +114,7 @@ class ClientListSerializer(serializers.ModelSerializer):
     offres_count = serializers.IntegerField(source='offres.count', read_only=True)
     affaires_count = serializers.IntegerField(source='affaires.count', read_only=True)
     factures_count = serializers.IntegerField(source='factures.count', read_only=True)
+    opportunities_count = serializers.IntegerField(source='opportunites.count', read_only=True)
     
     class Meta:
         model = Client
@@ -135,7 +137,8 @@ class ClientListSerializer(serializers.ModelSerializer):
             'offres_count',
             'affaires_count',
             'factures_count',
-            'region_nom'
+            'region_nom',
+            'opportunities_count'
         ]
         read_only_fields = ['c_num']
         

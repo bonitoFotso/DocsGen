@@ -163,3 +163,53 @@ class DepartmentPermission(permissions.BasePermission):
 
    def has_object_permission(self, request, view, obj):
        return self.has_permission(request, view)
+   
+   
+from rest_framework import permissions
+
+
+class OpportunitePermission(permissions.BasePermission):
+    """
+    Permissions pour les opportunités:
+    - Tous les utilisateurs authentifiés peuvent voir les opportunités
+    - Seuls les créateurs et les administrateurs peuvent modifier/supprimer
+    - Seuls les administrateurs et commerciaux peuvent créer
+    """
+    
+    def has_permission(self, request, view):
+        # Vérifier si l'utilisateur est authentifié
+        if not request.user.is_authenticated:
+            return False
+            
+        # Pour la création, vérifier si l'utilisateur est admin ou commercial
+        if view.action == 'create':
+            return (
+                request.user.is_staff or 
+                request.user.groups.filter(name='Commerciaux').exists()
+            )
+            
+        # Pour les autres actions (list, retrieve), autoriser tout utilisateur authentifié
+        return True
+    
+    def has_object_permission(self, request, view, obj):
+        # Lecture autorisée pour tous les utilisateurs authentifiés
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        # Vérifier si l'utilisateur est le créateur ou un admin
+        if request.user.is_staff:
+            return True
+            
+        # Vérifier si l'utilisateur est le créateur
+        if obj.created_by == request.user:
+            return True
+            
+        # Vérifier si l'utilisateur est un manager
+        if request.user.groups.filter(name='Managers').exists():
+            return True
+            
+        # Si la méthode est une transition d'état et que l'utilisateur est un commercial
+        if view.action in ['qualifier', 'proposer', 'negocier', 'gagner', 'perdre', 'creer_offre']:
+            return request.user.groups.filter(name='Commerciaux').exists()
+            
+        return False

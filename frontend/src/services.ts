@@ -17,6 +17,7 @@ import type {
 } from './interfaces';
 import { AffaireDetails } from './affaireType';
 import { Client, ClientDetails } from './types/client';
+import { Opportunite, OpportuniteEdition, OpportuniteListItem } from './types/contact';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -371,5 +372,64 @@ export const attestationFormationService = {
   },
   delete: async (id: number) => {
     await api.delete(`/attestations/${id}/`);
+  }
+};
+
+export const opportuniteService = {
+  getAll: async () => {
+    const { data } = await api.get<OpportuniteListItem[]>('/opportunites/');
+    return data;
+  },
+  getById: async (id: number) => {
+    const { data } = await api.get<Opportunite>(`/opportunites/${id}/`);
+    return data;
+  },
+  create: async (opportunite: OpportuniteEdition) => {
+    const { data } = await api.post<Opportunite>('/opportunites/', opportunite);
+    return data;
+  },
+  update: async (id: number, opportunite: Partial<OpportuniteEdition>) => {
+    const { data } = await api.patch<Opportunite>(`/opportunites/${id}/`, opportunite);
+    return data;
+  },
+  qualifier: async (id: number) => {
+    const { data } = await api.post<Opportunite>(`/opportunites/${id}/qualifier/`);
+    return data;
+  },
+  proposer: async (id: number) => {
+    const { data } = await api.post<Opportunite>(`/opportunites/${id}/proposer/`);
+    return data;
+  },
+  negocier: async (id: number) => {
+    const { data } = await api.post<Opportunite>(`/opportunites/${id}/negocier/`);
+    return data;
+  },
+  gagner: async (id: number) => {
+    const { data } = await api.post<Opportunite>(`/opportunites/${id}/gagner/`);
+    return data;
+  },
+  perdre: async (id: number, raison?: string) => {
+    // Only send the raison parameter, without change_state
+    const { data } = await api.post<Opportunite>(`/opportunites/${id}/perdre/`, 
+      raison ? { raison } : {});
+    return data;
+  },
+  creerOffre: async (id: number) => {
+    const { data } = await api.post<{ status: string, id: number, offre_reference: string }>(
+      `/opportunites/${id}/creer_offre/`
+    );
+    return data;
+  },
+  getARelancer: async () => {
+    const { data } = await api.get<OpportuniteListItem[]>('/opportunites/a_relancer/');
+    return data;
+  },
+  getStatistiques: async (days?: number) => {
+    const params = days ? { days } : {};
+    const { data } = await api.get('/opportunites/statistiques/', { params });
+    return data;
+  },
+  delete: async (id: number) => {
+    await api.delete(`/opportunites/${id}/`);
   }
 };

@@ -1,5 +1,6 @@
-import { Client, ClientEdit, ClientList, Contact, ContactEdit, ContactList, MailEdit, Pays, Region, Site, SiteEdit, SiteList, Ville } from "./itf";
+import { Client, ClientEdit, ClientList, ContactEdit, MailEdit, Pays, Region, Site, SiteEdit, SiteList, Ville } from "./itf";
 import { api } from "./services";
+import { Contact } from "./types/contact";
 
 
 
@@ -116,11 +117,11 @@ export const siteService = {
 
 export const contactService = {
   getAll: async () => {
-    const { data } = await api.get<ContactList[]>('/contacts/');
+    const { data } = await api.get<Contact[]>('/contacts/');
     return data;
   },
   getAllcc: async () => {
-    const { data } = await api.get<ContactList[]>('/contact2/');
+    const { data } = await api.get<Contact[]>('/contact2/');
     return data;
   },
 
@@ -129,17 +130,17 @@ export const contactService = {
     return data;
   },
 
-  getByd: async (id: number) => {
+  getById: async (id: number) => {
     const { data } = await api.get<Contact>(`/contacts/${id}/`);
     return data;
   },
 
   create: async (contact: ContactEdit) => {
-    const { data } = await api.post<ContactList>('/contacts/', contact);
+    const { data } = await api.post<Contact>('/contacts/', contact);
     return data;
   },
   addmail: async (contact: MailEdit) => {
-    const { data } = await api.post<ContactList>('/contacts/', contact);
+    const { data } = await api.post<Contact>('/contacts/', contact);
     return data;
   },
 

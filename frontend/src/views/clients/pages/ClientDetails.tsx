@@ -141,8 +141,12 @@ const ClientDetailsPage: React.FC = () => {
       </Card>
 
       {/* Onglets pour les différentes sections */}
-      <Tabs defaultValue="contacts" className="w-full">
-        <TabsList className="grid grid-cols-6 w-full">
+      <Tabs defaultValue="opportunites" className="w-full">
+        <TabsList className="grid grid-cols-7 w-full">
+        <TabsTrigger value="opportunites" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            <span>Opportunite ({client.offres_count})</span>
+          </TabsTrigger>
         <TabsTrigger value="offres" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
             <span>Offres ({client.offres_count})</span>
@@ -188,6 +192,22 @@ const ClientDetailsPage: React.FC = () => {
                       <span>{contact.telephone}</span>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="opportunites" className="mt-6">
+          <div className="grid grid-cols-1 gap-4">
+            {client.offres.map((offre) => (
+              <Card key={offre.id}>
+                <CardContent className="pt-6">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">{offre.titre}</span>
+                    <Badge>{offre.statut}</Badge>
+                  </div>
+                  <p className="text-sm text-gray-500">{offre.description}</p>
                 </CardContent>
               </Card>
             ))}

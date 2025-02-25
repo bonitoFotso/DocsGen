@@ -13,6 +13,7 @@ import {
   formationService,
   participantService,
   attestationFormationService,
+  opportuniteService,
 } from './services';
 import { contactService, paysService, regionService, villeService } from './clientServices';
 
@@ -35,6 +36,7 @@ type ServicesContextType = {
   villeService: typeof villeService;
   regionService: typeof regionService;
   paysService: typeof paysService;
+  opportuniteService: typeof opportuniteService;
 };
 
 // Créer le contexte
@@ -67,6 +69,7 @@ export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children }) 
     villeService,
     regionService,
     paysService,
+    opportuniteService,
   };
 
   return (

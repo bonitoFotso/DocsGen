@@ -12,17 +12,21 @@ import FormationManagement from './views/formations/formations';
 import LoginPage from './views/auth/login';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
-import ContactsGridView from './views/contacts/ContactsGridView';
-// mport { ContactsPage } from './views/contacts/Contacts';
 import FactureManagement from './views/factures/Facture';
 import ContactsPage from './views/contacts/contacts2';
 import ClientManagement from './views/clients/ClientManagement';
 import ClientDetailsPage from './views/clients/pages/ClientDetails';
+import OpportunityPage from './views/opportunites/oportuityPage';
+import OpportunityDetails from './views/opportunites/opportunityDetails';
+import { Toaster } from 'sonner';
+import OpportuniteCreation from './views/opportunites/OpportuniteCreation';
+import OpportuniteEditionPage from './views/opportunites/OpportuniteEdition';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="top-right" richColors />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={
@@ -31,28 +35,43 @@ function App() {
             </PrivateRoute>
           }>
             <Route index element={<Dashboard />} />
+
+            {/* Routes groupées par fonctionnalité */}
+            {/* Entités et sites */}
             <Route path="entities" element={<EntityManagement />} />
             <Route path="sites" element={<SiteManagement />} />
-            <Route path="offres" element={<OffreManagement/>} />
-            <Route path="affaires" element={<AffaireManagement/>} />
-            <Route path="factures" element={<FactureManagement/>} />
-            <Route path="proformas" element={<ProformaManagement/>} />
-            <Route path="rapports" element={<RapportManagement/>} />
+
+            {/* Gestion commerciale */}
+            <Route path="clients">
+              <Route index element={<ClientManagement />} />
+              <Route path=":id" element={<ClientDetailsPage />} />
+            </Route>
+
+            <Route path="contacts" element={<ContactsPage />} />
+            <Route path="contacts_grid" element={<ContactsPage />} />
+
+            <Route path="opportunities">
+              <Route index element={<OpportunityPage />} />
+              <Route path=":id" element={<OpportunityDetails />} />
+              <Route path=":id/edit" element={<OpportuniteEditionPage/>} />
+              <Route path="new" element={<OpportuniteCreation/>} />
+            </Route>
+
+            {/* Documents commerciaux */}
+            <Route path="offres" element={<OffreManagement />} />
+            <Route path="affaires" element={<AffaireManagement />} />
+            <Route path="factures" element={<FactureManagement />} />
+            <Route path="proformas" element={<ProformaManagement />} />
+
+            {/* Catalogue et formations */}
             <Route path="products" element={<ProductManagement />} />
             <Route path="formations" element={<FormationManagement />} />
-            <Route path="contacts" element={<ContactsPage />} />
-            <Route path="contacts_grid" element={< ContactsPage/>} />
 
+            {/* Rapports */}
+            <Route path="rapports" element={<RapportManagement />} />
+
+            {/* Redirection pour les routes inconnues */}
             <Route path="*" element={<Navigate to="/" replace />} />
-
-            <Route path="clients">
-            {/* Liste des contacts */}
-            <Route index element={<ClientManagement />} />
-            
-            {/* Détails d'un contact - Notez le :id avec les deux points */}
-            <Route path=":id" element={<ClientDetailsPage />} />
-
-          </Route>
           </Route>
         </Routes>
       </Router>

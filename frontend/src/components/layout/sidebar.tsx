@@ -34,6 +34,7 @@ const navigation = [
     icon: HandCoins,
     category: 'business',
     children: [
+      { name: 'Opportunites', href: '/opportunities', icon: FileText },
       { name: 'Offres', href: '/offres', icon: FileText },
       { name: 'Affaires', href: '/affaires', icon: FileText },
       { name: 'Proformas', href: '/proformas', icon: FileText },
