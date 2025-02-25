@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from document.serializers import OffreListSerializer
+from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, RapportListSerializer
 from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
 class PaysListSerializer(serializers.ModelSerializer):
@@ -107,6 +107,8 @@ class SiteEditSerializer(serializers.ModelSerializer):
 
 class ClientListSerializer(serializers.ModelSerializer):
     ville_nom = serializers.CharField(source='ville.nom', read_only=True)
+    region_nom = serializers.CharField(source='ville.region.nom', read_only=True
+    )
     contacts_count = serializers.IntegerField(source='contacts.count', read_only=True)
     offres_count = serializers.IntegerField(source='offres.count', read_only=True)
     affaires_count = serializers.IntegerField(source='affaires.count', read_only=True)
@@ -124,18 +126,19 @@ class ClientListSerializer(serializers.ModelSerializer):
             'secteur_activite',
             'agreer',
             'agreement_fournisseur',
+            'is_client',
+            'bp',
+            'quartier',
+            'matricule',
+            'entite',
             'contacts_count',
             'offres_count',
             'affaires_count',
-            'factures_count'
+            'factures_count',
+            'region_nom'
         ]
         read_only_fields = ['c_num']
-# class ClientDetailSerializer(ClientListSerializer):
-#     contacts = ContactListSerializer(many=True, read_only=True)
-#     offres = OffreListSerializer(many=True, read_only=True)
-#     
-#     class Meta(ClientListSerializer.Meta):
-#         fields = ClientListSerializer.Meta.fields + ['contacts', 'offres']
+        
 class SiteListSerializer(serializers.ModelSerializer):
     client = ClientListSerializer(read_only=True)
     ville_nom = serializers.CharField(source='ville.nom', read_only=True)
@@ -144,6 +147,50 @@ class SiteListSerializer(serializers.ModelSerializer):
         model = Site
         fields = ['id', 's_num', 'nom', 'client', 'ville_nom', 'localisation']
         read_only_fields = ['s_num']
+        
+        
+class ClientDetailSerializer(ClientListSerializer):
+    contacts = ContactListSerializer(many=True, read_only=True)
+    offres = OffreListSerializer(many=True, read_only=True)
+    factures = FactureListSerializer(many=True, read_only=True)
+    sites = SiteListSerializer(many=True, read_only=True)
+    affaires = AffaireListSerializer(many=True, read_only=True)
+    rapports = RapportListSerializer(many=True, read_only=True)
+    ville = VilleListSerializer(read_only=True)
+    
+    
+    
+    class Meta:
+        model = Client
+        fields = [
+            'id',
+            'c_num',
+            'nom',
+            'email',
+            'telephone',
+            'ville',
+            'secteur_activite',
+            'agreer',
+            'agreement_fournisseur',
+            'is_client',
+            'bp',
+            'quartier',
+            'matricule',
+            'entite',
+            'contacts_count',
+            'offres_count',
+            'affaires_count',
+            'factures_count',
+            'region_nom',
+            'contacts',
+            'offres',
+            'factures',
+            'sites',
+            'affaires',
+            'rapports'
+            
+        ]
+
 class SiteDetailSerializer(serializers.ModelSerializer):
     client_details = ClientListSerializer(source='client', read_only=True)
     ville_details = VilleListSerializer(source='ville', read_only=True)
@@ -155,20 +202,6 @@ class SiteDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['s_num', 'created_at', 'updated_at', 'created_by', 'updated_by']
 
-
-class ClientDetailSerializer(serializers.ModelSerializer):
-    ville_details = VilleListSerializer(source='ville', read_only=True)
-    contacts = ContactListSerializer(many=True, read_only=True)
-    sites = SiteListSerializer(many=True, read_only=True, source='site_set')
-    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
-    updated_by_name = serializers.CharField(source='updated_by.get_full_name', read_only=True)
-    offres = OffreListSerializer(many=True, read_only=True)
-    # affaires = AffaireSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = Client
-        fields = '__all__'
-        read_only_fields = ['c_num', 'created_at', 'updated_at', 'created_by', 'updated_by']
 
 class ClientEditSerializer(serializers.ModelSerializer):
     class Meta:

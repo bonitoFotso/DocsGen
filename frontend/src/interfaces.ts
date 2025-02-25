@@ -28,6 +28,7 @@ interface ClientBase extends BaseModel {
 }
 
 interface ClientDetail extends ClientBase {
+  type: "Enterprise" | "Individual";
   adresse?: string;
   sites: SiteBase[];
   formations: FormationBase[];

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type {
   EntityBase, EntityDetail, EntityEdit,
-  ClientBase, ClientDetail, ClientEdit,
+ ClientDetail, ClientEdit,
   SiteBase, SiteDetail, SiteEdit,
   CategoryBase, CategoryDetail, CategoryEdit,
   ProductBase, ProductDetail, ProductEdit,
@@ -16,7 +16,7 @@ import type {
   ProformaEditStatus,
 } from './interfaces';
 import { AffaireDetails } from './affaireType';
-import { Client } from './views/contacts/components/ClientTable';
+import { Client, ClientDetails } from './types/client';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -65,7 +65,7 @@ export const entityService = {
 // Client Service
 export const clientService = {
   getAll: async () => {
-    const { data } = await api.get<ClientBase[]>('/clients/');
+    const { data } = await api.get<Client[]>('/clients/');
     return data;
   },
   getAllcc: async () => {
@@ -73,7 +73,7 @@ export const clientService = {
     return data;
   },
   getById: async (id: number) => {
-    const { data } = await api.get<ClientDetail>(`/clients/${id}/`);
+    const { data } = await api.get<ClientDetails>(`/clients/${id}/`);
     return data;
   },
   create: async (client: ClientEdit) => {

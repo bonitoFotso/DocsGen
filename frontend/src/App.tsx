@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Layout } from './components/layout/layout';
 import { Dashboard } from './views/dashboard';
 import EntityManagement from './views/entities/entities';
-import ClientManagement from './views/clients/clients';
 import SiteManagement from './views/sites/sites';
 import OffreManagement from './views/offres/offres';
 import AffaireManagement from './views/affaires/affaies';
@@ -16,9 +15,9 @@ import { PrivateRoute } from './PrivateRoute';
 import ContactsGridView from './views/contacts/ContactsGridView';
 // mport { ContactsPage } from './views/contacts/Contacts';
 import FactureManagement from './views/factures/Facture';
-import DataTable from './views/contacts/DataTable';
 import ContactsPage from './views/contacts/contacts2';
-import ClientTable from './views/contacts/components/ClientTable';
+import ClientManagement from './views/clients/ClientManagement';
+import ClientDetailsPage from './views/clients/pages/ClientDetails';
 
 function App() {
   return (
@@ -33,7 +32,6 @@ function App() {
           }>
             <Route index element={<Dashboard />} />
             <Route path="entities" element={<EntityManagement />} />
-            <Route path="clients" element={<ClientManagement />} />
             <Route path="sites" element={<SiteManagement />} />
             <Route path="offres" element={<OffreManagement/>} />
             <Route path="affaires" element={<AffaireManagement/>} />
@@ -43,9 +41,18 @@ function App() {
             <Route path="products" element={<ProductManagement />} />
             <Route path="formations" element={<FormationManagement />} />
             <Route path="contacts" element={<ContactsPage />} />
-            <Route path="contacts_grid" element={<ContactsPage />} />
+            <Route path="contacts_grid" element={< ContactsPage/>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
+
+            <Route path="clients">
+            {/* Liste des contacts */}
+            <Route index element={<ClientManagement />} />
+            
+            {/* Détails d'un contact - Notez le :id avec les deux points */}
+            <Route path=":id" element={<ClientDetailsPage />} />
+
+          </Route>
           </Route>
         </Routes>
       </Router>

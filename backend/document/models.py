@@ -233,7 +233,7 @@ class Offre(Document):
         Crée l'affaire et le proforma associés à l'offre.
         Cette méthode est appelée automatiquement quand le statut passe à 'VALIDE'.
         """
-        if self.statut != 'VALIDE':
+        if self.statut != 'GAGNE':
             raise ValueError("L'offre doit être en statut 'VALIDE' pour créer une affaire.")
 
         if hasattr(self, 'proforma'):
@@ -497,3 +497,194 @@ class AttestationFormation(Document):
 
 class DocumentPermission:
     pass
+
+
+class Opportunite(Document):
+    STATUS_CHOICES = [
+        ('PROSPECT', 'Prospect'),
+        ('QUALIFICATION', 'Qualification'),
+        ('PROPOSITION', 'Proposition'),
+        ('NEGOCIATION', 'Négociation'),
+        ('GAGNEE', 'Gagnée'),
+        ('PERDUE', 'Perdue'),
+    ]
+    
+    produits = models.ManyToManyField(Product, related_name="opportunites")
+    produit_principal = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="opportunites_principales")
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="opportunites")
+    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="opportunites")
+    
+    date_detection = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    date_cloture = models.DateTimeField(blank=True, null=True)
+    
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='PROSPECT'
+    )
+    
+    montant_estime = models.DecimalField(max_digits=10, decimal_places=2)
+    probabilite = models.IntegerField(default=0, help_text="Probabilité de conversion en %")
+    
+    description = models.TextField(blank=True, null=True)
+    besoins_client = models.TextField(blank=True, null=True)
+    
+    relance = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Date de la prochaine relance"
+    )
+    
+    DELAIS_RELANCE = {
+        'PROSPECT': 14,       # Relance après 14 jours pour les prospects
+        'QUALIFICATION': 10,  # Relance après 10 jours pour les qualifications
+        'PROPOSITION': 7,     # Relance après 7 jours pour les propositions
+        'NEGOCIATION': 5,     # Relance après 5 jours pour les négociations
+    }
+    
+    def set_relance(self):
+        """
+        Configure la prochaine date de relance si l'opportunité n'est pas gagnée/perdue
+        """
+        if self.statut in ['GAGNEE', 'PERDUE']:
+            self.relance = None
+            return
+
+        if self.statut in self.DELAIS_RELANCE:
+            base_date = now() if not self.relance else self.relance
+            self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
+    
+    @property
+    def necessite_relance(self):
+        """
+        Indique si l'opportunité nécessite une relance maintenant
+        """
+        return (
+            self.relance 
+            and self.relance <= now() 
+            and self.statut not in ['GAGNEE', 'PERDUE']
+        )
+    
+    @transition(field=statut, source='PROSPECT', target='QUALIFICATION')
+    def qualifier(self, user):
+        self.log_action('UPDATE', user, {'statut': 'QUALIFICATION'})
+        self.set_relance()
+    
+    @transition(field=statut, source='QUALIFICATION', target='PROPOSITION')
+    def proposer(self, user):
+        self.log_action('UPDATE', user, {'statut': 'PROPOSITION'})
+        self.set_relance()
+    
+    @transition(field=statut, source='PROPOSITION', target='NEGOCIATION')
+    def negocier(self, user):
+        self.log_action('UPDATE', user, {'statut': 'NEGOCIATION'})
+        self.set_relance()
+    
+    @transition(field=statut, source=['QUALIFICATION', 'PROPOSITION', 'NEGOCIATION'], target='GAGNEE')
+    def gagner(self, user):
+        self.date_cloture = now()
+        self.relance = None
+        self.log_action('UPDATE', user, {'statut': 'GAGNEE'})
+        # On pourrait créer une offre automatiquement ici
+    
+    @transition(field=statut, source=['PROSPECT', 'QUALIFICATION', 'PROPOSITION', 'NEGOCIATION'], target='PERDUE')
+    def perdre(self, user, raison=None):
+        self.date_cloture = now()
+        self.relance = None
+        changes = {'statut': 'PERDUE'}
+        if raison:
+            self.description += f"\n\nRaison de perte: {raison}"
+            changes['raison'] = raison
+        self.log_action('UPDATE', user, changes)
+    
+    @transaction.atomic
+    def creer_offre(self):
+        """
+        Crée une offre basée sur cette opportunité
+        """
+        if self.statut not in ['QUALIFICATION', 'PROPOSITION', 'NEGOCIATION', 'GAGNEE']:
+            raise ValueError("L'opportunité doit être au moins qualifiée pour créer une offre.")
+        
+        offre = Offre.objects.create(
+            client=self.client,
+            entity=self.entity,
+            produit=self.produit_principal,
+            contact=self.contact,
+            montant=self.montant_estime,
+            doc_type='OFF',
+            created_by=self.created_by,
+        )
+        
+        # Ajouter tous les produits
+        for produit in self.produits.all():
+            offre.produits.add(produit)
+        
+        return offre
+    
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        
+        # Mise à jour de la probabilité en fonction du statut
+        probabilities = {
+            'PROSPECT': 10,
+            'QUALIFICATION': 30,
+            'PROPOSITION': 50,
+            'NEGOCIATION': 75,
+            'GAGNEE': 100,
+            'PERDUE': 0,
+        }
+        
+        if self.statut in probabilities:
+            self.probabilite = probabilities[self.statut]
+        
+        # Gestion des dates de clôture
+        if self.statut in ['GAGNEE', 'PERDUE'] and not self.date_cloture:
+            self.date_cloture = now()
+            self.relance = None
+        elif self.statut not in ['GAGNEE', 'PERDUE']:
+            self.date_cloture = None
+            self.set_relance()
+        
+        # Génération de la référence
+        if not self.reference:
+            if not self.sequence_number:
+                last_sequence = Opportunite.objects.filter(
+                    entity=self.entity,
+                    client=self.client,
+                    date_creation__year=now().year,
+                    date_creation__month=now().month
+                ).aggregate(Max('sequence_number'))['sequence_number__max']
+                self.sequence_number = (last_sequence or 0) + 1
+            
+            total_opportunites_client = Opportunite.objects.filter(client=self.client).count() + 1
+            date = self.date_creation or now()
+            self.reference = f"{self.entity.code}/OPP/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.produit_principal.code}/{total_opportunites_client}/{self.sequence_number:04d}"
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Opportunité {self.reference} - {self.client.nom} - {self.statut}"
+
+
+# Signal pour notifier le frontend quand une relance est nécessaire
+@receiver(signals.post_save, sender=Opportunite)
+def notify_frontend_relance_opportunite(sender, instance, **kwargs):
+    if instance.necessite_relance:
+        channel_layer = channels.layers.get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "notifications",  # Nom du groupe de notification
+            {
+                "type": "send_notification",
+                "message": {
+                    "type": "RELANCE_OPPORTUNITE_REQUISE",
+                    "opportunite_id": instance.id,
+                    "reference": instance.reference,
+                    "client": instance.client.nom,
+                    "date_relance": instance.relance.isoformat(),
+                    "montant": str(instance.montant_estime),
+                    "statut": instance.statut,
+                    "probabilite": instance.probabilite,
+                }
+            }
+        )

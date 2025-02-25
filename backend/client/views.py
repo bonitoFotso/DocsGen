@@ -1,7 +1,7 @@
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 
-from client.ser import ClientDetailSerializer
+
 
 
 
@@ -11,7 +11,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 from .serializers import (
-    ClientWithContactsDetailSerializer, ClientWithContactsListSerializer, ContactDetailedSerializer, PaysListSerializer, PaysDetailSerializer, PaysEditSerializer,
+    ClientDetailSerializer, ClientWithContactsDetailSerializer, ClientWithContactsListSerializer, ContactDetailedSerializer, PaysListSerializer, PaysDetailSerializer, PaysEditSerializer,
     RegionListSerializer, RegionDetailSerializer, RegionEditSerializer,
     VilleListSerializer, VilleDetailSerializer, VilleEditSerializer,
     ClientListSerializer, ClientEditSerializer,

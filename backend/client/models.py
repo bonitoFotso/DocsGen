@@ -131,7 +131,7 @@ class Client(AuditableMixin, models.Model):
 
 class Site(AuditableMixin, models.Model):
     nom = models.CharField(max_length=255)
-    client = models.ForeignKey(Client, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='sites')
     localisation = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     s_num = models.CharField(max_length=15, blank=True, null=True)
