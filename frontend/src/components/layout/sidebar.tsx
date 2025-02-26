@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Building2, 
@@ -26,7 +26,6 @@ const navigation = [
   { name: 'Contacts', href: '/contacts', icon: Contact, category: 'main'},
   { name: 'Contacts Grid', href: '/contacts_grid', icon: Contact2Icon, category: 'main'},
   { name: 'Clients', href: '/clients', icon: Users, category: 'main' },
-  { name: 'Sites', href: '/sites', icon: MapPin, category: 'main' },
 
   // Business operations
   { 
@@ -52,16 +51,33 @@ const footerNavigation = [
 ];
 
 export function Sidebar() {
+  // États
+  const [currentPath, setCurrentPath] = useState('/');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [hasRouterContext, setHasRouterContext] = useState(false);
+
   const location = useLocation();
-  const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
+  // Update current path when location changes
+  useEffect(() => {
+    try {
+      setCurrentPath(location.pathname);
+      setHasRouterContext(true);
+    } catch (error) {
+      // Fallback to window.location if router context is not available
+      const path = window.location.pathname || '/';
+      setCurrentPath(path);
+      console.warn('Router context not available for Sidebar, using fallback navigation');
+    }
+  }, [location]);
 
   const toggleCollapse = (name: string) => {
     setCollapsed(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
   const NavLink = ({ item, depth = 0 }: { item: any; depth?: number }) => {
-    const isActive = location.pathname === item.href;
+    const isActive = currentPath === item.href;
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
     const isCollapsed = collapsed[item.name];
@@ -95,6 +111,34 @@ export function Sidebar() {
       );
     }
 
+    // Si nous n'avons pas de contexte de routeur, utiliser les liens <a> standard
+    if (!hasRouterContext) {
+      return (
+        <a
+          key={item.name}
+          href={item.href}
+          className={cn(
+            'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
+            isActive
+              ? 'bg-gray-800 text-white shadow-sm'
+              : 'text-gray-300 hover:bg-gray-800/50 hover:text-white',
+            depth > 0 && 'pl-11'
+          )}
+        >
+          <Icon
+            className={cn(
+              'mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-150',
+              isActive
+                ? 'text-indigo-400'
+                : 'text-gray-400 group-hover:text-gray-300'
+            )}
+          />
+          {item.name}
+        </a>
+      );
+    }
+
+    // Si nous avons un contexte de routeur, utiliser les composants Link de react-router
     return (
       <Link
         key={item.name}
@@ -133,6 +177,58 @@ export function Sidebar() {
     </div>
   );
 
+  // Composant pour le logo et le titre (utilise Link ou <a> selon le contexte)
+  const LogoLink = () => {
+    if (hasRouterContext) {
+      return (
+        <Link to="/" className="flex items-center space-x-3">
+          <Home className="h-8 w-8 text-indigo-500" />
+          <h1 className="text-xl font-bold text-white tracking-tight">
+            KES DOC_GEN
+          </h1>
+        </Link>
+      );
+    }
+    
+    return (
+      <a href="/" className="flex items-center space-x-3">
+        <Home className="h-8 w-8 text-indigo-500" />
+        <h1 className="text-xl font-bold text-white tracking-tight">
+          KES DOC_GEN
+        </h1>
+      </a>
+    );
+  };
+
+  // Composant pour les liens de pied de page (utilise Link ou <a> selon le contexte)
+  const FooterLink = ({ item }: { item: { name: string; href: string; icon: React.ElementType } }) => {
+    const Icon = item.icon;
+    
+    if (hasRouterContext) {
+      return (
+        <Link
+          key={item.name}
+          to={item.href}
+          className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800/50 hover:text-white transition-colors duration-150"
+        >
+          <Icon className="mr-3 h-5 w-5 text-gray-400" />
+          {item.name}
+        </Link>
+      );
+    }
+    
+    return (
+      <a
+        key={item.name}
+        href={item.href}
+        className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800/50 hover:text-white transition-colors duration-150"
+      >
+        <Icon className="mr-3 h-5 w-5 text-gray-400" />
+        {item.name}
+      </a>
+    );
+  };
+
   return (
     <div className={cn(
       "flex h-full w-64 flex-col bg-gray-900",
@@ -157,12 +253,7 @@ export function Sidebar() {
         "bg-gray-900/95 backdrop-blur",
         "supports-[backdrop-filter]:bg-gray-900/75"
       )}>
-        <Link to="/" className="flex items-center space-x-3">
-          <Home className="h-8 w-8 text-indigo-500" />
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            KES DOC_GEN
-          </h1>
-        </Link>
+        <LogoLink />
       </div>
 
       {/* Navigation */}
@@ -181,19 +272,9 @@ export function Sidebar() {
         "bg-gray-900/95 backdrop-blur",
         "supports-[backdrop-filter]:bg-gray-900/75"
       )}>
-        {footerNavigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-lg hover:bg-gray-800/50 hover:text-white transition-colors duration-150"
-            >
-              <Icon className="mr-3 h-5 w-5 text-gray-400" />
-              {item.name}
-            </Link>
-          );
-        })}
+        {footerNavigation.map((item) => (
+          <FooterLink key={item.name} item={item} />
+        ))}
       </div>
 
       {/* Mobile toggle */}

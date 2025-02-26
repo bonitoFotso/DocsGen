@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type {
   EntityBase, EntityDetail, EntityEdit,
- ClientDetail, ClientEdit,
+  ClientDetail, ClientEdit,
   SiteBase, SiteDetail, SiteEdit,
   CategoryBase, CategoryDetail, CategoryEdit,
   ProductBase, ProductDetail, ProductEdit,
@@ -17,7 +17,8 @@ import type {
 } from './interfaces';
 import { AffaireDetails } from './affaireType';
 import { Client, ClientDetails } from './types/client';
-import { Opportunite, OpportuniteEdition, OpportuniteListItem } from './types/contact';
+import { Contact, Opportunite, OpportuniteEdition, OpportuniteListItem } from './types/contact';
+import { ContactBase, ContactEdit } from './itf';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -91,6 +92,61 @@ export const clientService = {
   getSites: async (id: number) => {
     const { data } = await api.get<SiteBase[]>(`/clients/${id}/sites/`);
     return data;
+  },
+  getContacts: async (id: number) => {
+    const { data } = await api.get<ContactBase[]>(`/clients/${id}/contacts/`);
+    return data;
+  },
+  getOpportunites: async (id: number) => {
+    const { data } = await api.get<OpportuniteListItem[]>(`/clients/${id}/opportunites/`);
+    return data;
+  },
+  getOffres: async (id: number) => {
+    const { data } = await api.get<OffreBase[]>(`/clients/${id}/offres/`);
+    return data;
+  },
+  getAffaires: async (id: number) => {
+    const { data } = await api.get<AffaireBase[]>(`/clients/${id}/affaires/`);
+    return data;
+  },
+  getFactures: async (id: number) => {
+    const { data } = await api.get<FactureBase[]>(`/clients/${id}/factures/`);
+    return data;
+  },
+  getFormations: async (id: number) => {
+    const { data } = await api.get<FormationBase[]>(`/clients/${id}/formations/`);
+    return data;
+  },
+  getRapports: async (id: number) => {
+    const { data } = await api.get<RapportBase[]>(`/clients/${id}/rapports/`);
+    return data;
+  }
+};
+
+// Contact Service
+export const contactService = {
+  getAll: async () => {
+    const { data } = await api.get<ContactBase[]>('/contacts/');
+    return data;
+  },
+  getById: async (id: number) => {
+    const { data } = await api.get<Contact>(`/contacts/${id}/`);
+    return data;
+  },
+  create: async (contact: ContactEdit) => {
+    const { data } = await api.post<Contact>('/contacts/', contact);
+    return data;
+  },
+  update: async (id: number, contact: Partial<ContactEdit>) => {
+    const { data } = await api.put<Contact>(`/contacts/${id}/`, contact);
+    return data;
+  },
+  delete: async (id: number) => {
+    await api.delete(`/contacts/${id}/`);
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<ContactBase[]>(`/clients/${clientId}/contacts/`);
+    return data;
   }
 };
 
@@ -114,6 +170,10 @@ export const siteService = {
   },
   delete: async (id: number) => {
     await api.delete(`/sites/${id}/`);
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<SiteBase[]>(`/clients/${clientId}/sites/`);
+    return data;
   }
 };
 
@@ -187,6 +247,19 @@ export const offreService = {
   valider: async (id: number) => {
     const { data } = await api.post<OffreDetail>(`/offres/${id}/valider/`);
     return data;
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<OffreBase[]>(`/clients/${clientId}/offres/`);
+    return data;
+  },
+  getARelancer: async () => {
+    const { data } = await api.get<OffreBase[]>('/offres/a_relancer/');
+    return data;
+  },
+  getStatistiques: async (period?: string) => {
+    const params = period ? { period } : {};
+    const { data } = await api.get('/offres/statistiques/', { params });
+    return data;
   }
 };
 
@@ -217,6 +290,10 @@ export const proformaService = {
   },
   valider: async (id: number) => {
     const { data } = await api.post<ProformaDetail>(`/proformas/${id}/valider/`);
+    return data;
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<ProformaBase[]>(`/clients/${clientId}/proformas/`);
     return data;
   }
 };
@@ -253,6 +330,19 @@ export const affaireService = {
   getFormations: async (id: number) => {
     const { data } = await api.get<FormationBase[]>(`/affaires/${id}/formations/`);
     return data;
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<AffaireBase[]>(`/clients/${clientId}/affaires/`);
+    return data;
+  },
+  getStatistiques: async (period?: string) => {
+    const params = period ? { period } : {};
+    const { data } = await api.get('/affaires/statistiques/', { params });
+    return data;
+  },
+  changeStatus: async (id: number, status: string) => {
+    const { data } = await api.post<AffaireDetail>(`/affaires/${id}/change_status/`, { status });
+    return data;
   }
 };
 
@@ -276,6 +366,19 @@ export const factureService = {
   },
   delete: async (id: number) => {
     await api.delete(`/factures/${id}/`);
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<FactureBase[]>(`/clients/${clientId}/factures/`);
+    return data;
+  },
+  getStatistiques: async (period?: string) => {
+    const params = period ? { period } : {};
+    const { data } = await api.get('/factures/statistiques/', { params });
+    return data;
+  },
+  changeStatus: async (id: number, status: string) => {
+    const { data } = await api.post<FactureDetail>(`/factures/${id}/change_status/`, { status });
+    return data;
   }
 };
 
@@ -299,6 +402,18 @@ export const rapportService = {
   },
   delete: async (id: number) => {
     await api.delete(`/rapports/${id}/`);
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<RapportBase[]>(`/clients/${clientId}/rapports/`);
+    return data;
+  },
+  getByAffaire: async (affaireId: number) => {
+    const { data } = await api.get<RapportBase[]>(`/affaires/${affaireId}/rapports/`);
+    return data;
+  },
+  changeStatus: async (id: number, status: string) => {
+    const { data } = await api.post<RapportDetail>(`/rapports/${id}/change_status/`, { status });
+    return data;
   }
 };
 
@@ -326,6 +441,14 @@ export const formationService = {
   getParticipants: async (id: number) => {
     const { data } = await api.get<ParticipantBase[]>(`/formations/${id}/participants/`);
     return data;
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<FormationBase[]>(`/clients/${clientId}/formations/`);
+    return data;
+  },
+  getByAffaire: async (affaireId: number) => {
+    const { data } = await api.get<FormationBase[]>(`/affaires/${affaireId}/formations/`);
+    return data;
   }
 };
 
@@ -349,6 +472,10 @@ export const participantService = {
   },
   delete: async (id: number) => {
     await api.delete(`/participants/${id}/`);
+  },
+  getByFormation: async (formationId: number) => {
+    const { data } = await api.get<ParticipantBase[]>(`/formations/${formationId}/participants/`);
+    return data;
   }
 };
 
@@ -372,6 +499,14 @@ export const attestationFormationService = {
   },
   delete: async (id: number) => {
     await api.delete(`/attestations/${id}/`);
+  },
+  getByFormation: async (formationId: number) => {
+    const { data } = await api.get<AttestationFormationBase[]>(`/formations/${formationId}/attestations/`);
+    return data;
+  },
+  getByParticipant: async (participantId: number) => {
+    const { data } = await api.get<AttestationFormationBase[]>(`/participants/${participantId}/attestations/`);
+    return data;
   }
 };
 
@@ -431,5 +566,9 @@ export const opportuniteService = {
   },
   delete: async (id: number) => {
     await api.delete(`/opportunites/${id}/`);
+  },
+  getByClient: async (clientId: number) => {
+    const { data } = await api.get<OpportuniteListItem[]>(`/clients/${clientId}/opportunites/`);
+    return data;
   }
 };

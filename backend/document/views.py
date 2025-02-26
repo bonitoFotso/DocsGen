@@ -1,272 +1,423 @@
-from document.permissions import DepartmentPermission
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from django.db.models import Count, Sum, Q
+from django.utils.timezone import now
+from datetime import timedelta
+
 from .models import (
-    AuditLog, Entity, Client, Site, Category, Product, Offre, Proforma, 
-    Affaire, Facture, Rapport, Formation, Participant, AttestationFormation
+    Entity, Category, Product, 
+    Offre, Proforma, Affaire, 
+    Facture, Rapport, Formation, 
+    Participant, AttestationFormation, Opportunite
 )
-from rest_framework import permissions
-from rest_framework.exceptions import PermissionDenied
-from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
 
-from django.contrib.contenttypes.models import ContentType 
 from .serializers import (
-    # Entity serializers
     EntityListSerializer, EntityDetailSerializer, EntityEditSerializer,
-    # Client serializers
-    ClientListSerializer, ClientDetailSerializer, ClientEditSerializer,
-    # Site serializers
-    SiteListSerializer, SiteDetailSerializer, SiteEditSerializer,
-    # Category serializers
-    CategoryListSerializer, CategoryDetailSerializer, CategoryEditSerializer,
-    # Product serializers
+    CategoryListSerializer, CategoryDetailSerializer, CategoryEditSerializer, OpportuniteSerializer,
     ProductListSerializer, ProductDetailSerializer, ProductEditSerializer,
-    # Offre serializers
     OffreListSerializer, OffreDetailSerializer, OffreEditSerializer,
-    # Proforma serializers
     ProformaListSerializer, ProformaDetailSerializer, ProformaEditSerializer,
-    # Affaire serializers
     AffaireListSerializer, AffaireDetailSerializer, AffaireEditSerializer,
-    # Facture serializers
     FactureListSerializer, FactureDetailSerializer, FactureEditSerializer,
-    # Rapport serializers
     RapportListSerializer, RapportDetailSerializer, RapportEditSerializer,
-    # Formation serializers
     FormationListSerializer, FormationDetailSerializer, FormationEditSerializer,
-    # Participant serializers
     ParticipantListSerializer, ParticipantDetailSerializer, ParticipantEditSerializer,
-    # AttestationFormation serializers
     AttestationFormationListSerializer, AttestationFormationDetailSerializer, AttestationFormationEditSerializer,
+    OpportuniteListSerializer, OpportuniteDetailSerializer
 )
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.utils import timezone
+from client.serializers import ClientListSerializer
 
-@api_view(['GET'])
-def check_relances_today(request):
-    """
-    Vérifie les offres qui ont une relance aujourd'hui
-    """
-    today = timezone.now().date()
-    relances = Offre.objects.filter(
-        relance=today,
-    ).values('reference', 'client__nom', 'montant')
-    
-    return Response(relances)
-
-class BaseModelViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, DepartmentPermission]
-    
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-        self._create_audit_log('CREATE', serializer.instance)
-        
-    def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
-        self._create_audit_log('UPDATE', serializer.instance)
-        
-    def perform_destroy(self, instance):
-        self._create_audit_log('DELETE', instance)
-        instance.delete()
-        
-
-    def _get_changes(self, instance):
-       print(instance._state.adding)
-       if not instance._state.adding:
-           old_instance = instance.__class__.objects.get(pk=instance.pk)
-           changes = {}
-           for field in instance._meta.fields:
-               old_value = getattr(old_instance, field.name)
-               new_value = getattr(instance, field.name)
-               if old_value != new_value:
-                   changes[field.name] = {
-                       'old': str(old_value),
-                       'new': str(new_value)
-                   }
-           return changes
-       return None
-    def _create_audit_log(self, action, instance):
-        print(instance)
-        AuditLog.objects.create(
-            user=self.request.user,
-            action=action,
-            content_type=ContentType.objects.get_for_model(instance.__class__),
-            object_id=str(instance.pk),
-            object_repr=str(instance),
-            changes=self._get_changes(instance) if action == 'UPDATE' else None
-        )
+class EntityViewSet(viewsets.ModelViewSet):
+    queryset = Entity.objects.all()
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['code', 'name']
+    ordering_fields = ['code', 'name']
 
     def get_serializer_class(self):
         if self.action == 'list':
-            return self.serializer_class
+            return EntityListSerializer
         elif self.action in ['create', 'update', 'partial_update']:
-            return self.edit_serializer_class
-        return self.detail_serializer_class
+            return EntityEditSerializer
+        return EntityDetailSerializer
 
-    def handle_exception(self, exc):
-       if isinstance(exc, ( DjangoPermissionDenied)):
-           return DepartmentPermission().get_error_response(
-               self.request.user,
-               self.action,
-               self.__class__.__name__.replace('ViewSet', '')
-           )
-       return super().handle_exception(exc)
-
-
-
-class EntityViewSet(BaseModelViewSet):
-    queryset = Entity.objects.all()
-    serializer_class = EntityListSerializer
-    detail_serializer_class = EntityDetailSerializer
-    edit_serializer_class = EntityEditSerializer
-    filterset_fields = ['code']
-    search_fields = ['code', 'name']
-    ordering_fields = ['code', 'name']
-
-class ClientViewSet(BaseModelViewSet):
-    queryset = Client.objects.all()
-    serializer_class = ClientListSerializer
-    detail_serializer_class = ClientDetailSerializer
-    edit_serializer_class = ClientEditSerializer
-    filterset_fields = ['nom']
-    search_fields = ['nom', 'email']
-    ordering_fields = ['nom']
-
-    @action(detail=True, methods=['get'])
-    def sites(self, request, pk=None):
-        client = self.get_object()
-        sites = Site.objects.filter(client=client)
-        serializer = SiteListSerializer(sites, many=True)
-        return Response(serializer.data)
-
-class SiteViewSet(BaseModelViewSet):
-    queryset = Site.objects.all()
-    serializer_class = SiteListSerializer
-    detail_serializer_class = SiteDetailSerializer
-    edit_serializer_class = SiteEditSerializer
-
-    filterset_fields = ['client', 'nom']
-    search_fields = ['nom', 'localisation']
-    ordering_fields = ['nom']
-
-class CategoryViewSet(BaseModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
-    serializer_class = CategoryListSerializer
-    detail_serializer_class = CategoryDetailSerializer
-    edit_serializer_class = CategoryEditSerializer
-    filterset_fields = ['code', 'entity']
-    search_fields = ['code', 'name']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['entity']
+    search_fields = ['code', 'name', 'entity__name']
     ordering_fields = ['code', 'name']
-
-class ProductViewSet(BaseModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductListSerializer
-    detail_serializer_class = ProductDetailSerializer
-    edit_serializer_class = ProductEditSerializer
-    filterset_fields = ['code', 'category']
-    search_fields = ['code', 'name']
-    ordering_fields = ['code', 'name']
-
-class OffreViewSet(BaseModelViewSet):
-    queryset = Offre.objects.all()
-    serializer_class = OffreListSerializer
-    detail_serializer_class = OffreDetailSerializer
-    edit_serializer_class = OffreEditSerializer
-    filterset_fields = ['client', 'entity', 'statut', 'doc_type']
-    search_fields = ['reference']
-    ordering_fields = ['date_creation', 'date_modification']
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return OffreEditSerializer
-        elif self.action == 'list':
+        if self.action == 'list':
+            return CategoryListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return CategoryEditSerializer
+        return CategoryDetailSerializer
+
+    @action(detail=True, methods=['get'])
+    def products(self, request, pk=None):
+        """Retourne les produits d'une catégorie."""
+        category = self.get_object()
+        products = Product.objects.filter(category=category)
+        serializer = ProductListSerializer(products, many=True)
+        return Response(serializer.data)
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['category', 'category__entity']
+    search_fields = ['code', 'name', 'category__name']
+    ordering_fields = ['code', 'name']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProductListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return ProductEditSerializer
+        return ProductDetailSerializer
+
+    @action(detail=True, methods=['get'])
+    def offres(self, request, pk=None):
+        """Retourne les offres liées à ce produit."""
+        product = self.get_object()
+        offres = Offre.objects.filter(Q(produit=product) | Q(produits=product)).distinct()
+        serializer = OffreListSerializer(offres, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def opportunites(self, request, pk=None):
+        """Retourne les opportunités liées à ce produit."""
+        product = self.get_object()
+        opportunites = Opportunite.objects.filter(
+            Q(produit_principal=product) | Q(produits=product)
+        ).distinct()
+        serializer = OpportuniteListSerializer(opportunites, many=True)
+        return Response(serializer.data)
+
+class OpportuniteViewSet(viewsets.ModelViewSet):
+    queryset = Opportunite.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'contact', 'produit_principal']
+    search_fields = ['reference', 'client__nom', 'description']
+    ordering_fields = ['reference', 'date_detection', 'montant_estime', 'probabilite']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return OpportuniteListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return OpportuniteSerializer
+        return OpportuniteDetailSerializer
+
+    @action(detail=True, methods=['post'])
+    def qualifier(self, request, pk=None):
+        """Qualifie une opportunité."""
+        opportunite = self.get_object()
+        try:
+            opportunite.qualifier(request.user)
+            opportunite.save()
+            serializer = self.get_serializer(opportunite)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def proposer(self, request, pk=None):
+        """Passe une opportunité en proposition."""
+        opportunite = self.get_object()
+        try:
+            opportunite.proposer(request.user)
+            opportunite.save()
+            serializer = self.get_serializer(opportunite)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def negocier(self, request, pk=None):
+        """Passe une opportunité en négociation."""
+        opportunite = self.get_object()
+        try:
+            opportunite.negocier(request.user)
+            opportunite.save()
+            serializer = self.get_serializer(opportunite)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def gagner(self, request, pk=None):
+        """Marque une opportunité comme gagnée."""
+        opportunite = self.get_object()
+        try:
+            opportunite.gagner(request.user)
+            opportunite.save()
+            serializer = self.get_serializer(opportunite)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def perdre(self, request, pk=None):
+        """Marque une opportunité comme perdue."""
+        opportunite = self.get_object()
+        raison = request.data.get('raison', None)
+        try:
+            opportunite.perdre(request.user, raison=raison)
+            opportunite.save()
+            serializer = self.get_serializer(opportunite)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def creer_offre(self, request, pk=None):
+        """Crée une offre à partir de cette opportunité."""
+        opportunite = self.get_object()
+        try:
+            offre = opportunite.creer_offre()
+            return Response({
+                "status": "success",
+                "id": offre.id,
+                "offre_reference": offre.reference
+            })
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def a_relancer(self, request):
+        """Retourne les opportunités qui nécessitent une relance."""
+        opportunites = Opportunite.objects.filter(
+            relance__lte=now(),
+            statut__in=['PROSPECT', 'QUALIFICATION', 'PROPOSITION', 'NEGOCIATION']
+        ).order_by('relance')
+        serializer = OpportuniteListSerializer(opportunites, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def statistiques(self, request):
+        """Retourne des statistiques sur les opportunités."""
+        days = request.query_params.get('days', 30)
+        try:
+            days = int(days)
+        except ValueError:
+            days = 30
+
+        date_debut = now() - timedelta(days=days)
+        
+        # Statistiques par statut
+        statut_stats = Opportunite.objects.filter(
+            date_detection__gte=date_debut
+        ).values('statut').annotate(
+            count=Count('id'),
+            montant_total=Sum('montant_estime')
+        )
+        
+        # Statistiques par produit
+        produit_stats = Opportunite.objects.filter(
+            date_detection__gte=date_debut
+        ).values('produit_principal__name').annotate(
+            count=Count('id'),
+            montant_total=Sum('montant_estime')
+        )
+        
+        # Statistiques de conversion
+        conversion_stats = {
+            'qualifiees': Opportunite.objects.filter(
+                statut__in=['QUALIFICATION', 'PROPOSITION', 'NEGOCIATION', 'GAGNEE']
+            ).count(),
+            'proposees': Opportunite.objects.filter(
+                statut__in=['PROPOSITION', 'NEGOCIATION', 'GAGNEE']
+            ).count(),
+            'negociees': Opportunite.objects.filter(
+                statut__in=['NEGOCIATION', 'GAGNEE']
+            ).count(),
+            'gagnees': Opportunite.objects.filter(statut='GAGNEE').count(),
+            'perdues': Opportunite.objects.filter(statut='PERDUE').count(),
+            'total': Opportunite.objects.count()
+        }
+        
+        return Response({
+            'par_statut': statut_stats,
+            'par_produit': produit_stats,
+            'conversion': conversion_stats,
+            'montant_total': Opportunite.objects.filter(
+                date_detection__gte=date_debut
+            ).aggregate(Sum('montant_estime'))['montant_estime__sum'] or 0,
+            'probabilite_moyenne': Opportunite.objects.filter(
+                date_detection__gte=date_debut
+            ).exclude(statut__in=['GAGNEE', 'PERDUE']).values('probabilite').aggregate(
+                avg_probabilite=Sum('probabilite') / Count('id')
+            )['avg_probabilite'] or 0
+        })
+
+class OffreViewSet(viewsets.ModelViewSet):
+    queryset = Offre.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'produit']
+    search_fields = ['reference', 'client__nom']
+    ordering_fields = ['reference', 'date_creation', 'montant']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
             return OffreListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return OffreEditSerializer
         return OffreDetailSerializer
 
     @action(detail=True, methods=['post'])
     def valider(self, request, pk=None):
+        """Valide une offre."""
         offre = self.get_object()
-        if offre.statut != 'BROUILLON':
-            return Response(
-                {"detail": "Seule une offre en brouillon peut être validée."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        offre.statut = 'VALIDE'
-        offre.save()
-        return Response({"detail": "Offre validée avec succès."})
+        try:
+            if offre.statut != 'GAGNE':
+                offre.statut = 'GAGNE'
+                offre.save()
+            serializer = self.get_serializer(offre)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class ProformaViewSet(BaseModelViewSet):
+    @action(detail=False, methods=['get'])
+    def a_relancer(self, request):
+        """Retourne les offres qui nécessitent une relance."""
+        offres = Offre.objects.filter(
+            relance__lte=now(),
+            statut__in=['ENVOYE', 'EN_NEGOCIATION']
+        ).order_by('relance')
+        serializer = OffreListSerializer(offres, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def statistiques(self, request):
+        """Retourne des statistiques sur les offres."""
+        period = request.query_params.get('period', 'month')
+        
+        if period == 'year':
+            date_debut = now().replace(month=1, day=1)
+        elif period == 'quarter':
+            current_month = now().month
+            quarter_start_month = ((current_month - 1) // 3) * 3 + 1
+            date_debut = now().replace(month=quarter_start_month, day=1)
+        else:  # month
+            date_debut = now().replace(day=1)
+        
+        # Statistiques par statut
+        statut_stats = Offre.objects.filter(
+            date_creation__gte=date_debut
+        ).values('statut').annotate(
+            count=Count('id'),
+            montant_total=Sum('montant')
+        )
+        
+        # Statistiques par produit
+        produit_stats = Offre.objects.filter(
+            date_creation__gte=date_debut
+        ).values('produit__name').annotate(
+            count=Count('id'),
+            montant_total=Sum('montant')
+        )
+        
+        # Statistiques par entité
+        entity_stats = Offre.objects.filter(
+            date_creation__gte=date_debut
+        ).values('entity__name').annotate(
+            count=Count('id'),
+            montant_total=Sum('montant')
+        )
+        
+        return Response({
+            'par_statut': statut_stats,
+            'par_produit': produit_stats,
+            'par_entity': entity_stats,
+            'montant_total': Offre.objects.filter(
+                date_creation__gte=date_debut
+            ).aggregate(Sum('montant'))['montant__sum'] or 0,
+            'taux_conversion': {
+                'total': Offre.objects.filter(date_creation__gte=date_debut).count(),
+                'gagnees': Offre.objects.filter(
+                    date_creation__gte=date_debut, statut='GAGNE'
+                ).count(),
+                'perdues': Offre.objects.filter(
+                    date_creation__gte=date_debut, statut='PERDU'
+                ).count(),
+            }
+        })
+
+class ProformaViewSet(viewsets.ModelViewSet):
     queryset = Proforma.objects.all()
-    serializer_class = ProformaListSerializer
-    detail_serializer_class = ProformaDetailSerializer
-    edit_serializer_class = ProformaEditSerializer
-    filterset_fields = ['client', 'entity', 'statut', 'doc_type']
-    search_fields = ['reference']
-    ordering_fields = ['date_creation']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'offre']
+    search_fields = ['reference', 'client__nom']
+    ordering_fields = ['reference', 'date_creation']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ProformaListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return ProformaEditSerializer
+        return ProformaDetailSerializer
 
     @action(detail=True, methods=['post'])
     def valider(self, request, pk=None):
+        """Valide un proforma."""
         proforma = self.get_object()
-        if proforma.statut != 'BROUILLON':
-            return Response(
-                {"detail": "Seul un proforma en brouillon peut être validé."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        proforma.statut = 'VALIDE'
-        proforma.save()
-        return Response({"detail": "Proforma validé avec succès."})
-    
+        try:
+            proforma.valider(request.user)
+            proforma.save()
+            serializer = self.get_serializer(proforma)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     @action(detail=True, methods=['post'])
     def change_status(self, request, pk=None):
+        """Change le statut d'un proforma."""
         proforma = self.get_object()
-
-        # Vérifier si le nouveau statut est fourni dans la requête
-        new_status = request.data.get('status')
-        if not new_status:
+        new_status = request.data.get('status', None)
+        if not new_status or new_status not in [s[0] for s in Proforma.STATUTS]:
             return Response(
-                {"detail": "Le nouveau statut doit être fourni."},
+                {"detail": "Statut invalide."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        try:
+            proforma.statut = new_status
+            proforma.save()
+            serializer = self.get_serializer(proforma)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Vérifier si le nouveau statut est valide
-        valid_statuses = ['BROUILLON', 'VALIDE', 'ENVOYE']  # Ajoutez ici tous les statuts valides
-        if new_status not in valid_statuses:
-            return Response(
-                {"detail": f"Le statut doit être l'un des suivants : {', '.join(valid_statuses)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Mettre à jour le statut
-        proforma.statut = new_status
-        proforma.save()
-        print(f"Statut du proforma mis à jour avec succès vers '{new_status}'.")
-
-        return Response({
-            "detail": f"Statut du proforma mis à jour avec succès vers '{new_status}'."
-        })
-
-class AffaireViewSet(BaseModelViewSet):
+class AffaireViewSet(viewsets.ModelViewSet):
     queryset = Affaire.objects.all()
-    serializer_class = AffaireListSerializer
-    detail_serializer_class = AffaireDetailSerializer
-    edit_serializer_class = AffaireEditSerializer
-    filterset_fields = ['client', 'entity', 'statut']
-    search_fields = ['reference']
-    ordering_fields = ['date_debut', 'date_fin_prevue']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'offre']
+    search_fields = ['reference', 'client__nom']
+    ordering_fields = ['reference', 'date_creation', 'date_debut']
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        affaire = serializer.save()
-        response_serializer = self.detail_serializer_class(affaire)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return AffaireListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return AffaireEditSerializer
+        elif self.action == 'details_complets':
+            return AffaireDetailSerializer
+        return AffaireDetailSerializer
+
+    @action(detail=True, methods=['get'])
+    def details_complets(self, request, pk=None):
+        """Retourne les détails complets d'une affaire avec ses entités liées."""
+        affaire = self.get_object()
+        serializer = AffaireDetailSerializer(affaire)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
     def rapports(self, request, pk=None):
+        """Retourne les rapports liés à une affaire."""
         affaire = self.get_object()
         rapports = Rapport.objects.filter(affaire=affaire)
         serializer = RapportListSerializer(rapports, many=True)
@@ -274,119 +425,273 @@ class AffaireViewSet(BaseModelViewSet):
 
     @action(detail=True, methods=['get'])
     def formations(self, request, pk=None):
+        """Retourne les formations liées à une affaire."""
         affaire = self.get_object()
         formations = Formation.objects.filter(affaire=affaire)
         serializer = FormationListSerializer(formations, many=True)
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def details_complets(self, request, pk=None):
+
+    @action(detail=True, methods=['post'])
+    def change_status(self, request, pk=None):
+        """Change le statut d'une affaire."""
         affaire = self.get_object()
-
-        # Récupérer l'offre associée avec ses détails
-        offre_serializer = OffreDetailSerializer(affaire.offre)
-
-        # Récupérer le client associé avec ses détails
-        client_serializer = ClientDetailSerializer(affaire.client)
-
-
-        # Récupérer les rapports
-        rapports = Rapport.objects.filter(affaire=affaire)
-        rapports_serializer = RapportListSerializer(rapports, many=True)
-
-        # Récupérer les formations et leurs participants
-        formations = Formation.objects.filter(affaire=affaire)
-        formations_data = []
-
-        for formation in formations:
-            formation_serializer = FormationDetailSerializer(formation)
-            participants = Participant.objects.filter(formation=formation)
-            participants_serializer = ParticipantListSerializer(participants, many=True)
-
-            # Récupérer les attestations pour cette formation
-            attestations = AttestationFormation.objects.filter(formation=formation)
-            attestations_serializer = AttestationFormationListSerializer(attestations, many=True)
-
-            formations_data.append({
-                'formation': formation_serializer.data,
-                'participants': participants_serializer.data,
-                'attestations': attestations_serializer.data
-            })
-
-        # Récupérer la facture si elle existe
+        new_status = request.data.get('status', None)
+        if not new_status or new_status not in ['EN_COURS', 'TERMINEE', 'ANNULEE']:
+            return Response(
+                {"detail": "Statut invalide."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         try:
-            facture = Facture.objects.get(affaire=affaire)
-            facture_serializer = FactureDetailSerializer(facture)
-            facture_data = facture_serializer.data
-        except Facture.DoesNotExist:
-            facture_data = None
+            affaire.statut = new_status
+            # Si terminée, définir la date de fin
+            if new_status == 'TERMINEE' and not affaire.date_fin_prevue:
+                affaire.date_fin_prevue = now()
+            affaire.save()
+            serializer = self.get_serializer(affaire)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Assembler toutes les données
-        data = {
-            'affaire': AffaireDetailSerializer(affaire).data,
-            'client': client_serializer.data,
-            'offre': offre_serializer.data,
-            'rapports': rapports_serializer.data,
-            'formations': formations_data,
-            'facture': facture_data,
-            'statistiques': {
-                'nombre_rapports': rapports.count(),
-                'nombre_formations': formations.count(),
-                'nombre_total_participants': Participant.objects.filter(formation__affaire=affaire).count(),
-                'nombre_attestations': AttestationFormation.objects.filter(affaire=affaire).count(),
-            }
-        }
+    @action(detail=False, methods=['get'])
+    def statistiques(self, request):
+        """Retourne des statistiques sur les affaires."""
+        period = request.query_params.get('period', 'month')
+        
+        if period == 'year':
+            date_debut = now().replace(month=1, day=1)
+        elif period == 'quarter':
+            current_month = now().month
+            quarter_start_month = ((current_month - 1) // 3) * 3 + 1
+            date_debut = now().replace(month=quarter_start_month, day=1)
+        else:  # month
+            date_debut = now().replace(day=1)
+        
+        # Statistiques par statut
+        statut_stats = Affaire.objects.filter(
+            date_creation__gte=date_debut
+        ).values('statut').annotate(
+            count=Count('id')
+        )
+        
+        # Nombre de rapports par affaire
+        rapport_stats = Affaire.objects.filter(
+            date_creation__gte=date_debut
+        ).annotate(
+            rapports_count=Count('rapports')
+        ).values('reference', 'rapports_count')
+        
+        # Nombre de formations par affaire
+        formation_stats = Affaire.objects.filter(
+            date_creation__gte=date_debut
+        ).annotate(
+            formations_count=Count('formations')
+        ).values('reference', 'formations_count')
+        
+        return Response({
+            'par_statut': statut_stats,
+            'rapports': rapport_stats,
+            'formations': formation_stats,
+            'total': Affaire.objects.filter(date_creation__gte=date_debut).count(),
+            'en_cours': Affaire.objects.filter(
+                date_creation__gte=date_debut, statut='EN_COURS'
+            ).count(),
+            'terminees': Affaire.objects.filter(
+                date_creation__gte=date_debut, statut='TERMINEE'
+            ).count(),
+            'annulees': Affaire.objects.filter(
+                date_creation__gte=date_debut, statut='ANNULEE'
+            ).count(),
+        })
 
-        return Response(data)
-
-class FactureViewSet(BaseModelViewSet):
+class FactureViewSet(viewsets.ModelViewSet):
     queryset = Facture.objects.all()
-    serializer_class = FactureListSerializer
-    detail_serializer_class = FactureDetailSerializer
-    edit_serializer_class = FactureEditSerializer
-    filterset_fields = ['client', 'entity', 'statut']
-    search_fields = ['reference']
-    ordering_fields = ['date_creation']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'affaire']
+    search_fields = ['reference', 'client__nom']
+    ordering_fields = ['reference', 'date_creation']
 
-class RapportViewSet(BaseModelViewSet):
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return FactureListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return FactureEditSerializer
+        return FactureDetailSerializer
+
+    @action(detail=True, methods=['post'])
+    def change_status(self, request, pk=None):
+        """Change le statut d'une facture."""
+        facture = self.get_object()
+        new_status = request.data.get('status', None)
+        if not new_status or new_status not in [s[0] for s in Facture.STATUTS]:
+            return Response(
+                {"detail": "Statut invalide."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            facture.statut = new_status
+            facture.save()
+            serializer = self.get_serializer(facture)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def statistiques(self, request):
+        """Retourne des statistiques sur les factures."""
+        period = request.query_params.get('period', 'month')
+        
+        if period == 'year':
+            date_debut = now().replace(month=1, day=1)
+        elif period == 'quarter':
+            current_month = now().month
+            quarter_start_month = ((current_month - 1) // 3) * 3 + 1
+            date_debut = now().replace(month=quarter_start_month, day=1)
+        else:  # month
+            date_debut = now().replace(day=1)
+        
+        # Statistiques par statut
+        statut_stats = Facture.objects.filter(
+            date_creation__gte=date_debut
+        ).values('statut').annotate(
+            count=Count('id')
+        )
+        
+        # Statistiques par client
+        client_stats = Facture.objects.filter(
+            date_creation__gte=date_debut
+        ).values('client__nom').annotate(
+            count=Count('id')
+        )
+        
+        return Response({
+            'par_statut': statut_stats,
+            'par_client': client_stats,
+            'total': Facture.objects.filter(date_creation__gte=date_debut).count(),
+            'brouillon': Facture.objects.filter(
+                date_creation__gte=date_debut, statut='BROUILLON'
+            ).count(),
+            'envoyees': Facture.objects.filter(
+                date_creation__gte=date_debut, statut='ENVOYE'
+            ).count(),
+            'validees': Facture.objects.filter(
+                date_creation__gte=date_debut, statut='VALIDE'
+            ).count(),
+            'refusees': Facture.objects.filter(
+                date_creation__gte=date_debut, statut='REFUSE'
+            ).count(),
+        })
+
+class RapportViewSet(viewsets.ModelViewSet):
     queryset = Rapport.objects.all()
-    serializer_class = RapportListSerializer
-    detail_serializer_class = RapportDetailSerializer
-    edit_serializer_class = RapportEditSerializer
-    filterset_fields = ['affaire', 'site', 'produit', 'statut']
-    search_fields = ['reference']
-    ordering_fields = ['date_creation']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'affaire', 'produit']
+    search_fields = ['reference', 'client__nom', 'numero']
+    ordering_fields = ['reference', 'date_creation']
 
-class FormationViewSet(BaseModelViewSet):
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return RapportListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return RapportEditSerializer
+        return RapportDetailSerializer
+
+    @action(detail=True, methods=['post'])
+    def change_status(self, request, pk=None):
+        """Change le statut d'un rapport."""
+        rapport = self.get_object()
+        new_status = request.data.get('status', None)
+        if not new_status or new_status not in [s[0] for s in Rapport.STATUTS]:
+            return Response(
+                {"detail": "Statut invalide."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            rapport.statut = new_status
+            rapport.save()
+            serializer = self.get_serializer(rapport)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'])
+    def attestations(self, request, pk=None):
+        """Retourne les attestations liées à un rapport."""
+        rapport = self.get_object()
+        attestations = AttestationFormation.objects.filter(rapport=rapport)
+        serializer = AttestationFormationListSerializer(attestations, many=True)
+        return Response(serializer.data)
+
+class FormationViewSet(viewsets.ModelViewSet):
     queryset = Formation.objects.all()
-    serializer_class = FormationListSerializer
-    detail_serializer_class = FormationDetailSerializer
-    edit_serializer_class = FormationEditSerializer
-    filterset_fields = ['client', 'affaire']
-    search_fields = ['titre']
-    ordering_fields = ['date_debut', 'date_fin']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'affaire', 'rapport']
+    search_fields = ['titre', 'client__nom', 'description']
+    ordering_fields = ['titre', 'date_debut', 'date_fin']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return FormationListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return FormationEditSerializer
+        return FormationDetailSerializer
 
     @action(detail=True, methods=['get'])
     def participants(self, request, pk=None):
+        """Retourne les participants d'une formation."""
         formation = self.get_object()
         participants = Participant.objects.filter(formation=formation)
         serializer = ParticipantListSerializer(participants, many=True)
         return Response(serializer.data)
 
-class ParticipantViewSet(BaseModelViewSet):
+    @action(detail=True, methods=['get'])
+    def attestations(self, request, pk=None):
+        """Retourne les attestations de formation."""
+        formation = self.get_object()
+        attestations = AttestationFormation.objects.filter(formation=formation)
+        serializer = AttestationFormationListSerializer(attestations, many=True)
+        return Response(serializer.data)
+
+class ParticipantViewSet(viewsets.ModelViewSet):
     queryset = Participant.objects.all()
-    serializer_class = ParticipantListSerializer
-    detail_serializer_class = ParticipantDetailSerializer
-    edit_serializer_class = ParticipantEditSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['formation']
-    search_fields = ['nom', 'prenom', 'email']
+    search_fields = ['nom', 'prenom', 'email', 'fonction']
     ordering_fields = ['nom', 'prenom']
 
-class AttestationFormationViewSet(BaseModelViewSet):
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ParticipantListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return ParticipantEditSerializer
+        return ParticipantDetailSerializer
+
+    @action(detail=True, methods=['get'])
+    def attestation(self, request, pk=None):
+        """Retourne l'attestation d'un participant."""
+        participant = self.get_object()
+        try:
+            attestation = AttestationFormation.objects.get(participant=participant)
+            serializer = AttestationFormationDetailSerializer(attestation)
+            return Response(serializer.data)
+        except AttestationFormation.DoesNotExist:
+            return Response(
+                {"detail": "Aucune attestation trouvée pour ce participant."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class AttestationFormationViewSet(viewsets.ModelViewSet):
     queryset = AttestationFormation.objects.all()
-    serializer_class = AttestationFormationListSerializer
-    detail_serializer_class = AttestationFormationDetailSerializer
-    edit_serializer_class = AttestationFormationEditSerializer
-    filterset_fields = ['affaire', 'formation', 'participant']
-    search_fields = ['reference']
-    ordering_fields = ['date_creation']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['client', 'statut', 'entity', 'affaire', 'formation', 'participant', 'rapport']
+    search_fields = ['reference', 'client__nom', 'participant__nom', 'participant__prenom']
+    ordering_fields = ['reference', 'date_creation']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return AttestationFormationListSerializer
+        elif self.action in ['create', 'update', 'partial_update']:
+            return AttestationFormationEditSerializer
+        return AttestationFormationDetailSerializer

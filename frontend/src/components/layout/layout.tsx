@@ -1,15 +1,19 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './sidebar';
 import { Header } from './Header';
 import { cn } from '@/lib/utils';
 import { Settings, ChevronUp } from 'lucide-react';
 
 export function Layout() {
+  // Utiliser useLocation ici pour obtenir le chemin actuel
+  const location = useLocation();
+  const currentPath = location.pathname;
+  
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const mainRef = React.useRef<HTMLElement>(null);
-
+  
   // Gérer le scroll
   React.useEffect(() => {
     const handleScroll = (e: Event) => {
@@ -17,14 +21,14 @@ export function Layout() {
       setIsScrolled(target.scrollTop > 0);
       setShowScrollTop(target.scrollTop > 400);
     };
-
+    
     const mainElement = mainRef.current;
     if (mainElement) {
       mainElement.addEventListener('scroll', handleScroll);
       return () => mainElement.removeEventListener('scroll', handleScroll);
     }
   }, []);
-
+  
   // Scroll to top
   const scrollToTop = () => {
     mainRef.current?.scrollTo({
@@ -32,13 +36,14 @@ export function Layout() {
       behavior: 'smooth'
     });
   };
-
+  
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <Sidebar />
+      {/* Passer currentPath à la Sidebar */}
+      <Sidebar currentPath={currentPath} />
+      
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
         <Header isScrolled={isScrolled} />
-
         {/* Main Content */}
         <main
           ref={mainRef}
@@ -54,7 +59,6 @@ export function Layout() {
           <div className="mx-auto w-full">
             <Outlet />
           </div>
-
           {/* Scroll to top button */}
           {showScrollTop && (
             <button
@@ -76,7 +80,6 @@ export function Layout() {
             </button>
           )}
         </main>
-
         {/* Footer */}
         <footer className={cn(
           "border-t border-gray-200 dark:border-gray-700",
@@ -89,7 +92,6 @@ export function Layout() {
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 © 2025 KES DOC_GEN. All rights reserved.
               </div>
-              
               <div className="flex items-center space-x-4">
                 <button
                   className={cn(
@@ -112,4 +114,4 @@ export function Layout() {
   );
 }
 
-export default Layout
+export default Layout;

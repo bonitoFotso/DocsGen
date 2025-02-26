@@ -151,5 +151,9 @@ export const contactService = {
 
   delete: async (id: string | number) => {
     await api.delete(`/contacts/${id}/`);
-  }
+  },
+    getByClient: async (clientId: number) => {
+      const { data } = await api.get<Contact[]>(`/clients/${clientId}/contacts/`);
+      return data;
+    }
 };

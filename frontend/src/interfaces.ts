@@ -118,6 +118,8 @@ interface OffreBase extends DocumentBase {
   date_validation?: string;
 }
 
+
+
 interface OffreDetail extends OffreBase {
   client_nom: string;
   produit?: ProductBase;

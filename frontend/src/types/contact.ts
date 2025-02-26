@@ -63,6 +63,7 @@ export interface Offre {
     date: string;
     montant: number;
     status: string;
+    reference: string;
 }
 
 export interface Facture {
@@ -89,7 +90,7 @@ export interface Affaire {
     titre: string;
     date_debut: string;
     date_fin: string;
-    status: string;
+    statut: string;
 }
 
 export interface Rapport {
@@ -168,4 +169,16 @@ export interface OpportuniteEdition {
     description: string | null;
     besoins_client: string | null;
     entity: number;
+}
+
+export interface OffreCommerciale {
+    id: number;
+    reference: string;
+    client_nom: string;
+    entity_code: string;
+    statut: string;
+    date_creation: string;
+    montant?: number;
+    validite_date?:string;
+    produits_count?:number;
 }

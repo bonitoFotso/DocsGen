@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, RapportListSerializer
+from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, OpportuniteSerializer, RapportListSerializer
 from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
 class PaysListSerializer(serializers.ModelSerializer):
@@ -160,6 +160,7 @@ class ClientDetailSerializer(ClientListSerializer):
     affaires = AffaireListSerializer(many=True, read_only=True)
     rapports = RapportListSerializer(many=True, read_only=True)
     ville = VilleListSerializer(read_only=True)
+    opportunites = OpportuniteSerializer(many=True, read_only=True)
     
     
     
@@ -190,7 +191,8 @@ class ClientDetailSerializer(ClientListSerializer):
             'factures',
             'sites',
             'affaires',
-            'rapports'
+            'rapports',
+            'opportunites'
             
         ]
 

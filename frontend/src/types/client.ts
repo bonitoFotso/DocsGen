@@ -1,4 +1,4 @@
-import { Affaire, Contact, Facture, Offre, Rapport, Site, Ville } from "./contact";
+import { Affaire, Contact, Facture, Offre, OffreCommerciale, Opportunite, Rapport, Site, Ville } from "./contact";
 
 export interface Client {
     id: number;
@@ -25,10 +25,11 @@ export interface Client {
 
 export interface ClientDetails extends Client {
     contacts: Contact[];
-    offres: Offre[];
+    offres: OffreCommerciale[];
     factures: Facture[];
     sites: Site[];
     affaires: Affaire[];
     rapports: Rapport[];
     ville: Ville;
+    opportunites:Opportunite[];
 }

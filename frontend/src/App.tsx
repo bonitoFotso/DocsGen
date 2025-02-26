@@ -55,6 +55,7 @@ function App() {
               <Route path=":id" element={<OpportunityDetails />} />
               <Route path=":id/edit" element={<OpportuniteEditionPage/>} />
               <Route path="new" element={<OpportuniteCreation/>} />
+              <Route path="new" element={<OpportuniteCreation/>} />
             </Route>
 
             {/* Documents commerciaux */}

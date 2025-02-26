@@ -667,25 +667,3 @@ class Opportunite(Document):
     def __str__(self):
         return f"Opportunité {self.reference} - {self.client.nom} - {self.statut}"
 
-
-# Signal pour notifier le frontend quand une relance est nécessaire
-@receiver(signals.post_save, sender=Opportunite)
-def notify_frontend_relance_opportunite(sender, instance, **kwargs):
-    if instance.necessite_relance:
-        channel_layer = channels.layers.get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "notifications",  # Nom du groupe de notification
-            {
-                "type": "send_notification",
-                "message": {
-                    "type": "RELANCE_OPPORTUNITE_REQUISE",
-                    "opportunite_id": instance.id,
-                    "reference": instance.reference,
-                    "client": instance.client.nom,
-                    "date_relance": instance.relance.isoformat(),
-                    "montant": str(instance.montant_estime),
-                    "statut": instance.statut,
-                    "probabilite": instance.probabilite,
-                }
-            }
-        )
