@@ -1,3 +1,4 @@
+from api.user.models import User
 from document.models import Entity, Category, Product
 
 def seed_data():
@@ -142,3 +143,58 @@ def seed_data():
         Product.objects.create(code=code, name=name, category=category)
 
     print("Seed data successfully added!")
+    
+    from django.contrib.auth.models import User
+
+def seed_users():
+    """Crée les utilisateurs avec leurs emails, noms d'utilisateur et mots de passe prédéfinis."""
+    
+    # Définition des données utilisateurs avec mot de passe prédéfini "Kes@2023!"
+    users_data = [
+        {"email": "alvin.jamfa@kes-africa.com", "username": "alvin.jamfa", "first_name": "Alvin", "last_name": "Jamfa", "password": "Kes@2023!"},
+        {"email": "adriane.njike@kes-africa.com", "username": "adriane.njike", "first_name": "Adriane", "last_name": "Njike", "password": "Kes@2023!"},
+        {"email": "jb.onomo@kes-africa.com", "username": "jb.onomo", "first_name": "Jean-Baptiste", "last_name": "Onomo", "password": "Kes@2023!"},
+        {"email": "patrick.essame@kes-africa.com", "username": "patrick.essame", "first_name": "Patrick", "last_name": "Essame", "password": "Kes@2023!"},
+        {"email": "helene.ndenga@kes-africa.com", "username": "helene.ndenga", "first_name": "Hélène", "last_name": "Ndenga", "password": "Kes@2023!"},
+        {"email": "emiliene.matip@kes-africa.com", "username": "emiliene.matip", "first_name": "Émilienne", "last_name": "Matip", "password": "Kes@2023!"},
+        {"email": "bonito.fotso@kes-africa.com", "username": "bonito.fotso", "first_name": "Bonito", "last_name": "Fotso", "password": "Kes@2023!"},
+    ]
+    
+    created_users = []
+    
+    for user_data in users_data:
+        # Vérification si l'utilisateur existe déjà
+        if not User.objects.filter(username=user_data["username"]).exists():
+            # Création de l'utilisateur
+            user = User.objects.create_user(
+                username=user_data["username"],
+                email=user_data["email"],
+                password=user_data["password"],
+
+            )
+            
+            created_users.append({
+                "username": user.username,
+                "email": user.email,
+                "password": user_data["password"],
+                
+            })
+        else:
+            print(f"L'utilisateur {user_data['username']} existe déjà.")
+    
+    # Affichage des informations des utilisateurs créés
+    if created_users:
+        print("Utilisateurs créés avec succès:")
+        print("=" * 80)
+        print(f"{'Nom d utilisateur':<20} {'Email':<35} {'Mot de passe':<15} ")
+        print("-" * 80)
+        
+        for user in created_users:
+            print(f"{user['username']:<20} {user['email']:<35} {user['password']:<15} ")
+    else:
+        print("Aucun nouvel utilisateur n'a été créé.")
+    
+    return created_users
+
+# Pour utiliser cette fonction, appelez simplement:
+# seed_users()
