@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import type {
   EntityBase, EntityDetail, EntityEdit,
   ClientDetail, ClientEdit,
@@ -29,8 +29,28 @@ export const api = axios.create({
   },
 });
 
+// Instance d'Axios pour les requêtes multipart (utile pour l'upload de fichiers)
+export const apiClientFile: AxiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'multipart/form-data', // Pour les requêtes avec fichiers
+  },
+});
+
 // Intercepteur pour ajouter le token
 api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Intercepteur pour ajouter le token
+apiClientFile.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -524,7 +544,7 @@ export const opportuniteService = {
     return data;
   },
   update: async (id: number, opportunite: Partial<OpportuniteEdition>) => {
-    const { data } = await api.patch<Opportunite>(`/opportunites/${id}/`, opportunite);
+    const { data } = await api.put<Opportunite>(`/opportunites/${id}/`, opportunite);
     return data;
   },
   qualifier: async (id: number) => {

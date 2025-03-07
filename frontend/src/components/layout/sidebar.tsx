@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Building2, 
   Users, 
-  MapPin, 
   Package, 
   FileText, 
   GraduationCap,
@@ -43,6 +42,7 @@ const navigation = [
   { name: 'Produits', href: '/products', icon: Package, category: 'business' },
   { name: 'Formations', href: '/formations', icon: GraduationCap, category: 'business' },
   { name: 'Rapports', href: '/rapports', icon: FileText, category: 'business' },
+  { name: 'Courriers', href: '/courriers', icon: FileText, category: 'business' },
 ];
 
 const footerNavigation = [
@@ -64,7 +64,8 @@ export function Sidebar() {
     try {
       setCurrentPath(location.pathname);
       setHasRouterContext(true);
-    } catch (error) {
+    } catch (_error) {
+      console.log(_error);
       // Fallback to window.location if router context is not available
       const path = window.location.pathname || '/';
       setCurrentPath(path);
@@ -76,7 +77,22 @@ export function Sidebar() {
     setCollapsed(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const NavLink = ({ item, depth = 0 }: { item: any; depth?: number }) => {
+  const NavLink = ({ 
+    item, 
+    depth = 0 
+  }: { 
+    item: {
+      name: string;
+      href?: string;
+      icon: React.ComponentType<{ className?: string }>;
+      children?: Array<{
+        name: string;
+        href: string;
+        icon: React.ComponentType<{ className?: string }>;
+      }>;
+    }; 
+    depth?: number 
+  }) => {
     const isActive = currentPath === item.href;
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
@@ -102,7 +118,7 @@ export function Sidebar() {
           </button>
           {isCollapsed && (
             <div className="mt-1 space-y-1 px-3">
-              {item.children.map((child: any) => (
+              {item.children?.map((child) => (
                 <NavLink key={child.name} item={child} depth={depth + 1} />
               ))}
             </div>
@@ -142,7 +158,7 @@ export function Sidebar() {
     return (
       <Link
         key={item.name}
-        to={item.href}
+        to={item.href || ''}
         className={cn(
           'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
           isActive

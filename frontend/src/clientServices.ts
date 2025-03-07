@@ -47,7 +47,7 @@ export const villeService = {
   },
 
   getByRegion: async (regiond: number) => {
-    const { data } = await api.get<Ville>(`/villes/?region=${regiond}`);
+    const { data } = await api.get<Ville[]>(`/villes/?region=${regiond}`);
     return data;
   }
 };

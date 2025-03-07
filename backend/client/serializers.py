@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from courrier.serializers import CourrierSerializer
 from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, OpportuniteSerializer, RapportListSerializer
 from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
@@ -115,6 +116,7 @@ class ClientListSerializer(serializers.ModelSerializer):
     affaires_count = serializers.IntegerField(source='affaires.count', read_only=True)
     factures_count = serializers.IntegerField(source='factures.count', read_only=True)
     opportunities_count = serializers.IntegerField(source='opportunites.count', read_only=True)
+    courriers_count = serializers.IntegerField(source='courriers.count', read_only=True)
     
     class Meta:
         model = Client
@@ -138,7 +140,8 @@ class ClientListSerializer(serializers.ModelSerializer):
             'affaires_count',
             'factures_count',
             'region_nom',
-            'opportunities_count'
+            'opportunities_count',
+            'courriers_count'
         ]
         read_only_fields = ['c_num']
         
@@ -161,6 +164,7 @@ class ClientDetailSerializer(ClientListSerializer):
     rapports = RapportListSerializer(many=True, read_only=True)
     ville = VilleListSerializer(read_only=True)
     opportunites = OpportuniteSerializer(many=True, read_only=True)
+    courriers = CourrierSerializer(many=True, read_only=True)
     
     
     
@@ -192,8 +196,8 @@ class ClientDetailSerializer(ClientListSerializer):
             'sites',
             'affaires',
             'rapports',
-            'opportunites'
-            
+            'opportunites',
+            'courriers',
         ]
 
 class SiteDetailSerializer(serializers.ModelSerializer):

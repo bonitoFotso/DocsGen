@@ -2,13 +2,14 @@ import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { ClientBase, EntityBase, OffreEdit } from '@/interfaces';
 import { FormField } from './FormField';
+import { Contact } from '@/types/contact';
 
 interface InfoTabProps {
   formData: OffreEdit;
   setFormData: React.Dispatch<React.SetStateAction<OffreEdit>>;
   clients: ClientBase[];
   entities: EntityBase[];
-  contacts: ContactBase[];
+  contacts: Contact[];
 }
 
 export const InfoTab: React.FC<InfoTabProps> = ({

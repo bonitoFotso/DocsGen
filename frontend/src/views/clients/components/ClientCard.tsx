@@ -45,6 +45,7 @@ interface Client {
   matricule: string;
   entite: string;
   opportunities_count: number;
+  courriers_count: number;
 }
 
 interface StatItemProps {

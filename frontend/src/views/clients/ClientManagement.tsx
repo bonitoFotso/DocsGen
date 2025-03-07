@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { User, Plus } from 'lucide-react';
+import {  Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useServices } from '@/AppHooks';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ const ClientManagement: React.FC<ClientManagementProps> = ({
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -56,22 +54,6 @@ const ClientManagement: React.FC<ClientManagementProps> = ({
     navigate('/clients/new');
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-      return;
-    }
-    setIsDeleting(id);
-    setError(null);
-    try {
-      await clientService.delete(id);
-      await loadClients();
-    } catch (err) {
-      console.error('Error deleting client:', err);
-      setError('Erreur lors de la suppression');
-    } finally {
-      setIsDeleting(null);
-    }
-  };
 
   const filteredClients = clients.filter(client =>
     client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||

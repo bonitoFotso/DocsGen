@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
-import { ClientBase, ClientDetail, ClientEdit } from '@/interfaces';
+import { ClientBase, ClientEdit } from '@/interfaces';
 import { useServices } from '@/AppHooks';
+import { ClientDetails } from '@/types/client';
 
 export const useClients = () => {
   const { clientService } = useServices();
@@ -14,6 +15,7 @@ export const useClients = () => {
       const data = await clientService.getAll();
       setClients(data);
     } catch (err) {
+      console.log(err);
       setError('Erreur lors du chargement des clients');
     } finally {
       setIsLoading(false);
@@ -23,10 +25,12 @@ export const useClients = () => {
   const createClient = async (clientData: ClientEdit) => {
     setIsLoading(true);
     try {
-      await clientService.create(clientData);
+      const resp = await clientService.create(clientData);
       await loadClients();
-      return true;
+      return resp;
     } catch (err) {
+      console.log(err);
+
       setError('Erreur lors de la création du client');
       return false;
     } finally {
@@ -41,6 +45,8 @@ export const useClients = () => {
       await loadClients();
       return true;
     } catch (err) {
+      console.log(err);
+
       setError('Erreur lors de la mise à jour du client');
       return false;
     } finally {
@@ -55,6 +61,8 @@ export const useClients = () => {
       await loadClients();
       return true;
     } catch (err) {
+      console.log(err);
+
       setError('Erreur lors de la suppression du client');
       return false;
     } finally {
@@ -62,11 +70,13 @@ export const useClients = () => {
     }
   };
 
-  const getClientById = async (id: number): Promise<ClientDetail | null> => {
+  const getClientById = async (id: number): Promise<ClientDetails | null> => {
     setIsLoading(true);
     try {
       return await clientService.getById(id);
     } catch (err) {
+      console.log(err);
+
       setError('Erreur lors du chargement du client');
       return null;
     } finally {

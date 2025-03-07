@@ -21,6 +21,10 @@ import OpportunityDetails from './views/opportunites/opportunityDetails';
 import { Toaster } from 'sonner';
 import OpportuniteCreation from './views/opportunites/OpportuniteCreation';
 import OpportuniteEditionPage from './views/opportunites/OpportuniteEdition';
+import CourriersManagementPage from './views/courriers/CourriersManagementPage';
+import CourrierForm from './views/courriers/CourrierForm';
+import CourrierDetailPage from './views/courriers/CourrierDetailPage';
+import ClientFormPage from './views/clients/ClientFormPage';
 
 function App() {
   return (
@@ -45,6 +49,8 @@ function App() {
             <Route path="clients">
               <Route index element={<ClientManagement />} />
               <Route path=":id" element={<ClientDetailsPage />} />
+              <Route path=":id/edit" element={<ClientFormPage />} />
+              <Route path="new" element={<ClientFormPage />} />
             </Route>
 
             <Route path="contacts" element={<ContactsPage />} />
@@ -54,7 +60,7 @@ function App() {
               <Route index element={<OpportunityPage />} />
               <Route path=":id" element={<OpportunityDetails />} />
               <Route path=":id/edit" element={<OpportuniteEditionPage/>} />
-              <Route path="new" element={<OpportuniteCreation/>} />
+              <Route path="creation" element={<OpportuniteCreation/>} />
               <Route path="new" element={<OpportuniteCreation/>} />
             </Route>
 
@@ -70,6 +76,16 @@ function App() {
 
             {/* Rapports */}
             <Route path="rapports" element={<RapportManagement />} />
+
+            {/*courriers */}
+            <Route path="courriers" >
+              <Route index element={<CourriersManagementPage />} />
+              <Route path=":id" element={<CourrierDetailPage />} />
+              <Route path=":id/edit" element={<CourrierForm />} />
+              <Route path="create" element={<CourrierForm />} />
+
+            </Route>
+            
 
             {/* Redirection pour les routes inconnues */}
             <Route path="*" element={<Navigate to="/" replace />} />

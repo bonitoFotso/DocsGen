@@ -130,12 +130,12 @@ const ClientDetailsPage: React.FC = () => {
   };
 
   const handleCreateOpportunite = () => {
-    navigate(`/opportunites/creation?client=${id}`);
+    navigate(`/opportunities/creation?client=${id}`);
   };
 
   // Fonctions de navigation vers les détails
   const navigateToOpportunite = (opportuniteId: number) => {
-    navigate(`/opportunites/${opportuniteId}`);
+    navigate(`/opportunities/${opportuniteId}`);
   };
 
   const navigateToContact = (contactId: number) => {

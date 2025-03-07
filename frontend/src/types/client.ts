@@ -1,4 +1,5 @@
-import { Affaire, Contact, Facture, Offre, OffreCommerciale, Opportunite, Rapport, Site, Ville } from "./contact";
+import { Affaire, Contact, Facture, OffreCommerciale, Opportunite, Rapport, Site, Ville } from "./contact";
+import { Courrier } from "./courrier";
 
 export interface Client {
     id: number;
@@ -20,8 +21,9 @@ export interface Client {
     quartier: string;
     matricule: string;
     entite: string;
+    opportunities_count: number;
+    courriers_count: number;
 }
-
 
 export interface ClientDetails extends Client {
     contacts: Contact[];
@@ -32,4 +34,5 @@ export interface ClientDetails extends Client {
     rapports: Rapport[];
     ville: Ville;
     opportunites:Opportunite[];
+    courriers:Courrier[];
 }
