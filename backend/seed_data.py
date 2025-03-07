@@ -4,15 +4,17 @@ def seed_data():
     # Création des entités
     kes_inspections = Entity.objects.create(code="KIP", name="KES INSPECTIONS & PROJECTS")
     kes_energy = Entity.objects.create(code="KEC", name="KES ENERGY & CARBON")
-    kes_sarl = Entity.objects.create(code="KES", name="KES SARL")
+    kes_sarl = Entity.objects.create(code="KES", name="KAMER ENGINEERING SOLUTIONS")  # Correction du nom
 
     # Création des catégories pour KES INSPECTIONS & PROJECTS
     categories_kes = {
         "INS": "INSPECTION",
+        "DEV": "DEVELOPPEMENT",  # Ajouté
         "FOR": "FORMATION",
-        "QHS": "QHSE",
+        "QHS": "QUALITE HYGIENE SECURITE ENVIRONNEMENT (QHSE)",  # Correction du nom complet
+        "CAR": "CARTOGRAPHIE",  # Correction orthographique
         "IND": "INDUSTRIE",
-        "CAR": "CARTHOGRAPHIE",
+        "PRJ": "PROJETS",  # Ajouté
         "CTC": "CONTRÔLE TECHNIQUE DES CONSTRUCTIONS",
     }
     kes_categories = {}
@@ -22,8 +24,11 @@ def seed_data():
     # Création des catégories pour KES ENERGY & CARBON
     categories_kec = {
         "INS": "INSPECTION",
+        "DEV": "DEVELOPPEMENT",  # Ajouté
         "FOR": "FORMATION",
-        "CAR": "CARTHOGRAPHIE",
+        "QHS": "QUALITE HYGIENE SECURITE ENVIRONNEMENT (QHSE)",  # Correction du nom complet
+        "CAR": "CARTOGRAPHIE",  # Correction orthographique
+        "ETD": "ETUDE",  # Ajouté - spécifique à KES EC
     }
     kec_categories = {}
     for code, name in categories_kec.items():
@@ -32,67 +37,66 @@ def seed_data():
     # Création des produits pour KES INSPECTIONS & PROJECTS
     products_kes = [
         # INSPECTION
-        ("INS", "VTE1", "Verification electrique"),
-        ("INS", "VTE2", "Mesure de terre"),
-        ("INS", "VTE3", "Vérification électrique par thermographie infrarouge"),
-        ("INS", "VTE4", "Etude Arc Flash"),
-        ("INS", "VTE5", "Etude Selectivité"),
-        ("INS", "VTE6", "Foudre"),
-        ("INS", "VTE7", "Verification des ascenseurs"),
-        ("INS", "VTE8", "Evaluation risque ATEX"),
-        ("INS", "VTE9", "Vérification des appareils de levage"),
-        ("INS", "VTE14", "Audit sécurité incendie"),
-        ("INS", "VTE17", "Diagnostic CTC"),
-        ("INS", "VTE20", "Audit climatisation"),
-        ("INS", "VTE21", "Audit énergetique"),
-        ("INS", "VTE22", "Verification des extincteurs"),
-        ("INS", "VTE24", "Audit plomberie"),
-        ("INS", "VTE49", "Expertise technique"),
-        ("INS", "VTE43", "Maitrise d'œuvre"),
-        ("INS", "VTE44", "Facility management"),
-        ("INS", "VTE45", "Bureau d'etude"),
-        ("INS", "VTE46", "Contrôle technique"),
-        ("INS", "VTE47", "Eclairage public"),
-        ("INS", "VTE48", "Accompagnement technique"),
-        ("INS", "VTE50", "Verification equipement de chantier"),
+        ("INS", "VINS1", "Verification electrique"),
+        ("INS", "VINS2", "Mesure de terre"),
+        ("INS", "VINS3", "Vérification électrique par thermographie infrarouge"),
+        ("INS", "VINS4", "Etude Arc Flash"),
+        ("INS", "VINS5", "Etude Selectivité"),
+        ("INS", "VINS6", "Foudre"),
+        ("INS", "VINS7", "Verification des ascenseurs"),
+        ("INS", "VINS8", "Evaluation risque ATEX"),
+        ("INS", "VINS9", "Vérification des appareils de levage"),
+        ("INS", "VINS10", "Audit sécurité incendie"),
+        ("INS", "VINS11", "Diagnostic CTC"),
+        ("INS", "VINS12", "Audit climatisation"),
+        ("INS", "VINS13", "Audit énergetique"),
+        ("INS", "VINS14", "Verification des extincteurs"),
+        ("INS", "VINS15", "Audit plomberie"),
+        ("INS", "VINS16", "Expertise technique"),
+        ("INS", "VINS17", "Facility management"),
+        ("INS", "VINS18", "Eclairage public"),
+        ("INS", "VINS19", "Accompagnement technique"),
+        ("INS", "VINS20", "Verification equipement de chantier"),
+        ("INS", "VINS21", "Analyse laboratoire"),
+        ("INS", "VINS22", "Vente EPI"),
+        ("INS", "VINS23", "Verification des echafaudages, echelles et point d'ancrage"),
         # FORMATION
-        ("FOR", "VTE27", "Habilitation électrique"),
-        ("FOR", "VTE28", "Travaux en hauteur"),
-        ("FOR", "VTE29", "Premiers secours"),
-        ("FOR", "VTE30", "Sécurité incendie"),
-        ("FOR", "VTE31", "Conduite des appareils de levage"),
-        ("FOR", "VTE32", "Elingage"),
-        ("FOR", "VTE33", "Equipements sous pression"),
-        ("FOR", "VTE34", "Thermographie infrarouge"),
-        ("FOR", "VTE35", "Fresque du climat"),
-        ("FOR", "VTE36", "Habilitation mecanique"),
-        ("FOR", "VTE37", "Maintenance des installations electriques"),
-        ("FOR", "VTE38", "Inspection des installations electrique"),
-        ("FOR", "VTE39", "Bureau d'etude"),
-        ("FOR", "VTE40", "Maitrise d'œuvre"),
-        ("FOR", "VTE41", "HSE"),
-        ("FOR", "VTE42", "Plomberie"),
-        ("FOR", "VTE51", "ATEX"),
-        ("FOR", "VTE52", "Equipement formation realité virtuelle"),
-        ("FOR", "VTE53", "Equipement sous pression"),
+        ("FOR", "VF1", "Habilitation électrique"),
+        ("FOR", "VF2", "Travaux en hauteur"),
+        ("FOR", "VF3", "Premiers secours"),
+        ("FOR", "VF4", "Sécurité incendie"),
+        ("FOR", "VF5", "Conduite des appareils de levage"),
+        ("FOR", "VF6", "Elingage"),
+        ("FOR", "VF7", "Equipements sous pression"),
+        ("FOR", "VF8", "Thermographie infrarouge"),
+        ("FOR", "VF9", "Fresque du climat"),
+        ("FOR", "VF10", "Habilitation mecanique"),
+        ("FOR", "VF11", "Sensibilisation du personnel aux risques ATEX"),
+        ("FOR", "VF12", "Maîtriser le risque ATEX lors des opérations de maintenance"),
+        ("FOR", "VF13", "Formation Habilitation GAZ"),
+        ("FOR", "VF14", "Bornes de recharge électrique - IRVE"),
+        ("FOR", "VF15", "Habilitation electrique - Bornes de recharge électrique - IRVE"),
+        # Ajout d'autres formations selon le fichier Excel
         # QHSE
-        ("QHS", "VTE11", "Mesure sonore"),
-        ("QHS", "VTE12", "Mesure d'éclairement"),
-        ("QHS", "VTE13", "Mesure de la qualité d'air"),
-        ("QHS", "VTE16", "Bilan carbone"),
+        ("QHS", "VQ1", "Mesure sonore"),
+        ("QHS", "VQ2", "Mesure d'éclairement"),
+        ("QHS", "VQ3", "Mesure de la qualité d'air"),
+        ("QHS", "VQ4", "Bilan carbone"),
         # INDUSTRIE
-        ("IND", "VTE10", "Verification des equipements sous pression"),
-        ("IND", "VTE18", "Contrôle non destructif"),
-        ("IND", "VTE19", "Baremage"),
-        ("IND", "VTE25", "Tarage des soupapes"),
+        ("IND", "VI1", "Verification des equipements sous pression"),
+        ("IND", "VI2", "Contrôle non destructif"),
+        ("IND", "VI3", "Baremage"),
+        ("IND", "VI4", "Tarage des soupapes"),
         # CARTOGRAPHIE
-        ("CAR", "VTE15", "Cartographie"),
-        ("CAR", "VTE23", "Inspection drone"),
-        ("CAR", "VTE26", "Projets spéciaux"),
+        ("CAR", "VC1", "Cartographie"),
+        ("CAR", "VC2", "Inspection drone"),
+        ("CAR", "VC3", "Projets spéciaux"),
         # CONTRÔLE TECHNIQUE DES CONSTRUCTIONS
-        ("CTC", "VTE54", "Diagnostique"),
-        ("CTC", "VTE55", "Contrôle technique"),
-        ("CTC", "VTE56", "Etude"),
+        ("CTC", "VC4", "Diagnostique"),
+        ("CTC", "VC5", "Contrôle technique"),
+        # PROJETS
+        ("PRJ", "VP1", "Bureau d'etude"),
+        ("PRJ", "VP2", "Maitrise d'œuvre"),
     ]
     for category_code, code, name in products_kes:
         category = kes_categories[category_code]
@@ -123,11 +127,15 @@ def seed_data():
         ("INS", "EC20", "Contrôle technique"),
         ("INS", "EC21", "Accompagnement technique"),
         # FORMATION
-        ("FOR", "EC22", "FORMATION"),
+        ("FOR", "EC22", "Fresque du climat"),  # Remplacé par un produit spécifique
+        ("FOR", "EC23", "Energie - Carbone"),  # Ajouté
         # CARTOGRAPHIE
-        ("CAR", "EC23", "Cartographie"),
-        ("CAR", "EC24", "Inspection drone"),
-        ("CAR", "EC25", "Projets spéciaux"),
+        ("CAR", "EC24", "Cartographie"),
+        ("CAR", "EC25", "Inspection drone"),
+        ("CAR", "EC26", "Projets spéciaux"),
+        # ETUDE - Catégorie spécifique à KES EC
+        ("ETD", "EC27", "Études énergétiques"),
+        ("ETD", "EC28", "Études de décarbonation"),
     ]
     for category_code, code, name in products_kec:
         category = kec_categories[category_code]
