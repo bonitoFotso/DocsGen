@@ -3,9 +3,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { useOffres } from "@/hooks/useOffres";
 import { FileText, PlusCircle } from "lucide-react";
 import { OffreTable } from "./offreTable";
-import { OffreDetails } from "./OfferDetails";
-import { OffreForm } from "./OffreForm";
-
+import { useNavigate } from "react-router-dom";
 
 const OffreManagement = () => {
   const {
@@ -14,26 +12,16 @@ const OffreManagement = () => {
     error,
     searchTerm,
     setSearchTerm,
-    selectedOffre,
-    setSelectedOffre,
+
     handleViewDetails,
     handleEdit,
     handleDelete,
     isDeleting,
-    isModalOpen,
-    setIsModalOpen,
-    handleNewOffre,
-    handleSubmit,
-    formData,
-    setFormData,
-    currentOffre,
-    clients,
-    products,
-    categories,
-    sites,
-    entities,
+  
     setError,
   } = useOffres();
+
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white p-6">
@@ -52,7 +40,7 @@ const OffreManagement = () => {
                 </div>
               </div>
               <button
-                onClick={handleNewOffre}
+                onClick={() => navigate('/offres/new')}
                 className="w-full sm:w-auto bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 
                          transition-all duration-200 transform hover:scale-105 hover:shadow-lg
                          flex items-center justify-center gap-2 group"
@@ -87,34 +75,6 @@ const OffreManagement = () => {
           </div>
         </div>
 
-        {/* Details Slide-over */}
-        {selectedOffre && (
-          <OffreDetails
-            offre={selectedOffre}
-            onClose={() => setSelectedOffre(null)}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
-          />
-        )}
-
-        {/* Edit/Create Modal */}
-        {isModalOpen && (
-          <OffreForm
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleSubmit}
-            formData={formData}
-            setFormData={setFormData}
-            isLoading={isLoading}
-            currentOffre={currentOffre}
-            clients={clients}
-            products={products}
-            sites={sites}
-            entities={entities}
-            categories={categories}
-          />
-        )}
       </div>
     </div>
   );

@@ -25,6 +25,8 @@ import CourriersManagementPage from './views/courriers/CourriersManagementPage';
 import CourrierForm from './views/courriers/CourrierForm';
 import CourrierDetailPage from './views/courriers/CourrierDetailPage';
 import ClientFormPage from './views/clients/ClientFormPage';
+import OffreForm from './views/offres/OffreFormdd';
+import OffreDetails from './views/offres/OfferDetails';
 
 function App() {
   return (
@@ -65,7 +67,14 @@ function App() {
             </Route>
 
             {/* Documents commerciaux */}
-            <Route path="offres" element={<OffreManagement />} />
+            {/* Offres */}
+            <Route path="offres">
+              <Route index element={<OffreManagement />} />
+              <Route path=":id" element={<OffreDetails />} />
+              <Route path=":id/edit" element={<OffreForm />} />
+              <Route path="creation" element={<OffreForm />} />
+              <Route path="new" element={<OffreForm />} />
+            </Route>
             <Route path="affaires" element={<AffaireManagement />} />
             <Route path="factures" element={<FactureManagement />} />
             <Route path="proformas" element={<ProformaManagement />} />
