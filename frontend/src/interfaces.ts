@@ -118,16 +118,50 @@ interface OffreBase extends DocumentBase {
   date_validation?: string;
 }
 
+interface Produit {
+  id: number;
+  name: string;
+  code: string;
+  prix: number;
+}
+
+interface Contact {
+  id: number;
+  nom: string;
+  email?: string;
+  telephone?: string;
+  fonction?: string;
+}
+
+interface Client {
+  id: number;
+  nom: string;
+  c_num: string;
+}
+
+interface Entity {
+  id: number;
+  nom: string;
+  code: string;
+}
 
 
-interface OffreDetail extends OffreBase {
-  client_nom: string;
-  produit?: ProductBase;
-  produits: ProductBase[];
-  // sites: SiteBase[];
-  client: ClientBase;
-  entity: EntityBase;
-  contact: ContactBase[];
+
+interface OffreDetail {
+  id: number;
+  reference: string;
+  statut: 'BROUILLON' | 'ENVOYE' | 'GAGNE' | 'PERDU';
+  date_creation: string;
+  date_modification: string;
+  date_validation?: string;
+  montant: number;
+  client: Client;
+  contact?: Contact;
+  entity: Entity;
+  produits: Produit[];
+  relance?: string;
+  necessite_relance: boolean;
+  sequence_number: number;
   proforma?: ProformaBase;
   affaire?: AffaireBase;
 }

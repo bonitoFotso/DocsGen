@@ -1,7 +1,8 @@
 from rest_framework import viewsets, serializers
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from document.models import Affaire, AttestationFormation, Client, Entity, Facture, Formation, Offre, Participant, Product, Proforma, Rapport, Site
+from document.models import Affaire, AttestationFormation, Client, Entity, Facture, Formation, Participant, Product, Proforma, Rapport, Site
+from offres_app.models import Offre
 
 # Serializers de base
 class ClientSerializer(serializers.ModelSerializer):

@@ -5,7 +5,7 @@ import type {
   SiteBase, SiteDetail, SiteEdit,
   CategoryBase, CategoryDetail, CategoryEdit,
   ProductBase, ProductDetail, ProductEdit,
-  OffreBase, OffreDetail, OffreEdit,
+  OffreBase,
   ProformaBase, ProformaDetail, ProformaEdit,
   AffaireBase, AffaireDetail, AffaireEdit,
   FactureBase, FactureDetail, FactureEdit,
@@ -19,6 +19,9 @@ import { AffaireDetails } from './affaireType';
 import { Client, ClientDetails } from './types/client';
 import { Contact, Opportunite, OpportuniteEdition, OpportuniteListItem } from './types/contact';
 import { ContactBase, ContactEdit } from './itf';
+import { OffreDetail, OffreInitData } from './types/offre';
+import { OffreFormData } from './views/offres/types';
+import { OffreStatus } from './components/offre/ActionsCard';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 
@@ -243,22 +246,31 @@ export const productService = {
   }
 };
 
+interface OffreStatusResponse {
+  success: boolean;
+  current_status: OffreStatus;
+}
+
 // Offre Service
 export const offreService = {
   getAll: async () => {
-    const { data } = await api.get<OffreBase[]>('/offres/');
+    const { data } = await api.get<OffreDetail[]>('/offres/');
     return data;
   },
   getById: async (id: number) => {
     const { data } = await api.get<OffreDetail>(`/offres/${id}/`);
     return data;
   },
-  create: async (offre: OffreEdit) => {
+  create: async (offre: OffreFormData) => {
     const { data } = await api.post<OffreDetail>('/offres/', offre);
     return data;
   },
-  update: async (id: number, offre: Partial<OffreEdit>) => {
+  update: async (id: number, offre: Partial<OffreFormData>) => {
     const { data } = await api.put<OffreDetail>(`/offres/${id}/`, offre);
+    return data;
+  },
+  upload: async (id: number, file: File) => {
+    const { data } = await apiClientFile.post<OffreDetail>(`/off/offres/${id}/upload/`, { file });
     return data;
   },
   delete: async (id: number) => {
@@ -280,7 +292,33 @@ export const offreService = {
     const params = period ? { period } : {};
     const { data } = await api.get('/offres/statistiques/', { params });
     return data;
-  }
+  },
+
+  getInitData: async () => {
+    const { data } = await api.get<OffreInitData>('/offress/init_data/');
+    return data;
+  },
+
+  download: async (id: number) => {
+    const { data } = await api.get<OffreDetail>(`/offres/${id}/download/`);
+    return data;
+  },
+  archive: async (id: number) => {
+    const { data } = await api.post<OffreDetail>(`/offres/${id}/archiver/`);
+    return data;
+  },
+  markWon: async (id: number) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/gagner/`);
+    return data;
+  },
+  markLost: async (id: number) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/perdre/`);
+    return data;
+  },
+  send: async (id: number) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/envoyer/`);
+    return data;
+  },
 };
 
 // Proforma Service

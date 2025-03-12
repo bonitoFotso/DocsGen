@@ -1,6 +1,8 @@
 from rest_framework import serializers
+
+from offres_app.models import Offre
 from .models import (
-    Entity, Client, Site, Category, Product, Offre, Proforma, 
+    Entity, Client, Site, Category, Product, Proforma, 
     Affaire, Facture, Rapport, Formation, Participant, AttestationFormation
 )
 

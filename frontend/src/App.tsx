@@ -25,7 +25,7 @@ import CourriersManagementPage from './views/courriers/CourriersManagementPage';
 import CourrierForm from './views/courriers/CourrierForm';
 import CourrierDetailPage from './views/courriers/CourrierDetailPage';
 import ClientFormPage from './views/clients/ClientFormPage';
-import OffreForm from './views/offres/OffreFormdd';
+import OffreForm from './views/offres/OffreForm';
 import OffreDetails from './views/offres/OfferDetails';
 
 function App() {

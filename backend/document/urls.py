@@ -24,7 +24,7 @@ router = DefaultRouter()
 router.register(r'entities', EntityViewSet, basename='entity')
 router.register(r'categories', CategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet, basename='product')
-router.register(r'offres', OffreViewSet, basename='offre')
+#router.register(r'offres', OffreViewSet, basename='offre')
 router.register(r'proformas', ProformaViewSet, basename='proforma')
 router.register(r'affaires', AffaireViewSet, basename='affaire')
 router.register(r'factures', FactureViewSet, basename='facture')
@@ -40,6 +40,8 @@ app_name = 'api'
 urlpatterns = [
     # Inclusion des URLs générées par le router
     path('', include(router.urls)),
+    
+    path('', include('offres_app.urls')),
     
     # URLs d'authentification de DRF
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),

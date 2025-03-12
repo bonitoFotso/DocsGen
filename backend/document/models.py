@@ -130,161 +130,9 @@ class Document(models.Model):
 
 
 
-class Offre(Document):
-    
-    STATUS_CHOICES = [
-        ('BROUILLON', 'Brouillon'),
-        ('ENVOYE', 'Envoyé'),
-        ('GAGNE', 'Gagné'),
-        ('PERDU', 'Perdu'),
-    ]
-    
-    produits = models.ManyToManyField(Product)
-    produit = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offres")
-    date_modification = models.DateTimeField(auto_now=True)
-    date_validation = models.DateTimeField(blank=True, null=True)  # Date d'acceptation
-    contact = models.ForeignKey(Contact, on_delete=models.CASCADE, related_name="offres")
-    montant = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    statut = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='BROUILLON'
-    )
-    
-    relance = models.DateTimeField(
-        blank=True, 
-        null=True,
-        help_text="Date de la prochaine relance si l'offre n'est pas encore gagnée"
-    )
-    
-    DELAIS_RELANCE = {
-        'ENVOYE': 7,  # Première relance après 7 jours
-        'EN_NEGOCIATION': 5,  # Relance tous les 5 jours pendant la négociation
-    }
-
-    def set_relance(self):
-        """
-        Configure la prochaine date de relance si l'offre n'est pas gagnée/perdue
-        """
-        if self.statut in ['GAGNE', 'PERDU']:
-            self.relance = None
-            return
-
-        if self.statut in self.DELAIS_RELANCE:
-            # Si une relance existe déjà, on ajoute le délai à la date actuelle
-            # Sinon on l'ajoute à la dernière modification
-            base_date = now() if not self.relance else self.relance
-            self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
-
-
-    @property
-    def necessite_relance(self):
-        """
-        Indique si l'offre nécessite une relance maintenant
-        """
-        return (
-            self.relance 
-            and self.relance <= now() 
-            and self.statut not in ['GAGNE', 'PERDU']
-        )
-        
-    @transaction.atomic
-    def save(self, *args, **kwargs):
-        
-        if self.statut == 'GAGNE':
-            self.date_validation = self.date_validation or now()
-            self.relance = None  # Plus besoin de relance si validée
-            self.creer_affaire()
-        elif self.statut == 'PERDU':
-            self.relance = None  # Plus besoin de relance si perdue
-        else:
-            # Met à jour la date de relance pour les autres statuts
-            self.set_relance()
-
-        
-        
-        if not self.reference:
-            if not self.sequence_number:
-                last_sequence = Offre.objects.filter(
-                    entity=self.entity,
-                    client=self.client,
-                    date_creation__year=now().year,
-                    date_creation__month=now().month
-                ).aggregate(Max('sequence_number'))['sequence_number__max']
-                self.sequence_number = (last_sequence or 0) + 1
-                print(self.sequence_number, last_sequence)
-            total_offres_client = Offre.objects.filter(client=self.client).count() + 1
-            date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/OFF/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{self.produit.code}/{total_offres_client}/{self.sequence_number:04d}"
-
-        if self.statut == 'VALIDE' and not self.date_validation:
-            self.date_validation = now() 
-            self.creer_affaire()
-        elif self.statut == 'VALIDE' and self.date_validation:
-            self.date_validation = now()
-            self.creer_affaire()
-
-        print(self.reference)
-        super().save(*args, **kwargs)
-    @transaction.atomic
-    def creer_affaire(self):
-        """
-        Crée l'affaire et le proforma associés à l'offre.
-        Cette méthode est appelée automatiquement quand le statut passe à 'VALIDE'.
-        """
-        if self.statut != 'GAGNE':
-            raise ValueError("L'offre doit être en statut 'VALIDE' pour créer une affaire.")
-
-        if hasattr(self, 'proforma'):
-            raise ValueError("Une affaire existe déjà pour cette proforma.")
-
-        if not self.date_validation:
-            raise ValueError("L'offre n'a pas de date de validation.")
-
-
-
-        # Créer le proforma
-        proforma = Proforma.objects.create(
-            offre=self,
-            client=self.client,
-            entity=self.entity,
-            doc_type='PRO',
-        )
-        
-        # Créer l'affaire
-        affaire = Affaire.objects.create(
-            offre=self,
-            client=self.client,
-            entity=self.entity,
-            doc_type='AFF',
-        )
-
-        return proforma,affaire
-
-# Signal pour notifier le frontend quand une relance est nécessaire
-@receiver(signals.post_save, sender=Offre)
-def notify_frontend_relance(sender, instance, **kwargs):
-    if instance.necessite_relance:
-        channel_layer = channels.layers.get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "notifications",  # Nom du groupe de notification
-            {
-                "type": "send_notification",
-                "message": {
-                    "type": "RELANCE_REQUISE",
-                    "offre_id": instance.id,
-                    "reference": instance.reference,
-                    "client": instance.client.nom,
-                    "date_relance": instance.relance.isoformat(),
-                    "montant": str(instance.montant),
-                    "statut": instance.statut,
-                }
-            }
-        )
 
 class Proforma(Document):
-    offre = models.OneToOneField(Offre, on_delete=models.CASCADE, related_name="proforma")
+    offre = models.OneToOneField('offres_app.Offre', on_delete=models.CASCADE, related_name="proforma")
 
     def save(self, *args, **kwargs):
         if not self.reference:
@@ -298,7 +146,7 @@ class Proforma(Document):
                 self.sequence_number = (last_sequence or 0) + 1
             total_proformas_client = Proforma.objects.filter(client=self.client).count() + 1
             date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/PRO/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}{date.day:02d}/{total_proformas_client}/{self.sequence_number:04d}"
+            self.reference = f"{self.entity.code}/PRO/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}/{self.offre.pk}/{total_proformas_client}/{self.sequence_number:02d}"
         if self.statut == 'VALIDE':
             self.date_validation = now()
 
@@ -306,7 +154,7 @@ class Proforma(Document):
 
 
 class Affaire(Document):
-    offre = models.OneToOneField(Offre, on_delete=models.CASCADE, related_name="affaire")
+    offre = models.OneToOneField('offres_app.Offre', on_delete=models.CASCADE, related_name="affaire")
     date_debut = models.DateTimeField(auto_now_add=True)
     date_fin_prevue = models.DateTimeField(null=True, blank=True)
     statut = models.CharField(
@@ -387,7 +235,7 @@ class Affaire(Document):
                     ).aggregate(Max('sequence_number'))['sequence_number__max']
                     self.sequence_number = (last_sequence or 0) + 1
                 date = self.date_creation or now()
-                self.reference = f"AFF{str(date.year)[-2:]}{date.month:02d}{date.day}{self.sequence_number:04d}"
+                self.reference = f"AFF{str(date.year)[-2:]}{date.month:02d}{Client.pk}{self.offre.pk}{self.sequence_number:02d}"
 
         super().save(*args, **kwargs)
 

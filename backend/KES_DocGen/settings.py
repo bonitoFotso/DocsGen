@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "api.authentication",
     "client",
     "courrier",
+    
+    "offres_app",
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
