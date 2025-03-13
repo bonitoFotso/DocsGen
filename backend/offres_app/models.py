@@ -5,7 +5,8 @@ from django.db.models import Max
 from django.contrib.auth import get_user_model
 from datetime import timedelta
 
-from document.models import Affaire, Proforma
+from affaires_app.models import Affaire
+from document.models import Proforma
 
 
 User = get_user_model()
@@ -17,15 +18,10 @@ class OffreProduit(models.Model):
     produit = models.ForeignKey('document.Product', on_delete=models.CASCADE)
     #quantite = models.PositiveIntegerField(default=1)
     #remise = models.FloatField(default=0)  # En pourcentage (0-100)
-    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
     class Meta:
         unique_together = ('offre', 'produit')
     
-    @property
-    def montant(self):
-        """Calculer le montant total pour ce produit dans l'offre"""
-        return self.prix_unitaire
 
 
 class Offre(models.Model):
@@ -46,7 +42,7 @@ class Offre(models.Model):
         choices=STATUS_CHOICES,
         default='BROUILLON'
     )
-    montant = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    montant = models.DecimalField(max_digits=10, decimal_places=2, default=100)
     fichier = models.FileField(upload_to='offres/', blank=True, null=True)
     # Relations
     client = models.ForeignKey('client.Client', on_delete=models.CASCADE, related_name="offres")
@@ -54,7 +50,7 @@ class Offre(models.Model):
     entity = models.ForeignKey('document.Entity', on_delete=models.CASCADE, related_name="offres")
     produits = models.ManyToManyField('document.Product', through='OffreProduit', related_name="offres")
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="offres")
-    produit = models.ForeignKey('document.Product', on_delete=models.SET_NULL, null=True, related_name="offres_unique")
+    produit = models.ForeignKey('document.Product', on_delete=models.CASCADE, related_name="offres_unique")
     
     # Champs supplémentaires
     notes = models.TextField(blank=True)
@@ -151,12 +147,12 @@ class Offre(models.Model):
             affaire = Affaire.objects.get_or_create(
                 offre=self,
                 #proforma=proforma,
-                client=self.client,
+                #client=self.client,
                 #contact=self.contact, 
-                entity=self.entity,
+                #entity=self.entity,
                 created_by=self.user,
                 #montant=self.montant
             )
     
     def __str__(self):
-        return f"{self.reference} - {self.client.nom} ({self.get_statut_display()})"
+        return f"{self.reference} - {self.client.nom}"

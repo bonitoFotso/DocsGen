@@ -10,7 +10,6 @@ class OffreProduitInline(admin.TabularInline):
     model = OffreProduit
     extra = 1
     fields = ('produit', 'prix_unitaire', 'montant')
-    readonly_fields = ('montant',)
     
     def get_fields(self, request, obj=None):
         """Rend montant readonly seulement quand l'objet existe déjà"""
@@ -23,10 +22,10 @@ class OffreProduitInline(admin.TabularInline):
 @admin.register(Offre)
 class OffreAdmin(admin.ModelAdmin):
     list_display = ('reference', 'client_link', 'statut', 'date_creation', 
-                    'afficher_montant', 'user', 'relance_status')
+                     'user', 'relance_status')
     list_filter = ('statut', 'entity', 'date_creation', 'user')
     search_fields = ('reference', 'client__nom', 'notes')
-    readonly_fields = ('reference', 'date_creation', 'date_modification', 'afficher_montant')
+    readonly_fields = ('reference', 'date_creation', 'date_modification',)
     inlines = [OffreProduitInline]
     fieldsets = (
         (None, {
@@ -63,24 +62,7 @@ class OffreAdmin(admin.ModelAdmin):
         return format_html('<span style="color:gray;">Pas de relance</span>')
     relance_status.short_description = 'Relance'
     
-    def afficher_montant(self, obj):
-        """Affiche le montant total de l'offre"""
-        try:
-            # Vérifie si le champ montant est accessible directement
-            if hasattr(obj, 'montant') and obj.montant is not None:
-                return obj.montant
-            
-            # Sinon, calcule le montant en sommant tous les produits
-            total = 0
-            for offre_produit in OffreProduit.objects.filter(offre=obj):
-                try:
-                    total += offre_produit.montant
-                except (TypeError, ValueError):
-                    pass
-            return total
-        except Exception:
-            return "—"
-    afficher_montant.short_description = 'Montant'
+    
     
     def get_queryset(self, request):
         """Optimise les requêtes en préchargeant les relations"""
@@ -96,10 +78,9 @@ class OffreAdmin(admin.ModelAdmin):
 
 @admin.register(OffreProduit)
 class OffreProduitAdmin(admin.ModelAdmin):
-    list_display = ('offre', 'produit', 'prix_unitaire', 'afficher_montant')
+    list_display = ('offre', 'produit')
     list_filter = ('offre__statut',)
     search_fields = ('offre__reference', 'produit__nom')
-    readonly_fields = ('montant',)
     
     def afficher_montant(self, obj):
         """Afficher le montant de façon sécurisée"""

@@ -4,7 +4,6 @@ import { Dashboard } from './views/dashboard';
 import EntityManagement from './views/entities/entities';
 import SiteManagement from './views/sites/sites';
 import OffreManagement from './views/offres/offres';
-import AffaireManagement from './views/affaires/affaies';
 import ProformaManagement from './views/proformas/Proformas';
 import RapportManagement from './views/rapports';
 import ProductManagement from './views/products';
@@ -27,6 +26,9 @@ import CourrierDetailPage from './views/courriers/CourrierDetailPage';
 import ClientFormPage from './views/clients/ClientFormPage';
 import OffreForm from './views/offres/OffreForm';
 import OffreDetails from './views/offres/OfferDetails';
+import AffaireListPage from './views/affaires/AffairesListPage';
+import AffaireDetailPage from './views/affaires/AffaireDetailPage';
+import AffaireEditPage from './views/affaires/AffaireEditPage';
 
 function App() {
   return (
@@ -75,7 +77,12 @@ function App() {
               <Route path="creation" element={<OffreForm />} />
               <Route path="new" element={<OffreForm />} />
             </Route>
-            <Route path="affaires" element={<AffaireManagement />} />
+            {/* Affaires */}
+            <Route path='affaires'>
+              <Route index element={<AffaireListPage />} />
+              <Route path=':id' element={<AffaireDetailPage />} />
+              <Route path=':id/edit' element={<AffaireEditPage />} />
+            </Route>
             <Route path="factures" element={<FactureManagement />} />
             <Route path="proformas" element={<ProformaManagement />} />
 

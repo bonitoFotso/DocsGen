@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "courrier",
     
     "offres_app",
+    "affaires_app",
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS Middleware

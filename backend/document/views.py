@@ -11,7 +11,7 @@ from offres_app.models import Offre
 
 from .models import (
     Entity, Category, Product, 
-    Proforma, Affaire, 
+    Proforma,
     Facture, Rapport, Formation, 
     Participant, AttestationFormation, Opportunite
 )
@@ -394,117 +394,6 @@ class ProformaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-class AffaireViewSet(viewsets.ModelViewSet):
-    queryset = Affaire.objects.all()
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['client', 'statut', 'entity', 'offre']
-    search_fields = ['reference', 'client__nom']
-    ordering_fields = ['reference', 'date_creation', 'date_debut']
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return AffaireListSerializer
-        elif self.action in ['create', 'update', 'partial_update']:
-            return AffaireEditSerializer
-        elif self.action == 'details_complets':
-            return AffaireDetailSerializer
-        return AffaireDetailSerializer
-
-    @action(detail=True, methods=['get'])
-    def details_complets(self, request, pk=None):
-        """Retourne les détails complets d'une affaire avec ses entités liées."""
-        affaire = self.get_object()
-        serializer = AffaireDetailSerializer(affaire)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def rapports(self, request, pk=None):
-        """Retourne les rapports liés à une affaire."""
-        affaire = self.get_object()
-        rapports = Rapport.objects.filter(affaire=affaire)
-        serializer = RapportListSerializer(rapports, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
-    def formations(self, request, pk=None):
-        """Retourne les formations liées à une affaire."""
-        affaire = self.get_object()
-        formations = Formation.objects.filter(affaire=affaire)
-        serializer = FormationListSerializer(formations, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def change_status(self, request, pk=None):
-        """Change le statut d'une affaire."""
-        affaire = self.get_object()
-        new_status = request.data.get('status', None)
-        if not new_status or new_status not in ['EN_COURS', 'TERMINEE', 'ANNULEE']:
-            return Response(
-                {"detail": "Statut invalide."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            affaire.statut = new_status
-            # Si terminée, définir la date de fin
-            if new_status == 'TERMINEE' and not affaire.date_fin_prevue:
-                affaire.date_fin_prevue = now()
-            affaire.save()
-            serializer = self.get_serializer(affaire)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'])
-    def statistiques(self, request):
-        """Retourne des statistiques sur les affaires."""
-        period = request.query_params.get('period', 'month')
-        
-        if period == 'year':
-            date_debut = now().replace(month=1, day=1)
-        elif period == 'quarter':
-            current_month = now().month
-            quarter_start_month = ((current_month - 1) // 3) * 3 + 1
-            date_debut = now().replace(month=quarter_start_month, day=1)
-        else:  # month
-            date_debut = now().replace(day=1)
-        
-        # Statistiques par statut
-        statut_stats = Affaire.objects.filter(
-            date_creation__gte=date_debut
-        ).values('statut').annotate(
-            count=Count('id')
-        )
-        
-        # Nombre de rapports par affaire
-        rapport_stats = Affaire.objects.filter(
-            date_creation__gte=date_debut
-        ).annotate(
-            rapports_count=Count('rapports')
-        ).values('reference', 'rapports_count')
-        
-        # Nombre de formations par affaire
-        formation_stats = Affaire.objects.filter(
-            date_creation__gte=date_debut
-        ).annotate(
-            formations_count=Count('formations')
-        ).values('reference', 'formations_count')
-        
-        return Response({
-            'par_statut': statut_stats,
-            'rapports': rapport_stats,
-            'formations': formation_stats,
-            'total': Affaire.objects.filter(date_creation__gte=date_debut).count(),
-            'en_cours': Affaire.objects.filter(
-                date_creation__gte=date_debut, statut='EN_COURS'
-            ).count(),
-            'terminees': Affaire.objects.filter(
-                date_creation__gte=date_debut, statut='TERMINEE'
-            ).count(),
-            'annulees': Affaire.objects.filter(
-                date_creation__gte=date_debut, statut='ANNULEE'
-            ).count(),
-        })
 
 class FactureViewSet(viewsets.ModelViewSet):
     queryset = Facture.objects.all()

@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from .models import Pays, Region, Ville, Client, Site, Contact
 from document.models import (
-    Proforma, Affaire, Facture, Rapport, 
+    Proforma, Facture, Rapport, 
     Formation, Participant, AttestationFormation, Opportunite
 )
 from rest_framework import viewsets
