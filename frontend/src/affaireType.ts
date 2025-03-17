@@ -126,6 +126,7 @@ export interface Entity {
     username: string;
     email: string;
     departement: string;
+    avatar?:string;
   }
 
   export interface LoginCredentials {

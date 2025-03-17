@@ -29,6 +29,7 @@ import OffreDetails from './views/offres/OfferDetails';
 import AffaireListPage from './views/affaires/AffairesListPage';
 import AffaireDetailPage from './views/affaires/AffaireDetailPage';
 import AffaireEditPage from './views/affaires/AffaireEditPage';
+import { SimplePage } from './views/SimplePage';
 
 function App() {
   return (
@@ -101,6 +102,9 @@ function App() {
               <Route path="create" element={<CourrierForm />} />
 
             </Route>
+
+            <Route path="simple" element={<SimplePage />} />
+
             
 
             {/* Redirection pour les routes inconnues */}

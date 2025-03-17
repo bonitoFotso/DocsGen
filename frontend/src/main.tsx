@@ -4,10 +4,12 @@ import App from './App.tsx';
 import './index.css';
 import { ServicesProvider } from './AppProviders.tsx';
 
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ServicesProvider>
-      <App />
-    </ServicesProvider>
+      <ServicesProvider>
+        <App />
+      </ServicesProvider>
+
   </StrictMode>
 );
