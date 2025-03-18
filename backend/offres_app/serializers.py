@@ -29,6 +29,9 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = ['id', 'nom', 'email', 'telephone', 'client_id']
+        
+        
+        
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -139,7 +142,7 @@ class OffreCreateSerializer(serializers.ModelSerializer):
                     produit = Product.objects.get(id=product_id)
                     offre.produits.add(produit)
                 except Product.DoesNotExist:
-                    print(f"Produit ID {product_id} non trouvé lors de la création de l'offre {offre.id}")
+                    print(f"Produit ID {product_id} non trouvé lors de la création de l'offre {offre.pk}")
                     #logger.warning(f"Produit ID {product_id} non trouvé lors de la création de l'offre {offre.id}")
         
         return offre

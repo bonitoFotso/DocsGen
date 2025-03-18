@@ -1,4 +1,5 @@
 # models.py (extrait)
+from decimal import Decimal
 from django.db import models
 from django.utils import timezone
 from django.db.models import Max
@@ -6,7 +7,7 @@ from django.contrib.auth import get_user_model
 from datetime import timedelta
 
 from affaires_app.models import Affaire
-from document.models import Proforma
+from proformas_app.models import Proforma
 
 
 User = get_user_model()
@@ -42,7 +43,7 @@ class Offre(models.Model):
         choices=STATUS_CHOICES,
         default='BROUILLON'
     )
-    montant = models.DecimalField(max_digits=10, decimal_places=2, default=100)
+    montant = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'), verbose_name="Montant")
     fichier = models.FileField(upload_to='offres/', blank=True, null=True)
     # Relations
     client = models.ForeignKey('client.Client', on_delete=models.CASCADE, related_name="offres")
@@ -136,9 +137,9 @@ class Offre(models.Model):
             # Créer une proforma
             proforma = Proforma.objects.get_or_create(
                 offre=self,
-                client=self.client,
+                #client=self.client,
                 #contact=self.contact,
-                entity=self.entity,
+                #entity=self.entity,
                 created_by=self.user,
                 #montant=self.montant
             )

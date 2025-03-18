@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from api.user.models import User
 from .models import (
-    ContentType, Entity, Category, Product, Proforma, 
+    ContentType, Entity, Category, Product, 
     Facture, Rapport, Formation, Participant, AttestationFormation,
      AuditLog
 )
@@ -66,13 +66,6 @@ class ProductAdmin(BaseModelAdmin):
     search_fields = ('code', 'name')
 
 
-
-@admin.register(Proforma)
-class ProformaAdmin(BaseModelAdmin):
-    list_display = ('reference', 'client', 'statut', 'date_creation')
-    list_filter = ('statut', 'entity')
-    search_fields = ('reference', 'client__nom')
-    readonly_fields = ('reference',)
 
 
 @admin.register(Rapport)

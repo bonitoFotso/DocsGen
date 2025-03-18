@@ -8,10 +8,10 @@ from django.utils.timezone import now
 from datetime import timedelta
 
 from offres_app.models import Offre
+from proformas_app.models import Proforma
 
 from .models import (
     Entity, Category, Product, 
-    Proforma,
     Facture, Rapport, Formation, 
     Participant, AttestationFormation, Opportunite
 )

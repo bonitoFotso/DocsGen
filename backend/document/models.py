@@ -113,26 +113,6 @@ class Document(models.Model):
 
 
 
-class Proforma(Document):
-    offre = models.OneToOneField('offres_app.Offre', on_delete=models.CASCADE, related_name="proforma")
-
-    def save(self, *args, **kwargs):
-        if not self.reference:
-            if not self.sequence_number:
-                last_sequence = Proforma.objects.filter(
-                    entity=self.entity,
-                    doc_type='PRO',
-                    date_creation__year=now().year,
-                    date_creation__month=now().month
-                ).aggregate(Max('sequence_number'))['sequence_number__max']
-                self.sequence_number = (last_sequence or 0) + 1
-            total_proformas_client = Proforma.objects.filter(client=self.client).count() + 1
-            date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/PRO/{self.client.c_num}/{str(date.year)[-2:]}{date.month:02d}/{self.offre.pk}/{total_proformas_client}/{self.sequence_number:02d}"
-        if self.statut == 'VALIDE':
-            self.date_validation = now()
-
-        super().save(*args, **kwargs)
 
 
 class Facture(Document):

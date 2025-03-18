@@ -3,8 +3,9 @@ from rest_framework import serializers
 from affaires_app.models import Affaire
 from client.models import Site
 from offres_app.models import Offre
+from proformas_app.models import Proforma
 from .models import (
-    Entity, Client, Category, Product, Proforma, 
+    Entity, Client, Category, Product, 
 Facture, Rapport, Formation, Participant, AttestationFormation
 )
 

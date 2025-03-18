@@ -4,7 +4,6 @@ import { Dashboard } from './views/dashboard';
 import EntityManagement from './views/entities/entities';
 import SiteManagement from './views/sites/sites';
 import OffreManagement from './views/offres/offres';
-import ProformaManagement from './views/proformas/Proformas';
 import RapportManagement from './views/rapports';
 import ProductManagement from './views/products';
 import FormationManagement from './views/formations/formations';
@@ -30,6 +29,9 @@ import AffaireListPage from './views/affaires/AffairesListPage';
 import AffaireDetailPage from './views/affaires/AffaireDetailPage';
 import AffaireEditPage from './views/affaires/AffaireEditPage';
 import { SimplePage } from './views/SimplePage';
+import ProformaListPage from './views/proformas/ProformaListPage';
+import ProformaDetailPage from './views/proformas/ProformaDetailPage';
+import ProformaCreatePage from './views/proformas/ProformaCreatePage';
 
 function App() {
   return (
@@ -64,9 +66,9 @@ function App() {
             <Route path="opportunities">
               <Route index element={<OpportunityPage />} />
               <Route path=":id" element={<OpportunityDetails />} />
-              <Route path=":id/edit" element={<OpportuniteEditionPage/>} />
-              <Route path="creation" element={<OpportuniteCreation/>} />
-              <Route path="new" element={<OpportuniteCreation/>} />
+              <Route path=":id/edit" element={<OpportuniteEditionPage />} />
+              <Route path="creation" element={<OpportuniteCreation />} />
+              <Route path="new" element={<OpportuniteCreation />} />
             </Route>
 
             {/* Documents commerciaux */}
@@ -85,7 +87,12 @@ function App() {
               <Route path=':id/edit' element={<AffaireEditPage />} />
             </Route>
             <Route path="factures" element={<FactureManagement />} />
-            <Route path="proformas" element={<ProformaManagement />} />
+
+            <Route path='proformas'>
+              <Route index element={<ProformaListPage />} />
+              <Route path=':id' element={<ProformaDetailPage/>}/>
+              <Route path='create' element={<ProformaCreatePage/>} />
+            </Route>
 
             {/* Catalogue et formations */}
             <Route path="products" element={<ProductManagement />} />
@@ -105,7 +112,7 @@ function App() {
 
             <Route path="simple" element={<SimplePage />} />
 
-            
+
 
             {/* Redirection pour les routes inconnues */}
             <Route path="*" element={<Navigate to="/" replace />} />
