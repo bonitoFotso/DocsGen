@@ -10,7 +10,6 @@ import FormationManagement from './views/formations/formations';
 import LoginPage from './views/auth/login';
 import { AuthProvider } from './contexts/AuthContext';
 import { PrivateRoute } from './PrivateRoute';
-import FactureManagement from './views/factures/Facture';
 import ContactsPage from './views/contacts/contacts2';
 import ClientManagement from './views/clients/ClientManagement';
 import ClientDetailsPage from './views/clients/pages/ClientDetails';
@@ -32,6 +31,9 @@ import { SimplePage } from './views/SimplePage';
 import ProformaListPage from './views/proformas/ProformaListPage';
 import ProformaDetailPage from './views/proformas/ProformaDetailPage';
 import ProformaCreatePage from './views/proformas/ProformaCreatePage';
+import FactureListPage from './views/factures/FactureListPage';
+import FactureDetailPage from './views/factures/FactureDetailPage';
+import FactureCreatePage from './views/factures/FactureCreatePage';
 
 function App() {
   return (
@@ -86,12 +88,20 @@ function App() {
               <Route path=':id' element={<AffaireDetailPage />} />
               <Route path=':id/edit' element={<AffaireEditPage />} />
             </Route>
-            <Route path="factures" element={<FactureManagement />} />
+
+            {/* factures */}
+            <Route path='factures'>
+              <Route index element={<FactureListPage />} />
+              <Route path=':id' element={<FactureDetailPage />} />
+              <Route path="create" element={<FactureCreatePage />} />
+              <Route path=":factureId/edit" element={<FactureCreatePage isEdit={true} />} />
+            </Route>
+
 
             <Route path='proformas'>
               <Route index element={<ProformaListPage />} />
-              <Route path=':id' element={<ProformaDetailPage/>}/>
-              <Route path='create' element={<ProformaCreatePage/>} />
+              <Route path=':id' element={<ProformaDetailPage />} />
+              <Route path='create' element={<ProformaCreatePage />} />
             </Route>
 
             {/* Catalogue et formations */}
@@ -100,6 +110,8 @@ function App() {
 
             {/* Rapports */}
             <Route path="rapports" element={<RapportManagement />} />
+
+
 
             {/*courriers */}
             <Route path="courriers" >

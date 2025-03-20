@@ -55,15 +55,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-// Mapping des statuts vers des variantes de badges
-const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline" | "primary"> = {
-  'BROUILLON': 'secondary',
-  'VALIDE': 'primary',
-  'EN_COURS': 'default',
-  'EN_PAUSE': 'outline',
-  'TERMINEE': 'primary',
-  'ANNULEE': 'destructive'
-};
+
 
 const AffaireDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -305,7 +297,7 @@ const AffaireDetailPage: React.FC = () => {
         {/* Title and Status */}
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-bold">Affaire {affaire.reference}</h1>
-          <Badge variant={statusVariants[affaire.statut]} className="text-base px-3 py-1">
+          <Badge className="text-base px-3 py-1">
             {affaire.statut_display}
           </Badge>
         </div>

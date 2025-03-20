@@ -14,7 +14,7 @@ from offres_app.models import Offre
 from offres_app.serializers import OffreSerializer
 
 from .models import Affaire
-from document.models import Rapport, Formation, Facture
+from document.models import Rapport, Formation
 from .serializers import (
     AffaireSerializer, 
     AffaireDetailSerializer, 
@@ -261,8 +261,8 @@ class AffaireViewSet(viewsets.ModelViewSet):
         Exporte la fiche affaire en PDF.
         """
         from django.http import FileResponse
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import A4
+        #from reportlab.pdfgen import canvas
+        #from reportlab.lib.pagesizes import A4
         from io import BytesIO
         
         affaire = self.get_object()
@@ -270,7 +270,6 @@ class AffaireViewSet(viewsets.ModelViewSet):
         # Création du PDF en mémoire
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
-        
         # En-tête
         p.setFont("Helvetica-Bold", 16)
         p.drawString(50, 800, f"Affaire : {affaire.reference}")

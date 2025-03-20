@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from .models import Pays, Region, Ville, Client, Site, Contact
 from document.models import (
-    Facture, Rapport, 
+    Rapport, 
     Formation, Participant, AttestationFormation, Opportunite
 )
 from rest_framework import viewsets
@@ -30,6 +30,9 @@ from document.serializers import (
     ParticipantListSerializer, AttestationFormationListSerializer,
     OpportuniteListSerializer
 )
+
+from offres_app.models import Offre
+from affaires_app.models import Affaire
 
 class PaysViewSet(viewsets.ModelViewSet):
     queryset = Pays.objects.all()
@@ -73,7 +76,7 @@ class VilleViewSet(viewsets.ModelViewSet):
         return VilleDetailSerializer
 
 class ClientViewSet(viewsets.ModelViewSet):
-    queryset = Client.objects.filter(is_client=True)
+    queryset = Client.objects.filter()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['ville', 'agreer', 'agreement_fournisseur', 'secteur_activite']
     search_fields = ['nom', 'c_num', 'email', 'telephone', 'matricule']

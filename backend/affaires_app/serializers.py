@@ -2,8 +2,10 @@ from rest_framework import serializers
 from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 
+from factures_app.models import Facture
+
 from .models import Affaire
-from document.models import Rapport, Formation, Facture
+from document.models import Rapport, Formation
 from offres_app.models import Offre
 from offres_app.serializers import OffreSerializer, ClientLightSerializer
 

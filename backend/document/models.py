@@ -111,29 +111,6 @@ class Document(models.Model):
 
 
 
-
-
-
-
-class Facture(Document):
-    affaire = models.OneToOneField('affaires_app.Affaire', on_delete=models.CASCADE, related_name="facture")
-
-    def save(self, *args, **kwargs):
-        if not self.reference:
-            if not self.sequence_number:
-                last_sequence = Facture.objects.filter(
-                    entity=self.entity,
-                    doc_type='FAC',
-                    date_creation__year=now().year,
-                    date_creation__month=now().month
-                ).aggregate(Max('sequence_number'))['sequence_number__max']
-                self.sequence_number = (last_sequence or 0) + 1
-            total_factures_client = Facture.objects.filter(client=self.affaire.offre.client).count() + 1
-            date = self.date_creation or now()
-            self.reference = f"{self.entity.code}/FAC/{self.client.c_num}/{self.affaire.reference}/{self.affaire.offre.produit.code}/{total_factures_client}/{self.sequence_number:04d}"
-        super().save(*args, **kwargs)
-
-
 class Rapport(Document):
     affaire = models.ForeignKey('affaires_app.Affaire', on_delete=models.CASCADE, related_name="rapports")
     #site = models.ForeignKey(Site, on_delete=models.CASCADE)

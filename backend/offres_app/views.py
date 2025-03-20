@@ -82,7 +82,7 @@ class ClientListView(generics.ListAPIView):
         queryset = Client.objects.all().order_by('nom')
         
         # Filtrage par nom ou numéro client
-        search = self.request.query_params.get('search', None)
+        search = self.request.GET.get('search', None)
         if search:
             queryset = queryset.filter(
                 Q(nom__icontains=search) | 
@@ -124,7 +124,7 @@ class ProductListView(generics.ListAPIView):
         queryset = Product.objects.all().order_by('designation')
         
         # Filtrage par désignation ou code
-        search = self.request.query_params.get('search', None)
+        search = self.request.GET.get('search', None)
         if search:
             queryset = queryset.filter(
                 Q(designation__icontains=search) | 
@@ -132,7 +132,7 @@ class ProductListView(generics.ListAPIView):
             )
         
         # Filtrage par catégorie
-        category = self.request.query_params.get('category', None)
+        category = self.request.GET.get('category', None)
         if category:
             queryset = queryset.filter(category=category)
         
@@ -287,7 +287,7 @@ class OffreFileUploadView(views.APIView):
         offre = get_object_or_404(Offre, pk=pk)
         
         # Vérifier que l'utilisateur a les permissions (exemple: propriétaire ou staff)
-        if not request.user.is_staff and offre.created_by != request.user:
+        if not request.user.is_staff : #and offre.created_by != request.user:
             return Response(
                 {"detail": "Vous n'avez pas la permission d'uploader des fichiers pour cette offre."},
                 status=status.HTTP_403_FORBIDDEN
@@ -326,8 +326,9 @@ class OffreFileUploadView(views.APIView):
         
         # Mettre à jour le chemin du fichier dans l'objet Offre
         relative_path = os.path.join('offres', str(pk), filename)
-        offre.fichier = relative_path
-        offre.save()
+        from django.core.files import File
+        with open(file_path, 'rb') as f:
+            offre.fichier.save(filename, File(f), save=True)
         
         # Sérialiser et retourner l'objet offre mis à jour
         serializer = OffreSerializer(offre)

@@ -7,12 +7,13 @@ from django.db.models import Count, Sum, Q
 from django.utils.timezone import now
 from datetime import timedelta
 
+from factures_app.models import Facture
 from offres_app.models import Offre
 from proformas_app.models import Proforma
 
 from .models import (
     Entity, Category, Product, 
-    Facture, Rapport, Formation, 
+    Rapport, Formation, 
     Participant, AttestationFormation, Opportunite
 )
 

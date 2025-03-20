@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
@@ -6,6 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
+
+from factures_app.models import Facture
 
 class Affaire(models.Model):
     """
@@ -116,21 +119,21 @@ class Affaire(models.Model):
     montant_total = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
+        default=Decimal('0'),
         verbose_name="Montant total",
         help_text="Montant total de l'affaire (HT)"
     )
     montant_facture = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
+        default=Decimal('0'),
         verbose_name="Montant facturé",
         help_text="Montant total facturé (HT)"
     )
     montant_paye = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        default=0,
+        default=Decimal('0'),
         verbose_name="Montant payé",
         help_text="Montant total payé (HT)"
     )
@@ -303,7 +306,7 @@ class Affaire(models.Model):
     
     def cree_facture_initiale(self):
         """Crée la facture initiale pour l'affaire"""
-        from document.models import Facture
+       
         
         # Vérifie si une facture existe déjà
         if Facture.objects.filter(affaire=self).exists():
@@ -312,9 +315,6 @@ class Affaire(models.Model):
         # Crée la facture
         facture = Facture.objects.get_or_create(
             affaire=self,
-            client=self.offre.client,
-            entity=self.offre.entity,
-            doc_type='FAC',
             statut='BROUILLON',
             sequence_number = self.sequence_number,
             #montant_ht=self.montant_total

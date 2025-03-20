@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
+
+from factures_app.models import Facture
 from .models import Affaire
-from document.models import Rapport, Formation, Facture
+from document.models import Rapport, Formation
 
 
 class RapportInline(admin.TabularInline):
