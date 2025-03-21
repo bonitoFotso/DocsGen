@@ -1,256 +1,225 @@
-import React, { useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { Header } from './Header';
 import { cn } from '@/lib/utils';
+import {
+  ChevronUp,
+  HelpCircle,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent
+} from '@/components/ui/tooltip';
+import { Progress } from '@/components/ui/progress';
+import KesContainer from '../KesContainer';
+import { SidebarProvider } from '../ui/sidebar';
+import AppSidebar from '../app-sidebar';
 
-// Types
-interface BadgeProps {
-  text: string;
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'outline' | 'secondary';
-}
+export function Layout() {
+  // État local
+  const location = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const mainRef = useRef<HTMLElement>(null);
 
-interface NavigationItem {
-  name: string;
-  href?: string;
-  icon: React.ElementType;
-  category?: 'main' | 'business';
-  badge?: BadgeProps;
-  children?: NavigationItem[];
-}
 
-interface NavLinkChildProps {
-  item: NavigationItem;
-  depth: number;
-  isActive: boolean;
-  hasRouterContext: boolean;
-  handleNavigation: (href: string, e: React.MouseEvent) => void;
-}
+  // Gérer le changement de route
+  useEffect(() => {
+    // Réinitialiser le scroll lors du changement de page
+    mainRef.current?.scrollTo({ top: 0 });
 
-interface ParentNavLinkProps {
-  item: NavigationItem;
-  isItemCollapsed: boolean;
-  toggleCollapse: (name: string, e: React.MouseEvent) => void;
-  children: React.ReactNode;
-}
+    // Simuler un chargement de page
+    simulatePageLoading();
 
-interface NavLinkProps {
-  item: NavigationItem;
-  depth?: number;
-  currentPath: string;
-  collapsed: Record<string, boolean>;
-  toggleCollapse: (name: string, e: React.MouseEvent) => void;
-  hasRouterContext: boolean;
-  handleNavigation: (href: string, e: React.MouseEvent) => void;
-}
+    // Fermer automatiquement le sidebar sur mobile lors d'un changement de route
+    const isMobile = window.innerWidth < 1024;
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
-// Séparons le sous-composant pour les enfants
-const NavLinkChild: React.FC<NavLinkChildProps> = React.memo(({ 
-  item, 
-  depth, 
-  isActive, 
-  hasRouterContext, 
-  handleNavigation 
-}) => {
-  const Icon = item.icon;
-  
-  // Si nous n'avons pas de contexte de routeur, utiliser les liens <a> standard
-  if (!hasRouterContext) {
-    return (
-      <a
-        href={item.href}
-        className={cn(
-          'group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-          isActive
-            ? 'bg-gray-800 text-white shadow-sm'
-            : 'text-gray-300 hover:bg-gray-800/50 hover:text-white',
-          depth > 0 && 'pl-11'
-        )}
-      >
-        <Icon
-          className={cn(
-            'mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-150',
-            isActive
-              ? 'text-indigo-400'
-              : 'text-gray-400 group-hover:text-gray-300'
-          )}
-        />
-        <span className="flex-1">{item.name}</span>
-        {item.badge && (
-          <Badge className="ml-auto">
-            {item.badge.text}
-          </Badge>
-        )}
-      </a>
-    );
-  }
+  // Simuler un chargement de page
+  const simulatePageLoading = () => {
+    setIsPageLoading(true);
+    setLoadingProgress(0);
 
-  // Si nous avons un contexte de routeur, utiliser les composants Link personnalisés
+    const interval = setInterval(() => {
+      setLoadingProgress(prev => {
+        const newProgress = prev + (100 - prev) / 10;
+
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsPageLoading(false);
+            setLoadingProgress(100);
+          }, 200);
+          return 100;
+        }
+
+        return newProgress;
+      });
+    }, 100);
+  };
+
+  // Gérer le scroll
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      setIsScrolled(target.scrollTop > 10);
+      setShowScrollTop(target.scrollTop > 400);
+    };
+
+    const mainElement = mainRef.current;
+    if (mainElement) {
+      mainElement.addEventListener('scroll', handleScroll);
+      return () => mainElement.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
+  // Gérer la touche Escape pour fermer le sidebar sur mobile
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const isMobile = window.innerWidth < 1024;
+        if (isMobile && isSidebarOpen) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSidebarOpen]);
+
+  // Fonction pour basculer l'état du sidebar
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Scroll to top
+  const scrollToTop = () => {
+    mainRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+
+
   return (
-    <Link
-      to={item.href || '/'}
-      onClick={(e) => handleNavigation(item.href || '/', e)}
-      className={cn(
-        'group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-        isActive
-          ? 'bg-gray-800 text-white shadow-sm'
-          : 'text-gray-300 hover:bg-gray-800/50 hover:text-white',
-        depth > 0 && 'pl-11'
-      )}
-    >
-      <div className="flex items-center">
-        <Icon
-          className={cn(
-            'mr-3 h-5 w-5 flex-shrink-0 transition-colors duration-150',
-            isActive
-              ? 'text-indigo-400'
-              : 'text-gray-400 group-hover:text-gray-300'
-          )}
+
+    <div className="flex h-screen  bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      {/* Sidebar améliorée */}
+      <SidebarProvider>
+        <AppSidebar />
+        <main>
+        <div className={cn(
+      )}>
+        {/* Header amélioré */}
+        <Header
+          isScrolled={isScrolled}
+          toggleSidebar={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
         />
-        <span>{item.name}</span>
+
+        {/* Page loading indicator */}
+        {isPageLoading && (
+          <div className="relative h-1">
+            <Progress
+              value={loadingProgress}
+              className="absolute top-0 left-0 right-0 z-50 h-1 bg-transparent"
+            />
+          </div>
+        )}
+
+        {/* Main Content */}
+        <main
+          ref={mainRef}
+          className={cn(
+            "flex-1 overflow-y-auto",
+            "bg-gray-100 dark:bg-gray-800",
+            "transition-colors duration-200",
+            "scroll-smooth"
+          )}
+        >
+          {/* Content wrapper */}
+          <div className="mx-auto w-full  animate-in fade-in duration-500">
+            <KesContainer
+              variant="transparent"
+              padding="none"
+              size="full"
+            >
+              <Outlet />
+            </KesContainer>
+
+          </div>
+
+          {/* Scroll to top button */}
+          {showScrollTop && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={scrollToTop}
+                    size="icon"
+                    variant="secondary"
+                    className={cn(
+                      "fixed bottom-20 right-8",
+                      "rounded-full",
+                      "shadow-lg dark:shadow-gray-900/50",
+                      "animate-in fade-in slide-in-from-bottom-5 duration-300"
+                    )}
+                    aria-label="Retour en haut"
+                  >
+                    <ChevronUp className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  Retour en haut
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Support button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className={cn(
+                    "fixed bottom-8 right-8",
+                    "rounded-full",
+                    "shadow-lg dark:shadow-gray-900/50"
+                  )}
+                  aria-label="Support"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                Besoin d'aide ?
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </main>
+
+        {/* Footer */}
+
       </div>
-      {item.badge && (
-        <Badge>
-          {item.badge.text}
-        </Badge>
-      )}
-    </Link>
-  );
-});
+        </main>
+      </SidebarProvider>
 
-// Séparons le composant parent
-const ParentNavLink: React.FC<ParentNavLinkProps> = React.memo(({ 
-  item, 
-  isItemCollapsed, 
-  toggleCollapse, 
-  children 
-}) => {
-  const Icon = item.icon;
-  
-  // Memoize the toggle handler
-  const handleToggle = useCallback((e: React.MouseEvent): void => {
-    toggleCollapse(item.name, e);
-  }, [item.name, toggleCollapse]);
-  
-  return (
-    <div>
-      <button
-        onClick={handleToggle}
-        className={cn(
-          'group flex items-center w-full rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150',
-          'text-gray-300 hover:bg-gray-800/50 hover:text-white'
-        )}
-      >
-        <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-300" />
-        <span className="flex-1">{item.name}</span>
-        {item.badge && (
-          <Badge className="ml-2 mr-2">
-            {item.badge.text}
-          </Badge>
-        )}
-        {isItemCollapsed ? (
-          <ChevronDown className="ml-3 h-4 w-4" />
-        ) : (
-          <ChevronRight className="ml-3 h-4 w-4" />
-        )}
-      </button>
-      {isItemCollapsed && children}
+      
     </div>
   );
-});
-
-// Optimisons le NavLink principal avec React.memo
-const NavLink: React.FC<NavLinkProps> = React.memo(({ 
-  item, 
-  depth = 0,
-  currentPath,
-  collapsed,
-  toggleCollapse,
-  hasRouterContext,
-  handleNavigation
-}) => {
-  const isActive = currentPath === item.href;
-  const hasChildren = 'children' in item && item.children && item.children.length > 0;
-  const isItemCollapsed = collapsed[item.name];
-  
-  if (hasChildren && 'children' in item && item.children) {
-    return (
-      <ParentNavLink 
-        item={item} 
-        isItemCollapsed={isItemCollapsed} 
-        toggleCollapse={toggleCollapse}
-      >
-        <div className="mt-1 space-y-1 px-3">
-          {item.children.map((child) => (
-            <NavLink 
-              key={child.name} 
-              item={child} 
-              depth={depth + 1}
-              currentPath={currentPath}
-              collapsed={collapsed}
-              toggleCollapse={toggleCollapse}
-              hasRouterContext={hasRouterContext}
-              handleNavigation={handleNavigation}
-            />
-          ))}
-        </div>
-      </ParentNavLink>
-    );
-  }
-
-  return (
-    <NavLinkChild 
-      item={item} 
-      depth={depth} 
-      isActive={isActive} 
-      hasRouterContext={hasRouterContext} 
-      handleNavigation={handleNavigation}
-    />
-  );
-});
-
-// Pour l'utilisation dans le composant parent (Sidebar)
-// Exemple de NavSection modifié:
-
-/*
-interface NavSectionProps {
-  items: NavigationItem[];
-  title?: string;
-  currentPath: string;
-  collapsed: Record<string, boolean>;
-  toggleCollapse: (name: string, e: React.MouseEvent) => void;
-  hasRouterContext: boolean;
-  handleNavigation: (href: string, e: React.MouseEvent) => void;
 }
 
-const NavSection: React.FC<NavSectionProps> = ({ 
-  items, 
-  title,
-  currentPath,
-  collapsed,
-  toggleCollapse,
-  hasRouterContext,
-  handleNavigation
-}) => (
-  <div className="space-y-1">
-    {title && (
-      <h2 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-        {title}
-      </h2>
-    )}
-    {items.map((item) => (
-      <NavLink 
-        key={item.name} 
-        item={item} 
-        currentPath={currentPath}
-        collapsed={collapsed}
-        toggleCollapse={toggleCollapse}
-        hasRouterContext={hasRouterContext}
-        handleNavigation={handleNavigation}
-      />
-    ))}
-  </div>
-);
-*/
-
-export default NavLink;
+export default Layout;
