@@ -1,155 +1,286 @@
-import React from 'react';
 import { KesContainer } from '@/components/KesContainer';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, Download, Filter } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import KDTable from '@/components/table/KDTable';
+import { autoGenerateColumns } from '@/components/table/generateColumns';
+import { FileText } from 'lucide-react';
 
-// Exemple d'une page simple
-export const SimplePage: React.FC = () => {
-  return (
-    <KesContainer 
-      title="Liste des clients" 
-      description="Consultez et gérez tous vos clients"
-    >
-      <div className="grid gap-4">
-        {/* Contenu de votre page ici */}
-        <p>Le contenu de la page s'affiche ici...</p>
-      </div>
-    </KesContainer>
-  );
-};
+// Définition des types pour les données
+interface Affaire {
+  id: number;
+  reference: string;
+  client_nom: string;
+  statut: string;
+  statut_display: string;
+  date_debut: string;
+  date_fin_prevue: string | null;
+  montant_total: number;
+  progression: number;
+  en_retard: boolean;
+}
 
-// Exemple d'une page avec des actions dans l'en-tête
-export const PageWithActions: React.FC = () => {
-  return (
-    <KesContainer 
-      title="Liste des offres" 
-      description="Gérez les offres commerciales de votre entreprise"
-      headerActions={
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtrer
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button size="sm">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nouvelle offre
-          </Button>
-        </div>
+function AffairesTable() {
+  // Exemple de données
+  const affaires: Affaire[] = [
+    {
+      id: 1,
+      reference: "AFF-2023-001",
+      client_nom: "Entreprise ABC",
+      statut: "en_cours",
+      statut_display: "En cours",
+      date_debut: "2023-06-15",
+      date_fin_prevue: "2023-09-30",
+      montant_total: 15000,
+      progression: 75,
+      en_retard: false
+    },
+    {
+      id: 2,
+      reference: "AFF-2023-002",
+      client_nom: "Société XYZ",
+      statut: "terminee",
+      statut_display: "Terminée",
+      date_debut: "2023-05-01",
+      date_fin_prevue: "2023-07-15",
+      montant_total: 8500,
+      progression: 100,
+      en_retard: false
+    },
+    {
+      id: 3,
+      reference: "AFF-2023-003",
+      client_nom: "Client DEF",
+      statut: "en_cours",
+      statut_display: "En cours",
+      date_debut: "2023-07-10",
+      date_fin_prevue: "2023-10-20",
+      montant_total: 22000,
+      progression: 30,
+      en_retard: true
+    }
+  ];
+
+  // Fonctions de gestion des actions
+  const handleViewDetails = (id: number): void => {
+    console.log(`Voir les détails de l'affaire ${id}`);
+  };
+
+  const handleEdit = (id: number, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    console.log(`Modifier l'affaire ${id}`);
+  };
+
+  // IMPORTANT : Nous passons un objet exemple pour que la fonction puisse extraire les clés au runtime
+  const columns = autoGenerateColumns<Affaire>(
+    // Utiliser le premier élément du tableau comme exemple
+    affaires[0],
+    {
+      onView: (id: string | number) => handleViewDetails(Number(id)),
+      onEdit: (id: string | number, e: React.MouseEvent) => handleEdit(Number(id), e),
+      // Personnalisation de colonnes spécifiques
+      columnOverrides: {
+        reference: {
+          cellClassName: "font-medium"
+        },
+        statut_display: {
+          sortFn: (a, b) => a.statut.localeCompare(b.statut)
+        }
       }
-    >
-      <div className="space-y-4">
-        {/* Liste des offres ici */}
-        <p>Contenu de la page des offres...</p>
-      </div>
-    </KesContainer>
+    }
   );
-};
 
-// Exemple d'une page de formulaire avec taille réduite
-export const FormPage: React.FC = () => {
   return (
-    <KesContainer 
-      title="Ajouter un client" 
-      variant="card"
-      size="md"
-      padding="lg"
-    >
-      <form className="space-y-4">
-        {/* Champs de formulaire ici */}
-        <div className="grid gap-4">
-          <p>Contenu du formulaire...</p>
-        </div>
-        
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline">Annuler</Button>
-          <Button>Enregistrer</Button>
-        </div>
-      </form>
-    </KesContainer>
-  );
-};
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Liste des Affaires</h1>
 
-// Exemple d'une page avec plusieurs conteneurs
-export const Dashboardss: React.FC = () => {
-  return (
-    <div className="space-y-8">
-      {/* Première section - Statistiques */}
-      <KesContainer 
-        variant="transparent"
-        padding="none"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <KesContainer 
-            variant="card" 
-            size="full" 
-            padding="sm" 
-            title="Clients"
-          >
-            <p className="text-3xl font-bold">128</p>
-          </KesContainer>
-          
-          <KesContainer 
-            variant="card" 
-            size="full" 
-            padding="sm" 
-            title="Opportunités"
-          >
-            <p className="text-3xl font-bold">32</p>
-          </KesContainer>
-          
-          <KesContainer 
-            variant="card" 
-            size="full" 
-            padding="sm" 
-            title="Revenus"
-          >
-            <p className="text-3xl font-bold">25.4M XAF</p>
-          </KesContainer>
-        </div>
-      </KesContainer>
-      
-      {/* Deuxième section - Graphique */}
-      <KesContainer 
-        title="Performance mensuelle" 
-        size="full"
-      >
-        <div className="h-80">
-          {/* Graphique ici */}
-          <p>Graphique d'analyse...</p>
-        </div>
-      </KesContainer>
-      
-      {/* Troisième section - Activités récentes */}
-      <KesContainer 
-        title="Activités récentes" 
-        variant="card"
-      >
-        <div className="space-y-4">
-          {/* Liste d'activités ici */}
-          <p>Liste des activités récentes...</p>
-        </div>
-      </KesContainer>
+      <KDTable<Affaire>
+        data={affaires}
+        columns={columns}
+        keyField="id"
+        onRowClick={(row) => handleViewDetails(row.id)}
+        rowClassName={(row) =>
+          row.en_retard ? "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30" : ""
+        }
+      />
     </div>
   );
-};
+}
 
-// Exemple d'utilisation page avec contenu centré
-export const CenteredContent: React.FC = () => {
+// Interface et exemple pour les clients
+interface Client {
+  id: number;
+  nom: string;
+  email?: string;
+  telephone?: string;
+  adresse?: string;
+}
+
+function ClientsTable() {
+  // Exemple de données clients
+  const clients: Client[] = [
+    {
+      id: 1,
+      nom: "Entreprise ABC",
+      email: "contact@abc.fr",
+      telephone: "01 23 45 67 89",
+      adresse: "123 Avenue Principale, 75001 Paris"
+    },
+    {
+      id: 2,
+      nom: "Société XYZ",
+      email: "info@xyz.fr",
+      telephone: "01 98 76 54 32",
+      adresse: "456 Rue du Commerce, 69002 Lyon"
+    }
+  ];
+
+  // Fonctions de gestion
+  const handleViewClient = (id: number): void => {
+    console.log(`Voir les détails du client ${id}`);
+  };
+
+  const handleEditClient = (id: number, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    console.log(`Modifier le client ${id}`);
+  };
+
+  const handleDeleteClient = (id: number, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    console.log(`Supprimer le client ${id}`);
+  };
+
+  // Génération automatique des colonnes en passant un exemple
+  const columns = autoGenerateColumns<Client>(
+    clients[0],
+    {
+      onView: (id: string | number) => handleViewClient(Number(id)),
+      onEdit: (id: string | number, e: React.MouseEvent) => handleEditClient(Number(id), e),
+      onDelete: (id: string | number, e: React.MouseEvent) => handleDeleteClient(Number(id), e),
+      // Exclure certaines colonnes
+      excludeColumns: []
+    }
+  );
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Liste des Clients</h1>
+
+      <KDTable<Client>
+        data={clients}
+        columns={columns}
+        keyField="id"
+        onRowClick={(row) => handleViewClient(row.id)}
+      />
+    </div>
+  );
+}
+
+// Interface et exemple pour les rapports
+interface Rapport {
+  id: number;
+  reference: string;
+  site_nom: string;
+  produit_nom: string;
+  statut: string;
+  date_creation: string;
+  affaire_reference: string;
+}
+
+function RapportsTable() {
+  // Exemple de données rapports
+  const rapports: Rapport[] = [
+    {
+      id: 1,
+      reference: "RAP-2023-001",
+      site_nom: "Site Principal Paris",
+      produit_nom: "Produit A",
+      statut: "Validé",
+      date_creation: "2023-07-15",
+      affaire_reference: "AFF-2023-001"
+    },
+    {
+      id: 2,
+      reference: "RAP-2023-002",
+      site_nom: "Site Lyon",
+      produit_nom: "Produit B",
+      statut: "En attente",
+      date_creation: "2023-08-10",
+      affaire_reference: "AFF-2023-002"
+    }
+  ];
+
+  // Fonctions
+  const handleViewRapport = (id: number): void => {
+    console.log(`Voir le rapport ${id}`);
+  };
+
+  const handleDownloadPDF = (row: Rapport, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    console.log(`Télécharger le PDF du rapport ${row.reference}`);
+  };
+
+  // Génération avec des actions personnalisées
+  const columns = autoGenerateColumns<Rapport>(
+    rapports[0],
+    {
+      onView: (id: string | number) => handleViewRapport(Number(id)),
+      // Actions personnalisées
+      customActions: [
+        {
+          icon: <FileText size={16} />,
+          tooltip: "Télécharger le PDF",
+          onClick: handleDownloadPDF
+        }
+      ],
+      // Surcharges personnalisées
+      columnOverrides: {
+        statut: {
+          render: (row) => {
+            let bgColor;
+            switch (row.statut.toLowerCase()) {
+              case 'validé':
+                bgColor = 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
+                break;
+              case 'en attente':
+                bgColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
+                break;
+              default:
+                bgColor = '';
+            }
+            return <Badge className={bgColor}>{row.statut}</Badge>;
+          }
+        }
+      }
+    }
+  );
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Liste des Rapports</h1>
+
+      <KDTable<Rapport>
+        data={rapports}
+        columns={columns}
+        keyField="id"
+        onRowClick={(row) => handleViewRapport(row.id)}
+      />
+    </div>
+  );
+}
+
+// Page complète avec les différents tableaux
+export const TablesDemoPage: React.FC = () => {
   return (
     <KesContainer
-      title="Rapports générés"
-      size="md"
-      centerContent
-      variant="card"
+      title="Tableaux auto-générés"
+      description="Démonstration des tableaux avec génération automatique de colonnes"
     >
-      <div className="text-center p-8">
-        <p className="mb-4">Tous les rapports ont été générés avec succès</p>
-        <Button>Télécharger tous les rapports</Button>
+      <div className="grid gap-8">
+        <AffairesTable />
+        <ClientsTable />
+        <RapportsTable />
       </div>
     </KesContainer>
   );
 };
+
+export default TablesDemoPage;

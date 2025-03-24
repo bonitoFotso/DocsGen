@@ -153,7 +153,7 @@ const AffaireListPage: React.FC = () => {
 
   const renderPagination = () => {
     const currentPage = filters.page || 1;
-    const pageSize = filters.page_size || 10;
+    const pageSize =  10;
     const totalPages = Math.ceil(totalCount / pageSize);
     
     return (

@@ -17,8 +17,7 @@ class OffreProduit(models.Model):
     """Modèle de relation Many-to-Many entre Offre et Product avec attributs supplémentaires"""
     offre = models.ForeignKey('Offre', on_delete=models.CASCADE)
     produit = models.ForeignKey('document.Product', on_delete=models.CASCADE)
-    #quantite = models.PositiveIntegerField(default=1)
-    #remise = models.FloatField(default=0)  # En pourcentage (0-100)
+    
     
     class Meta:
         unique_together = ('offre', 'produit')

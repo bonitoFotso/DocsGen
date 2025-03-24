@@ -14,9 +14,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-import { NavigationItem, navigationItems } from './navigation';
+import { getNavigationItems } from './navigation';
 import { NavItem } from './NavItem';
 import { useSidebar } from '@/contexts/SidebarContext';
+import { EntitySelector } from './EntitySelector';
+import { useEntityContext } from '@/hooks/useEntityContext';
 
 export interface SidebarProps {
   className?: string;
@@ -24,7 +26,14 @@ export interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const { expanded, toggleSidebar, isMobile } = useSidebar();
+  const { currentEntity } = useEntityContext();
   const [searchValue, setSearchValue] = useState('');
+  
+  // Obtenez les éléments de navigation basés sur l'entité actuelle
+  const navigationItems = useMemo(() => 
+    getNavigationItems(currentEntity), 
+    [currentEntity]
+  );
   
   // Filter navigation items based on search term
   const filteredItems = useMemo(() => {
@@ -42,7 +51,7 @@ export function Sidebar({ className }: SidebarProps) {
       
       return false;
     });
-  }, [searchValue]);
+  }, [searchValue, navigationItems]);
   
   // Group navigation items by category
   const mainItems = useMemo(() => 
@@ -126,6 +135,9 @@ export function Sidebar({ className }: SidebarProps) {
             )}
           </Button>
         </div>
+        
+        {/* Entity Selector */}
+        <EntitySelector expanded={expanded} isMobile={isMobile} />
         
         {/* Search input - only when expanded */}
         {(expanded || isMobile) && (
@@ -223,6 +235,15 @@ export function Sidebar({ className }: SidebarProps) {
           </nav>
         </ScrollArea>
         
+        {/* Affichage de l'entité active */}
+        {(expanded || isMobile) && (
+          <div className="px-4 py-2 border-t">
+            <p className="text-xs text-muted-foreground">
+              Entité active: <span className="font-semibold text-primary">{currentEntity}</span>
+            </p>
+          </div>
+        )}
+        
         {/* User profile */}
         <div className={cn(
           "border-t p-3",
@@ -261,8 +282,6 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         </div>
       </aside>
-      
-      
     </>
   );
 }

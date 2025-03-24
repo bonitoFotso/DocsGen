@@ -36,6 +36,7 @@ import {
 import { useSidebar } from '@/contexts/SidebarContext';
 import useTheme from '@/hooks/use-theme';
 import { useLayout } from '@/contexts/LayoutContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
@@ -59,6 +60,7 @@ export function Header({ className }: HeaderProps) {
   const { expanded } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const { isScrolled } = useLayout();
+  const { user, logout } = useAuth();
   
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -185,8 +187,7 @@ export function Header({ className }: HeaderProps) {
   
   // Mock user logout function
   const handleLogout = () => {
-    console.log('User logged out');
-    // Implement actual logout logic here
+    logout();
   };
 
   return (
@@ -437,9 +438,9 @@ export function Header({ className }: HeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="font-medium text-sm">Admin User</p>
-                  <p className="text-xs text-muted-foreground">admin@example.com</p>
-                  <Badge variant="outline" className="w-fit">Admin</Badge>
+                  <p className="font-medium text-sm">{user?.username}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  <Badge variant="outline" className="w-fit">{user?.username}</Badge>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

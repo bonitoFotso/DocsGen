@@ -61,7 +61,7 @@ export const resolveHref = (href: string | ((entity: string) => string), entity:
 };
 
 // Configuration principale de la navigation
-export const getNavigationItems = (): NavigationItem[] => [
+export const getNavigationItems = (currentEntity: string): NavigationItem[] => [
   // Main category
   { name: 'Tableau de bord', href: '/', icon: LayoutDashboard, category: 'main' },
   { 
@@ -73,7 +73,8 @@ export const getNavigationItems = (): NavigationItem[] => [
       name: entity,
       href: `/entities/${entity.toLowerCase()}`,
       icon: Building2,
-      entitySpecific: true
+      entitySpecific: true,
+      badge: entity === currentEntity ? { text: 'Active', variant: 'success' } : undefined
     }))
   },
   { name: 'Contacts', href: '/contacts', icon: Contact, category: 'main' },

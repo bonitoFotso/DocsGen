@@ -9,15 +9,17 @@ import { FactureProvider } from './contexts/FactureContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+
     <ServicesProvider>
       <ProformaProvider>
         <FactureProvider>
-        <App />
-
+            <App />
         </FactureProvider>
 
       </ProformaProvider>
     </ServicesProvider>
+
+
 
   </StrictMode>
 );

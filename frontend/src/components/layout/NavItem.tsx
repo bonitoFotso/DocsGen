@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { NavigationItem, resolveHref } from './navigation';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useEntityContext } from '@/contexts/EntityContext';
+import { useEntityContext } from '@/hooks/useEntityContext';
 
 interface NavItemProps {
   item: NavigationItem;
