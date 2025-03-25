@@ -1,8 +1,8 @@
 // components/common/NotFound.tsx
-import React from 'react';
-import { ChevronLeft, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import React from "react";
+import { ChevronLeft, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface NotFoundProps {
   onBack: () => void;
@@ -11,11 +11,11 @@ interface NotFoundProps {
   icon?: React.ReactNode;
 }
 
-const NotFound: React.FC<NotFoundProps> = ({ 
-  onBack, 
-  title = 'Élément non trouvé',
-  subtitle = 'L\'élément que vous recherchez n\'existe pas ou a été supprimé.',
-  icon = <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+const NotFound: React.FC<NotFoundProps> = ({
+  onBack,
+  title = "Élément non trouvé",
+  subtitle = "L'élément que vous recherchez n'existe pas ou a été supprimé.",
+  icon = <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />,
 }) => {
   return (
     <div className="container py-8">

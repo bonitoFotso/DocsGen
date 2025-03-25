@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { FormField } from './form-field';
-import type { IClient } from '../../interfaces';
-import { useClient } from '../../contexts/ClientContext';
-import { useModal } from '../../hooks/useModal';
+import { useState } from "react";
+import { FormField } from "./form-field";
+import type { IClient } from "../../interfaces";
+import { useClient } from "../../contexts/ClientContext";
+import { useModal } from "../../hooks/useModal";
 
 interface ClientFormProps {
   initialData?: IClient;
@@ -10,10 +10,10 @@ interface ClientFormProps {
 
 export function ClientForm({ initialData }: ClientFormProps) {
   const [formData, setFormData] = useState({
-    nom: initialData?.nom || '',
-    email: initialData?.email || '',
-    telephone: initialData?.telephone || '',
-    adresse: initialData?.adresse || ''
+    nom: initialData?.nom || "",
+    email: initialData?.email || "",
+    telephone: initialData?.telephone || "",
+    adresse: initialData?.adresse || "",
   });
 
   const { addClient, fetchClients } = useClient();
@@ -23,13 +23,13 @@ export function ClientForm({ initialData }: ClientFormProps) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.nom) {
-      newErrors.nom = 'Name is required';
+      newErrors.nom = "Name is required";
     }
 
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
     }
 
     setErrors(newErrors);
@@ -42,7 +42,6 @@ export function ClientForm({ initialData }: ClientFormProps) {
       addClient(formData);
       fetchClients();
       closeModal();
-
     }
   };
 
@@ -52,7 +51,9 @@ export function ClientForm({ initialData }: ClientFormProps) {
         <input
           type="text"
           value={formData.nom}
-          onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, nom: e.target.value }))
+          }
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           placeholder="Client name"
         />
@@ -62,7 +63,9 @@ export function ClientForm({ initialData }: ClientFormProps) {
         <input
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, email: e.target.value }))
+          }
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           placeholder="email@example.com"
         />
@@ -72,7 +75,9 @@ export function ClientForm({ initialData }: ClientFormProps) {
         <input
           type="tel"
           value={formData.telephone}
-          onChange={(e) => setFormData(prev => ({ ...prev, telephone: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, telephone: e.target.value }))
+          }
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           placeholder="+33 1 23 45 67 89"
         />
@@ -81,7 +86,9 @@ export function ClientForm({ initialData }: ClientFormProps) {
       <FormField label="Address">
         <textarea
           value={formData.adresse}
-          onChange={(e) => setFormData(prev => ({ ...prev, adresse: e.target.value }))}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, adresse: e.target.value }))
+          }
           className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           rows={3}
           placeholder="Enter address"
