@@ -21,7 +21,7 @@ export interface OffreDetail {
   date_validation?: string;
   montant: number;
   client: Client;
-  contact?: Contact;
+  contact: Contact;
   entity: Entity;
   produits: Produit[];
   produit_principal: Produit;

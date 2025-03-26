@@ -27,10 +27,11 @@ export interface Client {
     client: number | null;
     contact: number | null;
     entity: number | null;
-    produits: Produit[];
+    produits: number[];
     produit_principal: number | null;
     notes: string;
     montant: number;
+    doc_type: string;
   }
   
   // Totals type

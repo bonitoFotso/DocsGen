@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useServices } from '@/AppHooks';
-import { CategoryBase, ClientBase, EntityBase, OffreBase, OffreDetail, OffreEdit, ProductBase, SiteDetail } from '@/interfaces';
+import { CategoryBase, ClientBase, EntityBase, OffreBase, OffreEdit, ProductBase, SiteDetail } from '@/interfaces';
 import { categoryService } from '@/services';
+import { OffreDetail } from '@/types/offre';
+import { OffreFormData } from '@/views/offres/types';
 
 export const useOffres = () => {
   const { offreService, clientService, productService, siteService, entityService } = useServices();
-  const [offres, setOffres] = useState<OffreBase[]>([]);
+  const [offres, setOffres] = useState<OffreDetail[]>([]);
   const [clients, setClients] = useState<ClientBase[]>([]);
   const [products, setProducts] = useState<ProductBase[]>([]);
   const [categories, setCategories] = useState<CategoryBase[]>([]);
@@ -23,10 +25,11 @@ export const useOffres = () => {
     client: 0,
     entity: 0,
     doc_type: 'OFF',
-    produit: 0,
+    produit_principal: 0,
     produits: [],
     // sites: [],
     statut: 'BROUILLON',
+    contact: 0, // Ajout du champ contact obligatoire
   });
 
   const loadData = useCallback(async () => {
@@ -65,9 +68,25 @@ export const useOffres = () => {
     console.log('Submitting form', formData);
     try {
       if (currentOffre) {
-        await offreService.update(currentOffre.id, { ...formData, doc_type: 'OFF', produit:formData.produits[0] });
+        const updateData: Partial<OffreFormData> = {
+          client: formData.client,
+          entity: formData.entity,
+          doc_type: formData.doc_type,
+          produit_principal: formData.produit_principal,
+          produits: formData.produits,
+          statut: formData.statut as "BROUILLON" | "ENVOYE" | "GAGNE" | "PERDU",
+          contact: formData.contact,
+        };
+        await offreService.update(currentOffre.id, updateData);
       } else {
-        await offreService.create({ ...formData, doc_type: 'OFF' , produit:formData.produits[0] });
+        const createData: OffreFormData = {
+          ...formData,
+          reference: '',
+          notes: '',
+          montant: 0,
+          produit_principal: formData.produit_principal || null,
+        };
+        await offreService.create(createData);
       }
       setIsModalOpen(false);
       await loadData();
@@ -93,7 +112,7 @@ export const useOffres = () => {
     }
   };
 
-  const handleEdit = async (offre: OffreBase) => {
+  const handleEdit = async (offre: OffreDetail) => {
     setIsLoading(true);
     try {
       const detailedOffre = await offreService.getById(offre.id);
@@ -101,11 +120,12 @@ export const useOffres = () => {
       setFormData({
         client: detailedOffre.client.id,
         entity: detailedOffre.entity.id,
-        produit: detailedOffre.produit?.id,
+        produit_principal: detailedOffre.produit_principal.id,
         produits: detailedOffre.produits.map((p) => p.id),
         // sites: detailedOffre.sites.map((s) => s.id),
-        statut: detailedOffre.statut,
+        statut: detailedOffre.statut as "BROUILLON" | "ENVOYE" | "GAGNE" | "PERDU",
         doc_type: detailedOffre.doc_type,
+        contact: detailedOffre.contact?.id || 0, // Correction: suppression des crochets pour éviter l'erreur de type
       });
       setIsModalOpen(true);
     } catch (err) {
@@ -134,7 +154,8 @@ export const useOffres = () => {
     setFormData({
       client: 0,
       entity: 0,
-      produit: 0,
+      produit_principal: 0,
+      contact: 0,
       produits: [],
       // sites: [],
       statut: 'BROUILLON',

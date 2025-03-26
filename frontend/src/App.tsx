@@ -77,69 +77,48 @@ function App() {
               <Route path="contacts" element={<ContactsPage />} />
               <Route path="contacts_grid" element={<ContactsPage />} />
 
-              {/* Routes par entité */}
+              {/* Pages détaillées et formulaires (indépendantes des entités) */}
+              <Route path="opportunities/:id" element={<OpportunityDetails />} />
+              <Route path="opportunities/:id/edit" element={<OpportuniteEditionPage />} />
+              <Route path="opportunities/new" element={<OpportuniteCreation />} />
+              
+              <Route path="offres/:id" element={<OffreDetails />} />
+              <Route path="offres/:id/edit" element={<OffreForm />} />
+              <Route path="offres/new" element={<OffreForm />} />
+              
+              <Route path="affaires/:id" element={<AffaireDetailPage />} />
+              <Route path="affaires/:id/edit" element={<AffaireEditPage />} />
+              
+              <Route path="proformas/:id" element={<ProformaDetailPage />} />
+              <Route path="proformas/create" element={<ProformaCreatePage />} />
+              
+              <Route path="factures/:id" element={<FactureDetailPage />} />
+              <Route path="factures/create" element={<FactureCreatePage />} />
+              <Route path="factures/:factureId/edit" element={<FactureCreatePage isEdit={true} />} />
+
+              {/* Routes par entité (uniquement pour les vues de liste) */}
               {entities.map((entity) => {
                 const entityPath = entity.toLowerCase();
-                // const path = entityPath === "toutes" ? "/" : entityPath;
                 return (
                   <Route key={entity} path={entityPath}>
-                    {/* Commercial */}
-                    <Route path="opportunities">
-                      <Route index element={<OpportunityPage />} />
-                      <Route path=":id" element={<OpportunityDetails />} />
-                      <Route
-                        path=":id/edit"
-                        element={<OpportuniteEditionPage />}
-                      />
-                      <Route
-                        path="creation"
-                        element={<OpportuniteCreation />}
-                      />
-                      <Route path="new" element={<OpportuniteCreation />} />
-                    </Route>
-                    <Route path="offres">
-                      <Route index element={<OffreManagement />} />
-                      <Route path=":id" element={<OffreDetails />} />
-                      <Route path=":id/edit" element={<OffreForm />} />
-                      <Route path="creation" element={<OffreForm />} />
-                      <Route path="new" element={<OffreForm />} />
-                    </Route>
-                    <Route path="affaires">
-                      <Route index element={<AffaireListPage />} />
-                      <Route path=":id" element={<AffaireDetailPage />} />
-                      <Route path=":id/edit" element={<AffaireEditPage />} />
-                    </Route>
-                    <Route path="proformas">
-                      <Route index element={<ProformaListPage />} />
-                      <Route path=":id" element={<ProformaDetailPage />} />
-                      <Route path="create" element={<ProformaCreatePage />} />
-                    </Route>
-                    <Route path="factures">
-                      <Route index element={<FactureListPage />} />
-                      <Route path=":id" element={<FactureDetailPage />} />
-                      <Route path="create" element={<FactureCreatePage />} />
-                      <Route
-                        path=":factureId/edit"
-                        element={<FactureCreatePage isEdit={true} />}
-                      />
-                    </Route>
+                    {/* Commercial - uniquement les vues de liste */}
+                    <Route path="opportunities" element={<OpportunityPage />} />
+                    <Route path="offres" element={<OffreManagement />} />
+                    <Route path="affaires" element={<AffaireListPage />} />
+                    <Route path="proformas" element={<ProformaListPage />} />
+                    <Route path="factures" element={<FactureListPage />} />
 
                     {/* Catalogue et formations */}
                     <Route path="products" element={<ProductManagement />} />
-                    <Route
-                      path="formations"
-                      element={<FormationManagement />}
-                    />
+                    <Route path="formations" element={<FormationManagement />} />
                   </Route>
                 );
               })}
 
-              {/* Redirections vers les entités par défaut */}
+              {/* Redirections vers les entités par défaut pour les listes */}
               <Route
                 path="opportunities"
-                element={
-                  <Navigate to={`/${defaultEntity}/opportunities`} replace />
-                }
+                element={<Navigate to={`/${defaultEntity}/opportunities`} replace />}
               />
               <Route
                 path="offres"
@@ -151,9 +130,7 @@ function App() {
               />
               <Route
                 path="proformas"
-                element={
-                  <Navigate to={`/${defaultEntity}/proformas`} replace />
-                }
+                element={<Navigate to={`/${defaultEntity}/proformas`} replace />}
               />
               <Route
                 path="factures"
@@ -165,9 +142,7 @@ function App() {
               />
               <Route
                 path="formations"
-                element={
-                  <Navigate to={`/${defaultEntity}/formations`} replace />
-                }
+                element={<Navigate to={`/${defaultEntity}/formations`} replace />}
               />
 
               {/* Rapports */}
@@ -180,7 +155,7 @@ function App() {
                 <Route path=":id/edit" element={<CourrierForm />} />
                 <Route path="create" element={<CourrierForm />} />
               </Route>
-              <Route path="affaires/:id" element={<AffaireDetailPage />} />
+              
               <Route path="simple" element={<TablesDemoPage />} />
 
               {/* Redirection pour les routes inconnues */}

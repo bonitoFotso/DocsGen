@@ -1,109 +1,64 @@
+import { useState } from "react";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
-import { SearchInput } from "@/components/ui/SearchInput";
 import { useOffres } from "@/hooks/useOffres";
-import {
-  BarChart2Icon,
-  DollarSignIcon,
-  FileText,
-  PlusCircle,
-  TrendingUpIcon,
-  UsersIcon,
-} from "lucide-react";
-import { OffreTable } from "./offreTable";
+import { FileText, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import KesContainer from "@/components/KesContainer";
-import { Offer, StatsConfig } from "@/components/KDcart/types";
 import { KDStats } from "@/components/KDcart/KDstats";
+import { useEntityFromUrl } from "@/hooks/useEntityFromUrl";
+import KDTable from "@/components/table/KDTable2";
+import { OffreDetailsDialog } from "./components/OffreDetailsDialog";
+import { offresConfig } from "@/config/offres.config";
+import { OffreDetail } from "@/types/offre";
+import { linearizeOffre } from "@/config/offres.line";
 
 const OffreManagement = () => {
   const {
     offres,
     isLoading,
     error,
-    searchTerm,
-    setSearchTerm,
-
-    handleViewDetails,
     handleEdit,
-    handleDelete,
-    isDeleting,
-
     setError,
   } = useOffres();
 
   const navigate = useNavigate();
-  const data: Offer[] = [];
-  const statsConfig: StatsConfig = {
-    cards: [
-      {
-        id: "total-amount",
-        title: "Montant Total",
-        type: "amount",
-        icon: <DollarSignIcon className="h-4 w-4 text-green-400" />,
-        calculation: () => 1575,
-        prefix: "XAF ",
-        tooltipText: "Montant total de toutes les offres",
-        colorClass: "bg-white text-black",
-        trend: {
-          type: "up",
-          value: 12.5,
-          period: "ce mois",
-        },
-      },
-      {
-        id: "won-amount",
-        title: "Montant Gagné",
-        type: "amount",
-        calculation: () => 500,
-        icon: <TrendingUpIcon className="h-4 w-4 text-blue-400" />,
-        prefix: "XAF ",
-        filter: (item) => item.statut === "GAGNE",
-        tooltipText: "Montant total des offres gagnées",
-        colorClass: "bg-white text-black",
-        trend: {
-          type: "up",
-          value: 4.5,
-          period: "ce mois",
-        },
-      },
-      {
-        id: "success-rate",
-        title: "Taux de Réussite",
-        type: "percentage",
-        icon: <BarChart2Icon className="h-4 w-4 text-purple-500" />,
-        suffix: "%",
-        calculation: () => 50,
-        // calculation: (data) => {
-        //   const won = data.filter((item) => item.statut === "GAGNE").length;
-        //   return data.length > 0 ? (won / data.length) * 100 : 0;
-        // },
-        tooltipText: "Pourcentage des offres gagnées",
-        colorClass: "bg-white text-black",
-      },
-      {
-        id: "client-distribution",
-        title: "Clients",
-        type: "distribution",
-        calculation: () => 20,
-        // calculation: (data) => {
-        //   return data.reduce((acc, item) => {
-        //     const client = item.client.nom;
-        //     acc[client] = (acc[client] || 0) + 1;
-        //     return acc;
-        //   }, {} as Record<string, number>);
-        // },
-        icon: <UsersIcon className="h-4 w-4 text-orange-500 " />,
-        tooltipText: "Distribution des offres par client",
-        colorClass: "bg-white text-black",
-      },
-    ],
+  const currentEntity = useEntityFromUrl();
+  const [selectedOffre, setSelectedOffre] = useState<OffreDetail | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+
+  // fonction pour aller a la page de details de l'offre
+  const handleViewDetails = (offreId: number) => {
+    navigate(`/offres/${offreId}`);
+  };
+
+    // Filtrage des offres par entité
+    const filteredOffres = currentEntity === "TOUTES" 
+    ? offres 
+    : offres.filter((offre) => offre.entity.code === currentEntity);
+
+  // Configuration from imported config file
+  const { columns, groupByOptions, headerActions, emptyState, statsConfig } = offresConfig({
+    navigate,
+    handleEdit,
+    setSelectedOffre,
+    setShowDetailsDialog,
+    offres: filteredOffres,
+      
+  });
+
+  const title = currentEntity === "TOUTES" ? "Gestion des Offres" : `Gestion des Offres de ${currentEntity}`;
+
+const linearizedOffres = linearizeOffre(filteredOffres);
+
+  // Gérer le clic sur une ligne
+  const handleRowClick = (offre: OffreDetail) => {
+    navigate(`/offres/${offre.id}`);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto px-4 py-6 space-y-6">
         {/* Header */}
-
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-purple-100 rounded-xl">
@@ -111,7 +66,7 @@ const OffreManagement = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Gestion des Offres
+                {title}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
                 Gérez vos offres commerciales
@@ -132,28 +87,39 @@ const OffreManagement = () => {
         {/* Error Alert */}
         {error && <ErrorAlert error={error} onDismiss={() => setError(null)} />}
 
+        {/* Stats Cards */}
         <KesContainer variant="transparent" padding="none">
-          <KDStats data={data} config={statsConfig} />
+          <KDStats data={offres} config={statsConfig} />
         </KesContainer>
 
-        {/* Main Content */}
+        {/* Main Content - Table */}
         <div>
-          <SearchInput
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="mb-6"
-          />
-
-          <OffreTable
-            offres={offres}
-            isLoading={isLoading}
-            onViewDetails={handleViewDetails}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isDeleting={isDeleting}
+          <KDTable
+            data={linearizedOffres}
+            columns={columns}
+            groupByOptions={groupByOptions}
+            title="Liste des offres"
+            onRowClick={handleRowClick}
+            initialGroupBy="none"
+            initialSort={{ key: 'date_creation', direction: 'desc' }}
+            searchPlaceholder="Rechercher une offre..."
+            noGroupText="Toutes les offres"
+            noResultsText="Aucune offre ne correspond aux critères"
+            pagination={{ 
+              pageSizes: [10, 25, 50, 100], 
+              defaultPageSize: 10 
+            }}
+            loading={isLoading}
+            headerActions={headerActions}
+            emptyState={filteredOffres.length === 0 ? emptyState : undefined}
+            className="shadow-sm"
+            density="normal"
+            alternateRowColors={true}
+            bordered={true}
           />
         </div>
       </div>
+
     </div>
   );
 };

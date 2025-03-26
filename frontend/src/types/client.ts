@@ -9,6 +9,7 @@ export interface Client {
     telephone: string;
     ville_nom: string;
     region_nom: string;
+    pays_nom: string;
     secteur_activite: string;
     agreer: boolean;
     agreement_fournisseur: boolean;

@@ -178,13 +178,13 @@ class Offre(StatusTrackingModel):
         # Appel à la méthode save du parent (StatusTrackingModel)
         super().save(*args, **kwargs)
         
-        # Mettre à jour le montant total si nécessaire
-        montant_calcule = self.calculer_montant_total
-        if self.montant != montant_calcule:
-            self.montant = montant_calcule
-            # Éviter une récursion infinie en ne rappelant save que si le montant a changé
-            if 'update_fields' not in kwargs:
-                models.Model.save(self, update_fields=['montant'])  # Appel direct à Model.save pour éviter la récursion
+        ## Mettre à jour le montant total si nécessaire
+        #montant_calcule = self.calculer_montant_total
+        #if self.montant != montant_calcule:
+        #    self.montant = montant_calcule
+        #    # Éviter une récursion infinie en ne rappelant save que si le montant a changé
+        #    if 'update_fields' not in kwargs:
+        #        models.Model.save(self, update_fields=['montant'])  # Appel direct à Model.save pour éviter la récursion
         
         # Créer une proforma et une affaire si l'offre est gagnée
         if self.statut == 'GAGNE' and (not statut_precedent or statut_precedent != 'GAGNE'):

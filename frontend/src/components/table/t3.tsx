@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import KDTable from './KDTable';
 import { Button } from '@/components/ui/button';
 import {
   PlusCircle,
@@ -24,6 +23,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import KDTable from './t2';
 
 // Exemple de type de données
 interface Contact {
@@ -174,22 +174,7 @@ const ContactsTableExample = () => {
     { key: 'region', label: 'Région', hidden: true },
     { key: 'poste', label: 'Poste', hidden: true },
     { key: 'service', label: 'Service', hidden: true },
-    {
-      key: 'telephone',
-      label: 'Téléphone',
-      width: '140px',
-      render: (row: Contact) => {
-        if (!row.telephone) return <span className="text-gray-400">-</span>;
-        return (
-          <div className="flex items-center">
-            <a href={`tel:${row.telephone}`} className="text-blue-600 hover:underline flex items-center">
-              <Phone size={14} className="mr-1" />
-              {row.telephone}
-            </a>
-          </div>
-        );
-      }
-    },
+    
     {
       key: 'email',
       label: 'Email',
@@ -203,28 +188,7 @@ const ContactsTableExample = () => {
         </div>
       )
     },
-    {
-      key: 'derniere_interaction',
-      label: 'Dernière interaction',
-      width: '150px',
-      render: (row: Contact) => {
-        if (!row.derniere_interaction) return <span className="text-gray-400">-</span>;
-
-        const date = new Date(row.derniere_interaction);
-        const formattedDate = new Intl.DateTimeFormat('fr-FR').format(date);
-
-        // Calculer le nombre de jours depuis la dernière interaction
-        const today = new Date();
-        const diffTime = Math.abs(today.getTime() - date.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        let color = '';
-        if (diffDays > 60) color = 'text-red-600';
-        else if (diffDays > 30) color = 'text-amber-600';
-
-        return <span className={color}>{formattedDate}</span>;
-      }
-    },
+    
     {
       key: 'actions',
       label: 'Actions',

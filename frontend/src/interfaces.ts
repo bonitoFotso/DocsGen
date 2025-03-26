@@ -169,10 +169,10 @@ interface OffreDetail {
 interface OffreEdit {
   client: number;
   entity: number;
-  produit?: number;
+  produit_principal?: number;
   produits: number[];
-  contact: number[];
-  statut: DocumentStatus;
+  contact: number;
+  statut: 'BROUILLON' | 'ENVOYE' | 'GAGNE' | 'PERDU';
   doc_type: string;
 }
 interface OffreEditStatus {
