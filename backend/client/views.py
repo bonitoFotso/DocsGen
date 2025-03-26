@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Count, Sum, Q
 from django.utils.timezone import now
 from datetime import timedelta
+from factures_app.models import Facture
 
 from .models import Pays, Region, Ville, Client, Site, Contact
 from document.models import (
@@ -155,7 +156,9 @@ class ClientViewSet(viewsets.ModelViewSet):
     def affaires(self, request, pk=None):
         """Retourne les affaires d'un client."""
         client = self.get_object()
-        affaires = Affaire.objects.filter(client=client)
+        offres = Offre.objects.filter(client=client)
+        # Use a flat list to collect all affaires
+        affaires = Affaire.objects.filter(offre__in=offres)
         serializer = AffaireListSerializer(affaires, many=True)
         return Response(serializer.data)
     
@@ -163,7 +166,12 @@ class ClientViewSet(viewsets.ModelViewSet):
     def factures(self, request, pk=None):
         """Retourne les factures d'un client."""
         client = self.get_object()
-        factures = Facture.objects.filter(client=client)
+        # Get all offres for this client
+        offres = Offre.objects.filter(client=client)
+        # Get all affaires related to these offres
+        affaires = Affaire.objects.filter(offre__in=offres)
+        # Get all factures related to these affaires
+        factures = Facture.objects.filter(affaire__in=affaires)
         serializer = FactureListSerializer(factures, many=True)
         return Response(serializer.data)
     

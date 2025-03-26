@@ -47,9 +47,9 @@ function Calendar({
       ...acc,
       [key]: classNames?.[key as keyof typeof classNames]
         ? cn(
-            defaultClassNames[key as keyof typeof defaultClassNames],
-            classNames[key as keyof typeof classNames],
-          )
+          defaultClassNames[key as keyof typeof defaultClassNames],
+          classNames[key as keyof typeof classNames],
+        )
         : defaultClassNames[key as keyof typeof defaultClassNames],
     }),
     {} as typeof defaultClassNames,

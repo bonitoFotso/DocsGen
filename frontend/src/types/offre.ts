@@ -24,7 +24,7 @@ export interface OffreDetail {
   contact?: Contact;
   entity: Entity;
   produits: Produit[];
-  produit: Produit;
+  produit_principal: Produit;
   relance?: string;
   necessite_relance: boolean;
   sequence_number: number;

@@ -31,7 +31,7 @@ const OffreForm: React.FC = () => {
     contact: null,
     entity: null,
     produits: [],
-    produit: null,
+    produit_principal: null,
     notes: '',
     montant: 0,
   });
@@ -95,7 +95,7 @@ const OffreForm: React.FC = () => {
             contact: offreData.contact?.id || null,
             entity: offreData.entity.id || null,
             produits: offreData.produits,
-            produit: offreData.produit?.id || null,
+            produit_principal: offreData.produit_principal?.id || null,
 
             notes: offreData.notes,
             montant: offreData.montant,
@@ -220,8 +220,8 @@ const OffreForm: React.FC = () => {
       newErrors.entity = 'Veuillez sélectionner une entité';
     }
 
-    if (!formData.produit) {
-      newErrors.produit = 'Veuillez sélectionner un produit';
+    if (!formData.produit_principal) {
+      newErrors.produit_principal = 'Veuillez sélectionner un produit_principal';
     }
 
     if (formData.produits.length === 0) {
@@ -241,8 +241,9 @@ const OffreForm: React.FC = () => {
 
     // Valider le formulaire avant de continuer
     if (!validateForm()) {
+      console.log(errors);
       toast("Erreur de validation", {
-        description: "Veuillez corriger les erreurs dans le formulaire avant de continuer.",
+        description: `Veuillez corriger les erreurs dans le formulaire avant de continuer`,
       });
       return;
     }
@@ -255,7 +256,7 @@ const OffreForm: React.FC = () => {
       const offreData = {
         ...formData,
         // Convertir l'objet produit en ID de produit principal
-        produit: formData.produit || null,
+        produit_principal: formData.produit_principal || null,
       };
 
       // Créer ou mettre à jour selon la présence d'un ID

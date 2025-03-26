@@ -118,6 +118,7 @@ class ClientListSerializer(serializers.ModelSerializer):
     opportunities_count = serializers.IntegerField(source='opportunites.count', read_only=True)
     courriers_count = serializers.IntegerField(source='courriers.count', read_only=True)
     
+    
     class Meta:
         model = Client
         fields = [
@@ -128,6 +129,7 @@ class ClientListSerializer(serializers.ModelSerializer):
             'telephone',
             'ville_nom',
             'secteur_activite',
+            'categorie',
             'agreer',
             'agreement_fournisseur',
             'is_client',

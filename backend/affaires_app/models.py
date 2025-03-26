@@ -317,7 +317,7 @@ class Affaire(models.Model):
             affaire=self,
             statut='BROUILLON',
             sequence_number = self.sequence_number,
-            #montant_ht=self.montant_total
+            montant_ht=self.montant_total
         )
         
         return facture

@@ -52,11 +52,12 @@ class ClientLightSerializer(serializers.ModelSerializer):
     """Sérialiseur léger pour les clients (sans les contacts)"""
     ville_nom = serializers.StringRelatedField(source='ville.nom', read_only=True)
     region_nom = serializers.StringRelatedField(source='ville.region.nom', read_only=True)
+    pays_nom = serializers.StringRelatedField(source='ville.region.pays.nom', read_only=True)
     class Meta:
         model = Client
         fields = [
             'id', 'c_num', 'nom', 'email', 'telephone', 
-            'ville_nom', 'region_nom', 'secteur_activite'
+            'ville_nom', 'region_nom','pays_nom', 'secteur_activite'
         ]
 
 
@@ -80,15 +81,15 @@ class OffreSerializer(serializers.ModelSerializer):
     entity = EntitySerializer()
     produits = ProductSerializer(many=True, read_only=True)
     contact = ContactSerializer()
-    produit = ProductSerializer()
+    produit_principal = ProductSerializer()
     
     class Meta:
         model = Offre
         fields = [
             'id', 'reference', 'date_creation', 'date_modification',
-            'date_validation', 'statut', 'montant', 'relance',
+            'statut', 'montant', 'relance',
             'necessite_relance', 'client',
-            'contact', 'entity','produit',
+            'contact', 'entity','produit_principal',
             'produits', 'notes', 'sequence_number','fichier',
         ]
         read_only_fields = [
@@ -106,7 +107,7 @@ class OffreCreateSerializer(serializers.ModelSerializer):
         model = Offre
         fields = [
             'statut', 'client', 'contact', 'entity',
-            'produits', 'notes', 'montant', 'produit','fichier'
+            'produits', 'notes', 'montant', 'produit_principal','fichier'
         ]
     
     def validate(self, data):

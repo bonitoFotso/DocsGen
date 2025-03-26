@@ -1,20 +1,23 @@
 from rest_framework import serializers
+
+from offres_app.serializers import ClientLightSerializer
 from .models import Facture
 from affaires_app.serializers import AffaireSerializer
 
 class FactureSerializer(serializers.ModelSerializer):
-    client_nom = serializers.CharField(source='affaire.offre.client.nom', read_only=True)
     entity_code = serializers.CharField(source='affaire.offre.entity.code', read_only=True)
     affaire_reference = serializers.CharField(source='affaire.reference', read_only=True)
     est_en_retard = serializers.SerializerMethodField()
     statut_display = serializers.CharField(source='get_status_display', read_only=True)
     solde = serializers.SerializerMethodField()
+    client = ClientLightSerializer(read_only=True)
+    affaire = AffaireSerializer(read_only=True)
     
     class Meta:
         model = Facture
         fields = [
-            'id', 'reference', 'affaire', 'affaire_reference', 'client_nom', 
-            'entity_code', 'statut', 'statut_display', 'date_creation', 
+            'id', 'reference', 'affaire', 'affaire_reference', 'client', 
+            'entity_code', 'statut_display', 'date_creation', 
             'date_emission', 'date_echeance', 'date_paiement',
             'montant_ht', 'montant_ttc', 'montant_paye', 'solde',
             'est_en_retard', 'fichier'

@@ -14,10 +14,8 @@ class FactureViewSet(viewsets.ModelViewSet):
     """
     API endpoint pour gérer les factures.
     """
-    queryset = Facture.objects.all().select_related(
-        'affaire', 'affaire__offre', 'affaire__offre__client', 'affaire__offre__entity',
-        'created_by', 'updated_by'
-    )
+    queryset = Facture.objects.all()
+    
     serializer_class = FactureSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

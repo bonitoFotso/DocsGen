@@ -28,7 +28,7 @@ export interface Client {
     contact: number | null;
     entity: number | null;
     produits: Produit[];
-    produit: number | null;
+    produit_principal: number | null;
     notes: string;
     montant: number;
   }

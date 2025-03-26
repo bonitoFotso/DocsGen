@@ -57,13 +57,13 @@ const OffreProductsSection: React.FC<OffreProductsSectionProps> = ({
   const [produitPrincipale, setProduitPrincipale] = useState<Produit | null>(null);
   useEffect(() => {
 
-    setProduitPrincipale(formData.produit ? formData.produits.find(p => p.id === Number(formData.produit)) ?? null : null);
+    setProduitPrincipale(formData.produit_principal ? formData.produits.find(p => p.id === Number(formData.produit_principal)) ?? null : null);
     console.log(produitPrincipale);
-  }, [formData.produit, formData.produits, produitPrincipale]);
+  }, [formData.produit_principal, formData.produits, produitPrincipale]);
 
   // Trouver le produit principal actuel
-  const mainProduct = formData.produit
-      ? formData.produits.find(p => p.id === Number(formData.produit))
+  const mainProduct = formData.produit_principal
+      ? formData.produits.find(p => p.id === Number(formData.produit_principal))
     : null;
 
   return (
@@ -111,16 +111,16 @@ const OffreProductsSection: React.FC<OffreProductsSectionProps> = ({
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <Star className="h-4 w-4 mr-2 text-amber-500" />
-                <Label htmlFor="produit" className="font-medium">Produit principal: {produitPrincipale?.name}</Label>
+                <Label htmlFor="produit_principal" className="font-medium">Produit principal: {produitPrincipale?.name}</Label>
               </div>
               <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">Principal</Badge>
             </div>
 
             {/* Select pour choisir le produit principal */}
             <Select
-              value={formData.produit ? formData.produit.toString() : ''}
+              value={formData.produit_principal ? formData.produit_principal.toString() : ''}
               onValueChange={(value) => {
-                handleChange('produit', Number(value));
+                handleChange('produit_principal', Number(value));
               }}
             >
               <SelectTrigger className="w-full ring-offset-primary/20 focus:ring-primary/20">
@@ -197,7 +197,7 @@ const OffreProductsSection: React.FC<OffreProductsSectionProps> = ({
                 <div
                   key={produit.id}
                   className={`border rounded-md p-4 relative transition-all ${
-                    formData.produit?.toString() === produit.id.toString() 
+                    formData.produit_principal?.toString() === produit.id.toString() 
                       ? 'border-amber-300 bg-amber-50/30' 
                       : hoveredProductId === produit.id 
                         ? 'border-primary/50 bg-muted/10 shadow-sm' 
@@ -214,19 +214,19 @@ const OffreProductsSection: React.FC<OffreProductsSectionProps> = ({
                             variant="ghost"
                             size="icon"
                             className={`h-7 w-7 ${
-                              formData.produit?.toString() === produit.id.toString() 
+                              formData.produit_principal?.toString() === produit.id.toString() 
                                 ? 'text-amber-500 bg-amber-50' 
                                 : 'text-primary hover:bg-primary/10'
                             }`}
                             onClick={() => {
-                              handleChange('produit', produit.id);
+                              handleChange('produit_principal', produit.id);
                             }}
                           >
                             <Star className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                        {formData.produit?.toString() === produit.id.toString()
+                        {formData.produit_principal?.toString() === produit.id.toString()
                             ? 'Produit principal actuel' 
                             : 'Définir comme produit principal'
                           }
@@ -254,7 +254,7 @@ const OffreProductsSection: React.FC<OffreProductsSectionProps> = ({
                   <div className="space-y-3 pr-16">
                     <div>
                       <div className="font-medium flex items-center">
-                        {formData.produit?.toString() === produit.id.toString() && (
+                        {formData.produit_principal?.toString() === produit.id.toString() && (
                           <Badge variant="outline" className="mr-2 bg-amber-50 text-amber-700 border-amber-200">
                             Principal
                           </Badge>

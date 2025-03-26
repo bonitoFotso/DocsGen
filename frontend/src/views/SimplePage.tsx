@@ -4,6 +4,42 @@ import KDTable from '@/components/table/KDTable';
 import { autoGenerateColumns } from '@/components/table/generateColumns';
 import { FileText } from 'lucide-react';
 
+
+
+import React from 'react';
+import { ColumnDef } from "@tanstack/react-table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CalendarDays, Shield, CheckCircle2, XCircle } from "lucide-react";
+import { KdTable } from '@/components/table/KDTable2';
+import UserManagement from '@/components/table/t2';
+import ShadcnTable from '@/components/table/t2';
+import KDTableAdvancedExample from '@/components/table/t3';
+
+// Type pour nos données
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: string;
+  department: string;
+  status: "active" | "inactive";
+  lastLogin: string;
+};
+
+// Fonction pour formater les dates
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+};
+
+
 // Définition des types pour les données
 interface Affaire {
   id: number;
@@ -17,6 +53,8 @@ interface Affaire {
   progression: number;
   en_retard: boolean;
 }
+
+
 
 function AffairesTable() {
   // Exemple de données
@@ -275,6 +313,7 @@ export const TablesDemoPage: React.FC = () => {
       description="Démonstration des tableaux avec génération automatique de colonnes"
     >
       <div className="grid gap-8">
+        <KDTableAdvancedExample/>
         <AffairesTable />
         <ClientsTable />
         <RapportsTable />
