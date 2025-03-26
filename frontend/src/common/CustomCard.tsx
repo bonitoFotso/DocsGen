@@ -1,16 +1,12 @@
 // Card.tsx
-import React from 'react';
+import React from "react";
 
 // Card Component
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
 }
 
-export const Card = ({
-                             children,
-                             className = '',
-                             ...props
-                           }: CardProps) => {
+export const Card = ({ children, className = "", ...props }: CardProps) => {
   return (
     <div
       className={`
@@ -30,10 +26,10 @@ interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const CardHeader = ({
-                                   children,
-                                   className = '',
-                                   ...props
-                                 }: CardHeaderProps) => {
+  children,
+  className = "",
+  ...props
+}: CardHeaderProps) => {
   return (
     <div
       className={`
@@ -53,10 +49,10 @@ interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
 }
 
 export const CardTitle = ({
-                                  children,
-                                  className = '',
-                                  ...props
-                                }: CardTitleProps) => {
+  children,
+  className = "",
+  ...props
+}: CardTitleProps) => {
   return (
     <h3
       className={`
@@ -76,10 +72,10 @@ interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const CardContent = ({
-                                    children,
-                                    className = '',
-                                    ...props
-                                  }: CardContentProps) => {
+  children,
+  className = "",
+  ...props
+}: CardContentProps) => {
   return (
     <div className={`p-6 pt-0 ${className}`} {...props}>
       {children}
@@ -93,10 +89,10 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const CardFooter = ({
-                                   children,
-                                   className = '',
-                                   ...props
-                                 }: CardFooterProps) => {
+  children,
+  className = "",
+  ...props
+}: CardFooterProps) => {
   return (
     <div
       className={`

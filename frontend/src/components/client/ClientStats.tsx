@@ -1,7 +1,7 @@
 // components/client/ClientStats.tsx
-import React from 'react';
-import { ClientDetails } from '@/types/client';
-import { StatCard } from './ClientComponents';
+import React from "react";
+import { ClientDetails } from "@/types/client";
+import { StatCard } from "./ClientComponents";
 import {
   BarChart4,
   FileText,
@@ -9,8 +9,8 @@ import {
   FileSearch,
   Hash,
   Building,
-  Users
-} from 'lucide-react';
+  Users,
+} from "lucide-react";
 
 interface ClientStatsProps {
   client: ClientDetails;
@@ -24,43 +24,43 @@ const ClientStats: React.FC<ClientStatsProps> = ({ client, onStatClick }) => {
         label="Opportunités"
         value={client.opportunities?.length || 0}
         icon={<BarChart4 className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-opportunites')}
+        onClick={() => onStatClick("tab-opportunites")}
       />
       <StatCard
         label="Offres"
         value={client.offres_count || 0}
         icon={<FileText className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-offres')}
+        onClick={() => onStatClick("tab-offres")}
       />
       <StatCard
         label="Affaires"
         value={client.affaires_count || 0}
         icon={<Briefcase className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-affaires')}
+        onClick={() => onStatClick("tab-affaires")}
       />
       <StatCard
         label="Rapports"
         value={client.rapports?.length || 0}
         icon={<FileSearch className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-rapports')}
+        onClick={() => onStatClick("tab-rapports")}
       />
       <StatCard
         label="Factures"
         value={client.factures_count || 0}
         icon={<Hash className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-factures')}
+        onClick={() => onStatClick("tab-factures")}
       />
       <StatCard
         label="Sites"
         value={client.sites?.length || 0}
         icon={<Building className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-sites')}
+        onClick={() => onStatClick("tab-sites")}
       />
       <StatCard
         label="Contacts"
         value={client.contacts_count || 0}
         icon={<Users className="h-6 w-6" />}
-        onClick={() => onStatClick('tab-contacts')}
+        onClick={() => onStatClick("tab-contacts")}
       />
     </div>
   );

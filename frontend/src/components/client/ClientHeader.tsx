@@ -1,16 +1,11 @@
 // components/client/ClientHeader.tsx
-import React from 'react';
-import { ClientDetails } from '@/types/client';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+import React from "react";
+import { ClientDetails } from "@/types/client";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
   Hash,
   Mail,
@@ -23,9 +18,9 @@ import {
   PlusCircle,
   BadgeCheck,
   Store,
-} from 'lucide-react';
-import { InfoItem, getInitials, getAvatarColor } from './ClientComponents';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { InfoItem, getInitials, getAvatarColor } from "./ClientComponents";
+import { cn } from "@/lib/utils";
 
 interface ClientHeaderProps {
   client: ClientDetails;
@@ -40,7 +35,7 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
   onEdit,
   onDelete,
   onCreateOpportunity,
-  isSubmitting
+  isSubmitting,
 }) => {
   return (
     <Card>
@@ -66,13 +61,19 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
           </div>
           <div className="flex flex-col gap-1">
             {client.agreer && (
-              <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-200 bg-green-50"
+              >
                 <BadgeCheck className="h-3 w-3 mr-1" />
                 Agréé
               </Badge>
             )}
             {client.agreement_fournisseur && (
-              <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+              <Badge
+                variant="outline"
+                className="text-blue-600 border-blue-200 bg-blue-50"
+              >
                 <Store className="h-3 w-3 mr-1" />
                 Fournisseur
               </Badge>
@@ -80,69 +81,58 @@ const ClientHeader: React.FC<ClientHeaderProps> = ({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoItem 
-            icon={<Mail className="h-4 w-4" />} 
-            label="Email" 
+          <InfoItem
+            icon={<Mail className="h-4 w-4" />}
+            label="Email"
             value={client.email}
           />
-          <InfoItem 
-            icon={<Phone className="h-4 w-4" />} 
-            label="Téléphone" 
+          <InfoItem
+            icon={<Phone className="h-4 w-4" />}
+            label="Téléphone"
             value={client.telephone}
           />
-          <InfoItem 
-            icon={<MapPin className="h-4 w-4" />} 
-            label="Localisation" 
-            value={`${client.ville?.nom || ''}, ${client.region_nom || ''}`}
+          <InfoItem
+            icon={<MapPin className="h-4 w-4" />}
+            label="Localisation"
+            value={`${client.ville?.nom || ""}, ${client.region_nom || ""}`}
           />
-          <InfoItem 
-            icon={<Building2 className="h-4 w-4" />} 
-            label="Adresse postale" 
-            value={client.bp ? `BP: ${client.bp}` : '-'}
+          <InfoItem
+            icon={<Building2 className="h-4 w-4" />}
+            label="Adresse postale"
+            value={client.bp ? `BP: ${client.bp}` : "-"}
           />
-          <InfoItem 
-            icon={<MapPin className="h-4 w-4" />} 
-            label="Quartier" 
+          <InfoItem
+            icon={<MapPin className="h-4 w-4" />}
+            label="Quartier"
             value={client.quartier}
           />
-          <InfoItem 
-            icon={<Briefcase className="h-4 w-4" />} 
-            label="Secteur d'activité" 
-            value={
-              <Badge variant="secondary">
-                {client.secteur_activite}
-              </Badge>
-            }
+          <InfoItem
+            icon={<Briefcase className="h-4 w-4" />}
+            label="Secteur d'activité"
+            value={<Badge variant="secondary">{client.secteur_activite}</Badge>}
           />
         </div>
-        
+
         <Separator />
-        
+
         <div className="flex justify-end gap-2">
-          <Button 
-            variant="outline" 
-            onClick={onEdit}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={onEdit} disabled={isSubmitting}>
             <Edit className="h-4 w-4 mr-2" />
             Modifier
           </Button>
-          <Button 
-            variant="outline" 
-            className="border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700" 
+          <Button
+            variant="outline"
+            className="border-red-200 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
             onClick={onDelete}
             disabled={isSubmitting}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Supprimer
           </Button>
-          <Button 
-            onClick={onCreateOpportunity}
-            disabled={isSubmitting}
-          >
+          <Button onClick={onCreateOpportunity} disabled={isSubmitting}>
             <PlusCircle className="h-4 w-4 mr-2" />
             Nouvelle opportunité
           </Button>

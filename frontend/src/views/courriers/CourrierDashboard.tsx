@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/CourrierDashboard.tsx
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,11 +39,11 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useCourriers, useCourrierStats } from '@/hooks/useCourriers';
-import { CourrierFilter } from '@/services/CourrierService';
 import { fr } from 'date-fns/locale';
 import { format } from 'date-fns';
 import DatePicker from '@/components/ui/DatePicker';
 import CourrierCard from './CourrierCard';
+import { CourrierFilter } from '@/types/courrier';
 
 interface CourrierDashboardProps {
   onCreateCourrier: () => void;
@@ -76,14 +77,14 @@ const CourrierDashboard: React.FC<CourrierDashboardProps> = ({
   } = useCourrierStats();
 
   // Préparer les données pour les graphiques
-  const getStatusData = () => {
-    if (!stats?.par_statut) return [];
+  // const getStatusData = () => {
+  //   if (!stats?.par_statut) return [];
     
-    return Object.entries(stats.par_statut).map(([name, value]) => ({
-      name,
-      value
-    }));
-  };
+  //   return Object.entries(stats.par_statut).map(([name, value]) => ({
+  //     name,
+  //     value
+  //   }));
+  // };
 
   const getTypeData = () => {
     if (!stats?.par_type) return [];

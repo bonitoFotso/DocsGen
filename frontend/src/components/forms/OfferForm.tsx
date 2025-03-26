@@ -1,13 +1,29 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Info, AlertCircle, Check, X, Loader2, MapPin, Package, Users, Building2 } from 'lucide-react';
-import { useEntity } from '../../contexts/EntityContext';
-import { useClient } from '../../contexts/ClientContext';
-import { useCategory } from '../../hooks/useCategory';
-import { useProduct } from '../../hooks/useProduct';
-import { useSite } from '../../contexts/SiteContext';
-import { DocumentStatus, IOffre, IOffreC } from '../../interfaces';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../common/CustomCard';
-import { Alert, AlertDescription } from '../../common/CustomAlert';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Info,
+  AlertCircle,
+  Check,
+  X,
+  Loader2,
+  MapPin,
+  Package,
+  Users,
+  Building2,
+} from "lucide-react";
+import { useEntity } from "../../contexts/EntityContext";
+import { useClient } from "../../contexts/ClientContext";
+import { useCategory } from "../../hooks/useCategory";
+import { useProduct } from "../../hooks/useProduct";
+import { useSite } from "../../contexts/SiteContext";
+import { DocumentStatus, IOffre, IOffreC } from "../../interfaces";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../common/CustomCard";
+import { Alert, AlertDescription } from "../../common/CustomAlert";
 
 interface OfferFormProps {
   initialData?: Partial<IOffre>;
@@ -30,16 +46,16 @@ const OfferForm: React.FC<OfferFormProps> = ({
 
   const [formData, setFormData] = useState<Partial<IOffreC>>({
     entity: initialData?.entity?.id,
-    reference: initialData?.reference || '',
+    reference: initialData?.reference || "",
     client: initialData?.client?.id,
     date_creation: initialData?.date_creation || new Date().toISOString(),
     statut: initialData?.statut || DocumentStatus.BROUILLON,
-    doc_type: initialData?.doc_type || 'OFF',
+    doc_type: initialData?.doc_type || "OFF",
     sequence_number: initialData?.sequence_number || 0,
-    produit: initialData?.produit?.map(p => p.id) || [],
+    produit: initialData?.produit?.map((p) => p.id) || [],
     date_modification: new Date().toISOString(),
     date_validation: initialData?.date_validation || null,
-    sites: initialData?.sites?.map(s => s.id) || [],
+    sites: initialData?.sites?.map((s) => s.id) || [],
   });
 
   const [category, setCategory] = useState<number | null>(null);
@@ -49,27 +65,27 @@ const OfferForm: React.FC<OfferFormProps> = ({
 
   const filteredProducts = useMemo(() => {
     if (!category) return products;
-    return products.filter(product => product.category.id === category);
+    return products.filter((product) => product.category.id === category);
   }, [products, category]);
 
   useEffect(() => {
-      if (initialData) {
-        setFormData(prev => ({
-          ...prev,
-          entity: initialData.entity?.id,
-          reference: initialData.reference,
-          client: initialData.client?.id,
-          date_creation: initialData.date_creation,
-          statut: initialData.statut,
-          doc_type: initialData.doc_type,
-          sequence_number: initialData.sequence_number,
-          produit: initialData.produit?.map(p => p.id) || [],
-          date_modification: new Date().toISOString(),
-          date_validation: initialData.date_validation,
-          sites: initialData.sites?.map(s => s.id) || [],
-        }));
-      }
-    }, [initialData]);
+    if (initialData) {
+      setFormData((prev) => ({
+        ...prev,
+        entity: initialData.entity?.id,
+        reference: initialData.reference,
+        client: initialData.client?.id,
+        date_creation: initialData.date_creation,
+        statut: initialData.statut,
+        doc_type: initialData.doc_type,
+        sequence_number: initialData.sequence_number,
+        produit: initialData.produit?.map((p) => p.id) || [],
+        date_modification: new Date().toISOString(),
+        date_validation: initialData.date_validation,
+        sites: initialData.sites?.map((s) => s.id) || [],
+      }));
+    }
+  }, [initialData]);
 
   const handleSelectChange = (
     e: React.ChangeEvent<HTMLSelectElement>,
@@ -78,11 +94,13 @@ const OfferForm: React.FC<OfferFormProps> = ({
     const selectedId = Number(e.target.value);
     if (selectedId) {
       setFormData((prev) => ({ ...prev, [key]: selectedId }));
-      setErrors((prev) => ({ ...prev, [key]: '' }));
+      setErrors((prev) => ({ ...prev, [key]: "" }));
     }
   };
 
-  const handleCategorySelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCategorySelectChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const selectedId = Number(e.target.value);
     setCategory(selectedId || null);
   };
@@ -94,9 +112,9 @@ const OfferForm: React.FC<OfferFormProps> = ({
         ...prev,
         produit: [...(prev.produit || []), selectedId],
       }));
-      setErrors(prev => ({ ...prev, produit: '' }));
+      setErrors((prev) => ({ ...prev, produit: "" }));
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleRemoveProduct = (productId: number) => {
@@ -113,9 +131,9 @@ const OfferForm: React.FC<OfferFormProps> = ({
         ...prev,
         sites: [...(prev.sites || []), selectedId],
       }));
-      setErrors(prev => ({ ...prev, sites: '' }));
+      setErrors((prev) => ({ ...prev, sites: "" }));
     }
-    e.target.value = '';
+    e.target.value = "";
   };
 
   const handleRemoveSite = (siteId: number) => {
@@ -130,7 +148,8 @@ const OfferForm: React.FC<OfferFormProps> = ({
 
     if (!data.entity) newErrors.entity = "L'entité est requise";
     if (!data.client) newErrors.client = "Le client est requis";
-    if (!data.produit?.length) newErrors.produit = "Au moins un produit est requis";
+    if (!data.produit?.length)
+      newErrors.produit = "Au moins un produit est requis";
     if (!data.sites?.length) newErrors.sites = "Au moins un site est requis";
 
     setErrors(newErrors);
@@ -150,7 +169,7 @@ const OfferForm: React.FC<OfferFormProps> = ({
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
         setErrors({ submit: "Une erreur est survenue lors de la soumission" });
       } finally {
         setIsSubmitting(false);
@@ -159,24 +178,24 @@ const OfferForm: React.FC<OfferFormProps> = ({
   };
 
   const getProductName = (productId: number) => {
-    return products.find(p => p.id === productId)?.name || 'Produit inconnu';
+    return products.find((p) => p.id === productId)?.name || "Produit inconnu";
   };
 
   const getSiteName = (siteId: number) => {
-    return sites.find(s => s.id === siteId)?.nom || 'Site inconnu';
+    return sites.find((s) => s.id === siteId)?.nom || "Site inconnu";
   };
 
   return (
     <Card className="w-full max-w-[200vw] bg-white shadow-lg">
-      
-
       <CardContent>
         <form onSubmit={handleSubmit} className="py-6">
           {showSuccessMessage && (
             <Alert className="mb-6 bg-green-50 border-green-200 rounded-lg">
               <Check className="w-5 h-5 text-green-500" />
               <AlertDescription className="text-green-700 font-medium">
-                {isEditing ? 'Offre mise à jour avec succès !' : 'Offre créée avec succès !'}
+                {isEditing
+                  ? "Offre mise à jour avec succès !"
+                  : "Offre créée avec succès !"}
               </AlertDescription>
             </Alert>
           )}
@@ -188,22 +207,26 @@ const OfferForm: React.FC<OfferFormProps> = ({
                 <Building2 className="w-5 h-5 text-gray-500" />
                 Informations Principales
               </h3>
-              
+
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                     Entité <Info className="w-4 h-4 text-gray-400" />
                   </label>
                   <select
-                    value={formData.entity || ''}
-                    onChange={(e) => handleSelectChange(e, 'entity')}
+                    value={formData.entity || ""}
+                    onChange={(e) => handleSelectChange(e, "entity")}
                     className={`w-full h-11 px-4 rounded-lg border ${
-                      errors.entity ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      errors.entity
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-200"
                     } focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all`}
                   >
                     <option value="">Sélectionnez une entité</option>
                     {entities?.map((ent) => (
-                      <option key={ent.id} value={ent.id}>{ent.name}</option>
+                      <option key={ent.id} value={ent.id}>
+                        {ent.name}
+                      </option>
                     ))}
                   </select>
                   {errors.entity && (
@@ -220,15 +243,19 @@ const OfferForm: React.FC<OfferFormProps> = ({
                     Client
                   </label>
                   <select
-                    value={formData.client || ''}
-                    onChange={(e) => handleSelectChange(e, 'client')}
+                    value={formData.client || ""}
+                    onChange={(e) => handleSelectChange(e, "client")}
                     className={`w-full h-11 px-4 rounded-lg border ${
-                      errors.client ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      errors.client
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-200"
                     } focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all`}
                   >
                     <option value="">Sélectionnez un client</option>
                     {clients?.map((cli) => (
-                      <option key={cli.id} value={cli.id}>{cli.nom}</option>
+                      <option key={cli.id} value={cli.id}>
+                        {cli.nom}
+                      </option>
                     ))}
                   </select>
                   {errors.client && (
@@ -251,13 +278,15 @@ const OfferForm: React.FC<OfferFormProps> = ({
               <div className="space-y-4">
                 <div className="space-y-3">
                   <select
-                    value={category || ''}
+                    value={category || ""}
                     onChange={handleCategorySelectChange}
                     className="w-full h-11 px-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
                   >
                     <option value="">Toutes les catégories</option>
                     {categories?.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
                     ))}
                   </select>
 
@@ -267,11 +296,13 @@ const OfferForm: React.FC<OfferFormProps> = ({
                     disabled={!category}
                   >
                     <option value="">
-                      {category ? 'Ajouter un produit' : 'Veuillez d\'abord sélectionner une catégorie'}
+                      {category
+                        ? "Ajouter un produit"
+                        : "Veuillez d'abord sélectionner une catégorie"}
                     </option>
                     {filteredProducts.map((prod) => (
-                      <option 
-                        key={prod.id} 
+                      <option
+                        key={prod.id}
                         value={prod.id}
                         disabled={formData.produit?.includes(prod.id)}
                       >
@@ -283,11 +314,13 @@ const OfferForm: React.FC<OfferFormProps> = ({
 
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {formData.produit?.map((productId) => (
-                    <div 
-                      key={productId} 
+                    <div
+                      key={productId}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group hover:border-blue-200 hover:shadow-sm transition-all"
                     >
-                      <span className="text-sm text-gray-700">{getProductName(productId)}</span>
+                      <span className="text-sm text-gray-700">
+                        {getProductName(productId)}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveProduct(productId)}
@@ -321,8 +354,8 @@ const OfferForm: React.FC<OfferFormProps> = ({
                 >
                   <option value="">Ajouter un site</option>
                   {sites?.map((site) => (
-                    <option 
-                      key={site.id} 
+                    <option
+                      key={site.id}
                       value={site.id}
                       disabled={formData.sites?.includes(site.id)}
                     >
@@ -333,11 +366,13 @@ const OfferForm: React.FC<OfferFormProps> = ({
 
                 <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   {formData.sites?.map((siteId) => (
-                    <div 
-                      key={siteId} 
+                    <div
+                      key={siteId}
                       className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group hover:border-blue-200 hover:shadow-sm transition-all"
                     >
-                      <span className="text-sm text-gray-700">{getSiteName(siteId)}</span>
+                      <span className="text-sm text-gray-700">
+                        {getSiteName(siteId)}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveSite(siteId)}
@@ -361,7 +396,6 @@ const OfferForm: React.FC<OfferFormProps> = ({
       </CardContent>
 
       <CardFooter className="flex justify-end py-4 px-6 border-t border-gray-100 bg-gray-50">
-        
         <button
           type="submit"
           onClick={handleSubmit}
@@ -371,10 +405,12 @@ const OfferForm: React.FC<OfferFormProps> = ({
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              {initialData ? 'Mise à jour...' : 'Création...'}
+              {initialData ? "Mise à jour..." : "Création..."}
             </>
+          ) : initialData ? (
+            "Mettre à jour"
           ) : (
-            initialData ? 'Mettre à jour' : 'Créer l\'offre'
+            "Créer l'offre"
           )}
         </button>
       </CardFooter>

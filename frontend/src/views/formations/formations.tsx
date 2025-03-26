@@ -149,7 +149,7 @@ const FormationManagement = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+      <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-violet-50">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-6 w-6 text-indigo-600" />
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Formations</h1>

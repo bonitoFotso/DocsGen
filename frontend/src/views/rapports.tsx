@@ -1,36 +1,58 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useServices } from '@/AppHooks';
-import { RapportBase, RapportDetail, RapportEdit, AffaireBase, ProductBase, DocumentStatus } from '@/interfaces';
-import { PlusCircle, Pencil, Trash2, X, AlertCircle, Loader2, FileText, Building2, Calendar, CheckCircle2, Clock, Send, XCircle, MapPin, Package } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from "react";
+import { useServices } from "@/AppHooks";
+import {
+  RapportBase,
+  RapportDetail,
+  RapportEdit,
+  AffaireBase,
+  ProductBase,
+  DocumentStatus,
+} from "@/interfaces";
+import {
+  PlusCircle,
+  Pencil,
+  Trash2,
+  X,
+  AlertCircle,
+  Loader2,
+  FileText,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Send,
+  XCircle,
+  Package,
+} from "lucide-react";
 
 const getStatusLabel = (status: DocumentStatus): string => {
   const statusLabels: Record<DocumentStatus, string> = {
-    'BROUILLON': 'Brouillon',
-    'ENVOYE': 'Envoyé',
-    'VALIDE': 'Validé',
-    'REFUSE': 'Refusé',
-    'EN_COURS': 'En cours',
-    'TERMINEE': 'Terminée',
-    'ANNULEE': 'Annulée'
+    BROUILLON: "Brouillon",
+    ENVOYE: "Envoyé",
+    VALIDE: "Validé",
+    REFUSE: "Refusé",
+    EN_COURS: "En cours",
+    TERMINEE: "Terminée",
+    ANNULEE: "Annulée",
   };
   return statusLabels[status] || status;
 };
 
 const getStatusIcon = (status: DocumentStatus) => {
   switch (status) {
-    case 'BROUILLON':
+    case "BROUILLON":
       return <Clock className="h-3 w-3 mr-1" />;
-    case 'ENVOYE':
+    case "ENVOYE":
       return <Send className="h-3 w-3 mr-1" />;
-    case 'VALIDE':
+    case "VALIDE":
       return <CheckCircle2 className="h-3 w-3 mr-1" />;
-    case 'REFUSE':
+    case "REFUSE":
       return <XCircle className="h-3 w-3 mr-1" />;
-    case 'EN_COURS':
+    case "EN_COURS":
       return <Clock className="h-3 w-3 mr-1" />;
-    case 'TERMINEE':
+    case "TERMINEE":
       return <CheckCircle2 className="h-3 w-3 mr-1" />;
-    case 'ANNULEE':
+    case "ANNULEE":
       return <X className="h-3 w-3 mr-1" />;
     default:
       return null;
@@ -39,43 +61,45 @@ const getStatusIcon = (status: DocumentStatus) => {
 
 const getStatusBadgeClass = (status: DocumentStatus): string => {
   switch (status) {
-    case 'BROUILLON':
-      return 'bg-gray-100 text-gray-800';
-    case 'ENVOYE':
-      return 'bg-blue-100 text-blue-800';
-    case 'VALIDE':
-      return 'bg-green-100 text-green-800';
-    case 'REFUSE':
-      return 'bg-red-100 text-red-800';
-    case 'EN_COURS':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'TERMINEE':
-      return 'bg-emerald-100 text-emerald-800';
-    case 'ANNULEE':
-      return 'bg-gray-100 text-gray-800';
+    case "BROUILLON":
+      return "bg-gray-100 text-gray-800";
+    case "ENVOYE":
+      return "bg-blue-100 text-blue-800";
+    case "VALIDE":
+      return "bg-green-100 text-green-800";
+    case "REFUSE":
+      return "bg-red-100 text-red-800";
+    case "EN_COURS":
+      return "bg-yellow-100 text-yellow-800";
+    case "TERMINEE":
+      return "bg-emerald-100 text-emerald-800";
+    case "ANNULEE":
+      return "bg-gray-100 text-gray-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 };
 
 const RapportManagement = () => {
-  const { rapportService, affaireService, siteService, productService } = useServices();
+  const { rapportService, affaireService, productService } = useServices();
   const [rapports, setRapports] = useState<RapportBase[]>([]);
   const [affaires, setAffaires] = useState<AffaireBase[]>([]);
   // const [sites, setSites] = useState<SiteBase[]>([]);
   const [products, setProducts] = useState<ProductBase[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentRapport, setCurrentRapport] = useState<RapportDetail | null>(null);
+  const [currentRapport, setCurrentRapport] = useState<RapportDetail | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<RapportEdit>({
     affaire: 0,
     // site: 0,
     produit: 0,
-    statut: 'BROUILLON'
+    statut: "BROUILLON",
   });
 
   const loadData = useCallback(async () => {
@@ -84,8 +108,7 @@ const RapportManagement = () => {
       const [rapportsData, affairesData, productsData] = await Promise.all([
         rapportService.getAll(),
         affaireService.getAll(),
-        siteService.getAll(),
-        productService.getAll()
+        productService.getAll(),
       ]);
       setRapports(rapportsData);
       setAffaires(affairesData);
@@ -93,11 +116,11 @@ const RapportManagement = () => {
       setProducts(productsData);
     } catch (err) {
       console.error(err);
-      setError('Erreur lors du chargement des données');
+      setError("Erreur lors du chargement des données");
     } finally {
       setIsLoading(false);
     }
-  }, [rapportService, affaireService, siteService, productService]);
+  }, [rapportService, affaireService, productService]);
 
   useEffect(() => {
     loadData();
@@ -117,7 +140,7 @@ const RapportManagement = () => {
       resetForm();
     } catch (err) {
       console.error(err);
-      setError('Erreur lors de la sauvegarde');
+      setError("Erreur lors de la sauvegarde");
     } finally {
       setIsLoading(false);
     }
@@ -132,12 +155,12 @@ const RapportManagement = () => {
         affaire: detailedRapport.affaire.id,
         // site: detailedRapport.site.id,
         produit: detailedRapport.produit.id,
-        statut: detailedRapport.statut
+        statut: detailedRapport.statut,
       });
       setIsModalOpen(true);
     } catch (err) {
       console.error(err);
-      setError('Erreur lors du chargement du rapport');
+      setError("Erreur lors du chargement du rapport");
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +173,7 @@ const RapportManagement = () => {
       await loadData();
     } catch (err) {
       console.error(err);
-      setError('Erreur lors de la suppression');
+      setError("Erreur lors de la suppression");
     } finally {
       setIsDeleting(null);
     }
@@ -162,7 +185,7 @@ const RapportManagement = () => {
       affaire: 0,
       // site: 0,
       produit: 0,
-      statut: 'BROUILLON'
+      statut: "BROUILLON",
     });
     setError(null);
   };
@@ -172,15 +195,15 @@ const RapportManagement = () => {
     setIsModalOpen(true);
   };
 
-  const filteredRapports = rapports.filter(rapport => 
+  const filteredRapports = rapports.filter((rapport) =>
     rapport.reference.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   };
 
@@ -189,7 +212,9 @@ const RapportManagement = () => {
       <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-rose-50 to-pink-50">
         <div className="flex items-center gap-2">
           <FileText className="h-6 w-6 text-rose-600" />
-          <h1 className="text-2xl font-bold text-gray-800">Gestion des Rapports</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Gestion des Rapports
+          </h1>
         </div>
         <button
           onClick={handleNewRapport}
@@ -205,7 +230,7 @@ const RapportManagement = () => {
           <div className="flex items-center">
             <AlertCircle className="h-5 w-5 text-red-400 mr-3" />
             <p className="text-sm">{error}</p>
-            <button 
+            <button
               onClick={() => setError(null)}
               className="ml-auto text-red-400 hover:text-red-500"
             >
@@ -230,13 +255,27 @@ const RapportManagement = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Référence</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Affaire</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Création</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Référence
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Affaire
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Site
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Produit
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date Création
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Statut
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -251,18 +290,23 @@ const RapportManagement = () => {
                 </tr>
               ) : filteredRapports.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan={7}
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     Aucun rapport trouvé
                   </td>
                 </tr>
               ) : (
                 filteredRapports.map((rapport) => (
-                  <tr 
-                    key={rapport.id} 
+                  <tr
+                    key={rapport.id}
                     className="hover:bg-gray-50 transition-colors duration-150"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{rapport.reference}</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {rapport.reference}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-600">
@@ -270,7 +314,7 @@ const RapportManagement = () => {
                         <span>{rapport.affaire.reference}</span>
                       </div>
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <Package className="h-4 w-4 mr-2" />
@@ -284,7 +328,11 @@ const RapportManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(rapport.statut)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(
+                          rapport.statut
+                        )}`}
+                      >
                         {getStatusIcon(rapport.statut)}
                         {getStatusLabel(rapport.statut)}
                       </span>
@@ -325,7 +373,7 @@ const RapportManagement = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {currentRapport ? 'Modifier le rapport' : 'Nouveau rapport'}
+                  {currentRapport ? "Modifier le rapport" : "Nouveau rapport"}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -337,44 +385,67 @@ const RapportManagement = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Affaire</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Affaire
+                  </label>
                   <select
                     value={formData.affaire}
-                    onChange={(e) => setFormData({ ...formData, affaire: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        affaire: Number(e.target.value),
+                      })
+                    }
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200"
                   >
                     <option value="">Sélectionnez une affaire</option>
-                    {affaires.map(affaire => (
-                      <option key={affaire.id} value={affaire.id}>{affaire.reference}</option>
+                    {affaires.map((affaire) => (
+                      <option key={affaire.id} value={affaire.id}>
+                        {affaire.reference}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-              
-
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Produit</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Produit
+                    </label>
                     <select
                       value={formData.produit}
-                      onChange={(e) => setFormData({ ...formData, produit: Number(e.target.value) })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          produit: Number(e.target.value),
+                        })
+                      }
                       required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200"
                     >
                       <option value="">Sélectionnez un produit</option>
-                      {products.map(product => (
-                        <option key={product.id} value={product.id}>{product.name}</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Statut
+                  </label>
                   <select
                     value={formData.statut}
-                    onChange={(e) => setFormData({ ...formData, statut: e.target.value as DocumentStatus })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        statut: e.target.value as DocumentStatus,
+                      })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all duration-200"
                   >
                     <option value="BROUILLON">Brouillon</option>
@@ -401,8 +472,10 @@ const RapportManagement = () => {
                     className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 transition-all duration-200 flex items-center"
                     disabled={isLoading}
                   >
-                    {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    {currentRapport ? 'Modifier' : 'Créer'}
+                    {isLoading && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
+                    {currentRapport ? "Modifier" : "Créer"}
                   </button>
                 </div>
               </form>

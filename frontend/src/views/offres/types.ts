@@ -104,3 +104,6 @@ export interface Client {
     handleProductSelect: (product: Produit) => void;
     formatMontant: (montant: number) => string;
   }
+
+
+  

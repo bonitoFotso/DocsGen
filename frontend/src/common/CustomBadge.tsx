@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: BadgeVariant;
@@ -8,18 +8,18 @@ interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-blue-500 text-white hover:bg-blue-600',
-  secondary: 'bg-gray-500 text-white hover:bg-gray-600',
-  destructive: 'bg-red-500 text-white hover:bg-red-600',
-  outline: 'border-2 border-gray-300 text-gray-700 hover:border-gray-400'
+  default: "bg-blue-500 text-white hover:bg-blue-600",
+  secondary: "bg-gray-500 text-white hover:bg-gray-600",
+  destructive: "bg-red-500 text-white hover:bg-red-600",
+  outline: "border-2 border-gray-300 text-gray-700 hover:border-gray-400",
 };
 
 export const Badge = ({
-                              variant = 'default',
-                              children,
-                              className = '',
-                              ...props
-                            }: BadgeProps) => {
+  variant = "default",
+  children,
+  className = "",
+  ...props
+}: BadgeProps) => {
   return (
     <div
       className={`
