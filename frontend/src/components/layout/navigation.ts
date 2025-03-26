@@ -12,6 +12,8 @@ import {
   FileBarChart,
   Mail,
   Briefcase,
+  GithubIcon,
+  PhoneIcon,
 } from "lucide-react";
 
 // Liste des entités disponibles
@@ -174,13 +176,13 @@ export const footerItems: FooterItem[] = [
   {
     name: "GitHub",
     href: "https://github.com/kesdocgen",
-    icon: Mail,
+    icon: GithubIcon,
     external: true,
   },
   {
     name: "Contact",
     href: "mailto:contact@kesdocgen.com",
-    icon: Mail,
+    icon: PhoneIcon,
     external: true,
   },
   { name: "Aide", href: "/help", icon: HelpCircle },
