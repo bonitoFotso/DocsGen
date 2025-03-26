@@ -1,9 +1,9 @@
-import { 
-  Users, 
-  MapPin, 
-  FileText, 
-  Briefcase, 
-  GraduationCap, 
+import {
+  Users,
+  MapPin,
+  FileText,
+  Briefcase,
+  GraduationCap,
   Plus,
   Bell,
   Search,
@@ -12,70 +12,71 @@ import {
   TrendingUp,
   BarChart3,
   PieChart,
-  Clock
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+  Clock,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
-
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   BarChart,
-  Bar
-} from 'recharts';
-import { Card } from '@/common/CustomCard';
+  Bar,
+} from "recharts";
+import { Card } from "@/common/CustomCard";
 const mockMonthlyData = [
-  { month: 'Jan', documents: 65 },
-  { month: 'Fév', documents: 59 },
-  { month: 'Mar', documents: 80 },
-  { month: 'Avr', documents: 81 },
-  { month: 'Mai', documents: 56 },
-  { month: 'Jun', documents: 55 },
-  { month: 'Jul', documents: 40 }
+  { month: "Jan", documents: 65 },
+  { month: "Fév", documents: 59 },
+  { month: "Mar", documents: 80 },
+  { month: "Avr", documents: 81 },
+  { month: "Mai", documents: 56 },
+  { month: "Jun", documents: 55 },
+  { month: "Jul", documents: 40 },
 ];
 
 const mockClientData = [
-  { name: 'SABC', value: 35 },
-  { name: 'ENEO', value: 28 },
-  { name: 'ALUCAM', value: 24 },
-  { name: 'CIMENCAM', value: 22 },
-  { name: 'DANGOTE', value: 20 }
+  { name: "SABC", value: 35 },
+  { name: "ENEO", value: 28 },
+  { name: "ALUCAM", value: 24 },
+  { name: "CIMENCAM", value: 22 },
+  { name: "DANGOTE", value: 20 },
 ];
 
 const mockNotifications = [
   {
     id: 1,
-    title: 'Nouvelle offre en attente',
-    description: 'Offre #KES-2024-001 en attente de validation',
-    time: '5 min',
-    type: 'warning'
+    title: "Nouvelle offre en attente",
+    description: "Offre #KES-2024-001 en attente de validation",
+    time: "5 min",
+    type: "warning",
   },
   {
     id: 2,
-    title: 'Affaire terminée',
-    description: 'Affaire #AFF-2024-003 marquée comme terminée',
-    time: '1 heure',
-    type: 'success'
+    title: "Affaire terminée",
+    description: "Affaire #AFF-2024-003 marquée comme terminée",
+    time: "1 heure",
+    type: "success",
   },
   {
     id: 3,
-    title: 'Nouveau rapport créé',
-    description: 'Rapport d\'inspection #RAP-2024-015 créé',
-    time: '2 heures',
-    type: 'info'
-  }
+    title: "Nouveau rapport créé",
+    description: "Rapport d'inspection #RAP-2024-015 créé",
+    time: "2 heures",
+    type: "info",
+  },
 ];
 
 export function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 lg:p-8">
+    <div className="min-h-screen  p-2 lg:p-2">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* En-tête */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Tableau de bord
+            </h1>
             <p className="text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
           </div>
 
@@ -92,7 +93,7 @@ export function Dashboard() {
               <Bell className="w-4 h-4" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
             </Button>
-            <Button className="gap-2">
+            <Button className="gap-2 bg-blue-500 hover:bg-blue-600 text-white">
               <Plus className="w-4 h-4" />
               Nouveau document
             </Button>
@@ -113,8 +114,8 @@ export function Dashboard() {
             </div>
             <div className="flex items-center gap-1 mt-4 text-sm">
               <ArrowUpRight className="w-4 h-4 text-green-500" />
-              <span className="text-green-500 font-medium">+12.5%</span>
-              <span className="text-gray-500">ce mois</span>
+              <span className="text-green-500 font-medium">+12.5% </span>
+              <span className="text-gray-500"> ce mois</span>
             </div>
           </Card>
 
@@ -176,7 +177,7 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-gray-500" />
+                  <BarChart3 className="w-5 h-5 text-red-500" />
                   Documents créés
                 </h3>
                 <p className="text-sm text-gray-500">Par mois</p>
@@ -202,7 +203,7 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <PieChart className="w-5 h-5 text-gray-500" />
+                  <PieChart className="w-5 h-5 text-red-500" />
                   Clients les plus actifs
                 </h3>
                 <p className="text-sm text-gray-500">Par nombre de documents</p>
@@ -211,10 +212,10 @@ export function Dashboard() {
                 Ce mois
               </Button>
             </div>
-            <div className="h-[300px]">
+            <div className="h-[300px]  ml-[-1rem] mr-[-1rem]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockClientData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="2 3" />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" />
                   <Tooltip />
@@ -237,11 +238,18 @@ export function Dashboard() {
             </div>
             <div className="divide-y divide-gray-100">
               {mockNotifications.map((notification) => (
-                <div key={notification.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div
+                  key={notification.id}
+                  className="p-6 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900">{notification.title}</h4>
-                      <p className="text-sm text-gray-500 mt-1">{notification.description}</p>
+                      <h4 className="text-sm font-medium text-gray-900">
+                        {notification.title}
+                      </h4>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {notification.description}
+                      </p>
                     </div>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -261,7 +269,7 @@ export function Dashboard() {
                 Accès rapide
               </h3>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 space-y-4">
               <Button variant="outline" className="w-full justify-start gap-2">
                 <Users className="w-4 h-4" />
                 Nouveau client

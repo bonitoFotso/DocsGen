@@ -75,6 +75,7 @@ export interface CourrierStats {
 }
 
 export interface CourrierFilter {
+  [x: string]: any;
   search?: string;
   entite?: number;
   client?: number;

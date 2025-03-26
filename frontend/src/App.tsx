@@ -80,6 +80,7 @@ function App() {
               {/* Routes par entité */}
               {entities.map((entity) => {
                 const entityPath = entity.toLowerCase();
+                // const path = entityPath === "toutes" ? "/" : entityPath;
                 return (
                   <Route key={entity} path={entityPath}>
                     {/* Commercial */}

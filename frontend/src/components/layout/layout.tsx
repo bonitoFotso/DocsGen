@@ -30,7 +30,7 @@ function LayoutContent() {
   const { expanded, isMobile } = useSidebar();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background transition-colors duration-200">
+    <div className="flex h-screen overflow-hidden bg-indigo-50 transition-colors duration-200">
       {/* Sidebar */}
       <Sidebar />
       

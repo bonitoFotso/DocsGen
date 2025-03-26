@@ -1,24 +1,22 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  X, 
-  Search, 
-  ChevronLeft,
-  ChevronRight,
-  Home 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { X, Search, ChevronLeft, ChevronRight, Home } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-import { getNavigationItems } from './navigation';
-import { NavItem } from './NavItem';
-import { useSidebar } from '@/contexts/SidebarContext';
-import { EntitySelector } from './EntitySelector';
-import { useEntityContext } from '@/hooks/useEntityContext';
+import { getNavigationItems } from "./navigation";
+import { NavItem } from "./NavItem";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { EntitySelector } from "./EntitySelector";
+import { useEntityContext } from "@/hooks/useEntityContext";
 
 export interface SidebarProps {
   className?: string;
@@ -27,45 +25,48 @@ export interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const { expanded, toggleSidebar, isMobile } = useSidebar();
   const { currentEntity } = useEntityContext();
-  const [searchValue, setSearchValue] = useState('');
-  
+  const [searchValue, setSearchValue] = useState("");
+
   // Obtenez les éléments de navigation basés sur l'entité actuelle
-  const navigationItems = useMemo(() => 
-    getNavigationItems(currentEntity), 
+  const navigationItems = useMemo(
+    () => getNavigationItems(currentEntity),
     [currentEntity]
   );
-  
+
   // Filter navigation items based on search term
   const filteredItems = useMemo(() => {
     if (!searchValue.trim()) return navigationItems;
-    
+
     const searchLower = searchValue.toLowerCase();
-    return navigationItems.filter(item => {
+    return navigationItems.filter((item) => {
       // Check main item name
       if (item.name.toLowerCase().includes(searchLower)) return true;
-      
+
       // Check children
-      if (item.children?.some(child => 
-        child.name.toLowerCase().includes(searchLower)
-      )) return true;
-      
+      if (
+        item.children?.some((child) =>
+          child.name.toLowerCase().includes(searchLower)
+        )
+      )
+        return true;
+
       return false;
     });
   }, [searchValue, navigationItems]);
-  
+
   // Group navigation items by category
-  const mainItems = useMemo(() => 
-    filteredItems.filter(item => item.category === 'main'),
+  const mainItems = useMemo(
+    () => filteredItems.filter((item) => item.category === "main"),
     [filteredItems]
   );
-  
-  const businessItems = useMemo(() => 
-    filteredItems.filter(item => item.category === 'business'),
+
+  const businessItems = useMemo(
+    () => filteredItems.filter((item) => item.category === "business"),
     [filteredItems]
   );
-  
-  const systemItems = useMemo(() => 
-    filteredItems.filter(item => item.category === 'system'),
+
+  const systemItems = useMemo(
+    () => filteredItems.filter((item) => item.category === "system"),
     [filteredItems]
   );
 
@@ -73,23 +74,23 @@ export function Sidebar({ className }: SidebarProps) {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
-  
+
   // Clear search
   const handleSearchClear = () => {
-    setSearchValue('');
+    setSearchValue("");
   };
 
   return (
     <>
       {/* Mobile overlay */}
       {isMobile && expanded && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm"
           onClick={toggleSidebar}
           aria-hidden="true"
         />
       )}
-      
+
       {/* Sidebar */}
       <aside
         className={cn(
@@ -105,23 +106,23 @@ export function Sidebar({ className }: SidebarProps) {
       >
         {/* Header with logo */}
         <div className="flex h-16 items-center border-b px-4">
-          <Link 
+          <Link
             to="/"
             className={cn(
               "flex items-center gap-2",
               !expanded && !isMobile && "justify-center"
             )}
           >
-            <Home className="h-6 w-6 text-primary" />
+            <Home className="h-5 w-6 text-primary" />
             {(expanded || isMobile) && (
               <span className="text-lg font-semibold">KES DOC_GEN</span>
             )}
           </Link>
-          
+
           {/* Toggle button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={toggleSidebar}
             className="ml-auto"
             aria-label={expanded ? "Réduire le menu" : "Agrandir le menu"}
@@ -135,36 +136,40 @@ export function Sidebar({ className }: SidebarProps) {
             )}
           </Button>
         </div>
-        
+
         {/* Entity Selector */}
         <EntitySelector expanded={expanded} isMobile={isMobile} />
-        
+
         {/* Search input - only when expanded */}
-        {(expanded || isMobile) && (
+        {expanded || isMobile ? (
           <div className="p-4 pb-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <input
                 type="text"
                 placeholder="Rechercher..."
                 value={searchValue}
                 onChange={handleSearchChange}
-                className="w-full pl-8 h-9 text-sm"
+                className="w-full pl-8 h-9 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
               />
               {searchValue && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1 h-7 w-7"
+                <button
+                  className="absolute right-1 top-1 h-7 w-7 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100"
                   onClick={handleSearchClear}
                 >
                   <X className="h-4 w-4" />
-                </Button>
+                </button>
               )}
             </div>
           </div>
+        ) : (
+          <div className="p-4 flex justify-center">
+            <Button className="h-9 w-9 flex items-center bg-white justify-center text-black hover:bg-white rounded-md transition-colors">
+              <Search className="h-4 w-4 text-gray-400" />
+            </Button>
+          </div>
         )}
-        
+
         {/* Navigation */}
         <ScrollArea className="flex-1 px-3">
           <nav className="flex flex-col gap-6 py-4">
@@ -172,7 +177,7 @@ export function Sidebar({ className }: SidebarProps) {
             {mainItems.length > 0 && (
               <div className="space-y-3">
                 {(expanded || isMobile) && (
-                  <h3 className="px-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <h3 className="px-2 text-xs font-medium text-muted-foreground   uppercase tracking-wider">
                     Principal
                   </h3>
                 )}
@@ -183,7 +188,7 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
               </div>
             )}
-            
+
             {/* Business items */}
             {businessItems.length > 0 && (
               <div className="space-y-3">
@@ -199,7 +204,7 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
               </div>
             )}
-            
+
             {/* System items */}
             {systemItems.length > 0 && (
               <div className="space-y-3">
@@ -215,7 +220,7 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
               </div>
             )}
-            
+
             {/* Empty state for search */}
             {filteredItems.length === 0 && (
               <div className="py-6 text-center">
@@ -234,22 +239,27 @@ export function Sidebar({ className }: SidebarProps) {
             )}
           </nav>
         </ScrollArea>
-        
+
         {/* Affichage de l'entité active */}
         {(expanded || isMobile) && (
           <div className="px-4 py-2 border-t">
             <p className="text-xs text-muted-foreground">
-              Entité active: <span className="font-semibold text-primary">{currentEntity}</span>
+              Entité active:{" "}
+              <span className="font-semibold text-primary">
+                {currentEntity}
+              </span>
             </p>
           </div>
         )}
-        
+
         {/* User profile */}
-        <div className={cn(
-          "border-t p-3",
-          !expanded && !isMobile && "flex justify-center"
-        )}>
-          {(expanded || isMobile) ? (
+        <div
+          className={cn(
+            "border-t p-3",
+            !expanded && !isMobile && "flex justify-center"
+          )}
+        >
+          {expanded || isMobile ? (
             <div className="flex items-center gap-3">
               <Avatar className="h-9 w-9">
                 <AvatarImage src="/placeholder-avatar.jpg" alt="User Avatar" />
@@ -259,7 +269,9 @@ export function Sidebar({ className }: SidebarProps) {
               </Avatar>
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-muted-foreground">admin@example.com</p>
+                <p className="text-xs text-muted-foreground">
+                  admin@example.com
+                </p>
               </div>
             </div>
           ) : (
@@ -267,7 +279,10 @@ export function Sidebar({ className }: SidebarProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src="/placeholder-avatar.jpg" alt="User Avatar" />
+                    <AvatarImage
+                      src="/placeholder-avatar.jpg"
+                      alt="User Avatar"
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       AU
                     </AvatarFallback>
@@ -275,7 +290,9 @@ export function Sidebar({ className }: SidebarProps) {
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p className="font-medium">Admin User</p>
-                  <p className="text-xs text-muted-foreground">admin@example.com</p>
+                  <p className="text-xs text-muted-foreground">
+                    admin@example.com
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

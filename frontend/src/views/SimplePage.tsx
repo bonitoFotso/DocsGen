@@ -1,8 +1,9 @@
-import { KesContainer } from '@/components/KesContainer';
+import { KesContainer } from "@/components/KesContainer";
 import { Badge } from "@/components/ui/badge";
-import KDTable from '@/components/table/KDTable';
-import { autoGenerateColumns } from '@/components/table/generateColumns';
-import { FileText } from 'lucide-react';
+import KDTable from "@/components/table/KDTable";
+import { autoGenerateColumns } from "@/components/table/generateColumns";
+import { FileText } from "lucide-react";
+import { KDStatsExample } from "@/TestCard";
 
 // Définition des types pour les données
 interface Affaire {
@@ -31,7 +32,7 @@ function AffairesTable() {
       date_fin_prevue: "2023-09-30",
       montant_total: 15000,
       progression: 75,
-      en_retard: false
+      en_retard: false,
     },
     {
       id: 2,
@@ -43,7 +44,7 @@ function AffairesTable() {
       date_fin_prevue: "2023-07-15",
       montant_total: 8500,
       progression: 100,
-      en_retard: false
+      en_retard: false,
     },
     {
       id: 3,
@@ -55,8 +56,8 @@ function AffairesTable() {
       date_fin_prevue: "2023-10-20",
       montant_total: 22000,
       progression: 30,
-      en_retard: true
-    }
+      en_retard: true,
+    },
   ];
 
   // Fonctions de gestion des actions
@@ -75,16 +76,17 @@ function AffairesTable() {
     affaires[0],
     {
       onView: (id: string | number) => handleViewDetails(Number(id)),
-      onEdit: (id: string | number, e: React.MouseEvent) => handleEdit(Number(id), e),
+      onEdit: (id: string | number, e: React.MouseEvent) =>
+        handleEdit(Number(id), e),
       // Personnalisation de colonnes spécifiques
       columnOverrides: {
         reference: {
-          cellClassName: "font-medium"
+          cellClassName: "font-medium",
         },
         statut_display: {
-          sortFn: (a, b) => a.statut.localeCompare(b.statut)
-        }
-      }
+          sortFn: (a, b) => a.statut.localeCompare(b.statut),
+        },
+      },
     }
   );
 
@@ -98,7 +100,9 @@ function AffairesTable() {
         keyField="id"
         onRowClick={(row) => handleViewDetails(row.id)}
         rowClassName={(row) =>
-          row.en_retard ? "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30" : ""
+          row.en_retard
+            ? "bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30"
+            : ""
         }
       />
     </div>
@@ -122,15 +126,15 @@ function ClientsTable() {
       nom: "Entreprise ABC",
       email: "contact@abc.fr",
       telephone: "01 23 45 67 89",
-      adresse: "123 Avenue Principale, 75001 Paris"
+      adresse: "123 Avenue Principale, 75001 Paris",
     },
     {
       id: 2,
       nom: "Société XYZ",
       email: "info@xyz.fr",
       telephone: "01 98 76 54 32",
-      adresse: "456 Rue du Commerce, 69002 Lyon"
-    }
+      adresse: "456 Rue du Commerce, 69002 Lyon",
+    },
   ];
 
   // Fonctions de gestion
@@ -149,16 +153,15 @@ function ClientsTable() {
   };
 
   // Génération automatique des colonnes en passant un exemple
-  const columns = autoGenerateColumns<Client>(
-    clients[0],
-    {
-      onView: (id: string | number) => handleViewClient(Number(id)),
-      onEdit: (id: string | number, e: React.MouseEvent) => handleEditClient(Number(id), e),
-      onDelete: (id: string | number, e: React.MouseEvent) => handleDeleteClient(Number(id), e),
-      // Exclure certaines colonnes
-      excludeColumns: []
-    }
-  );
+  const columns = autoGenerateColumns<Client>(clients[0], {
+    onView: (id: string | number) => handleViewClient(Number(id)),
+    onEdit: (id: string | number, e: React.MouseEvent) =>
+      handleEditClient(Number(id), e),
+    onDelete: (id: string | number, e: React.MouseEvent) =>
+      handleDeleteClient(Number(id), e),
+    // Exclure certaines colonnes
+    excludeColumns: [],
+  });
 
   return (
     <div className="p-4">
@@ -195,7 +198,7 @@ function RapportsTable() {
       produit_nom: "Produit A",
       statut: "Validé",
       date_creation: "2023-07-15",
-      affaire_reference: "AFF-2023-001"
+      affaire_reference: "AFF-2023-001",
     },
     {
       id: 2,
@@ -204,8 +207,8 @@ function RapportsTable() {
       produit_nom: "Produit B",
       statut: "En attente",
       date_creation: "2023-08-10",
-      affaire_reference: "AFF-2023-002"
-    }
+      affaire_reference: "AFF-2023-002",
+    },
   ];
 
   // Fonctions
@@ -219,39 +222,38 @@ function RapportsTable() {
   };
 
   // Génération avec des actions personnalisées
-  const columns = autoGenerateColumns<Rapport>(
-    rapports[0],
-    {
-      onView: (id: string | number) => handleViewRapport(Number(id)),
-      // Actions personnalisées
-      customActions: [
-        {
-          icon: <FileText size={16} />,
-          tooltip: "Télécharger le PDF",
-          onClick: handleDownloadPDF
-        }
-      ],
-      // Surcharges personnalisées
-      columnOverrides: {
-        statut: {
-          render: (row) => {
-            let bgColor;
-            switch (row.statut.toLowerCase()) {
-              case 'validé':
-                bgColor = 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
-                break;
-              case 'en attente':
-                bgColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
-                break;
-              default:
-                bgColor = '';
-            }
-            return <Badge className={bgColor}>{row.statut}</Badge>;
+  const columns = autoGenerateColumns<Rapport>(rapports[0], {
+    onView: (id: string | number) => handleViewRapport(Number(id)),
+    // Actions personnalisées
+    customActions: [
+      {
+        icon: <FileText size={16} />,
+        tooltip: "Télécharger le PDF",
+        onClick: handleDownloadPDF,
+      },
+    ],
+    // Surcharges personnalisées
+    columnOverrides: {
+      statut: {
+        render: (row) => {
+          let bgColor;
+          switch (row.statut.toLowerCase()) {
+            case "validé":
+              bgColor =
+                "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100";
+              break;
+            case "en attente":
+              bgColor =
+                "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100";
+              break;
+            default:
+              bgColor = "";
           }
-        }
-      }
-    }
-  );
+          return <Badge className={bgColor}>{row.statut}</Badge>;
+        },
+      },
+    },
+  });
 
   return (
     <div className="p-4">
@@ -275,6 +277,7 @@ export const TablesDemoPage: React.FC = () => {
       description="Démonstration des tableaux avec génération automatique de colonnes"
     >
       <div className="grid gap-8">
+        <KDStatsExample />
         <AffairesTable />
         <ClientsTable />
         <RapportsTable />
