@@ -99,28 +99,6 @@ function LayoutContent() {
             </TooltipProvider>
           )}
           
-          {/* Support button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className={cn(
-                    "fixed bottom-8 right-8",
-                    "rounded-full",
-                    "shadow-lg dark:shadow-black/20"
-                  )}
-                  aria-label="Support"
-                >
-                  <HelpCircle className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                Besoin d'aide ?
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </main>
         
         {/* Footer */}

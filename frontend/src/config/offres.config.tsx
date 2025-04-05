@@ -25,7 +25,7 @@ interface OffresConfigProps {
   handleEdit: (offre: OffreDetail) => void;
   setSelectedOffre: (offre: OffreDetail) => void;
   setShowDetailsDialog: (show: boolean) => void;
-  offres: OffreDetail[];
+  offres: unknown[];
 }
 
 export const offresConfig = ({
@@ -284,13 +284,14 @@ export const offresConfig = ({
 
   // Options de groupement
   const groupByOptions = [
+    { key: 'clientPays', label: 'Par Pays' },
+    { key: 'clientRegion', label: 'Par Région' },
+    { key: 'clientVille', label: 'Par Ville' },
     { key: 'statut', label: 'Par Statut' },
     { key: 'entityCode', label: 'Par Entité' },
     { key: 'clientNom', label: 'Par Client' },
     { key: 'produitPrincipalName', label: 'Par Produit' },
-    { key: 'clientPays', label: 'Par Pays' },
-    { key: 'clientRegion', label: 'Par Région' },
-    { key: 'clientVille', label: 'Par Ville' }
+    
   ];
 
   // Actions d'en-tête

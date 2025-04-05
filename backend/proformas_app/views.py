@@ -33,7 +33,7 @@ class ProformaViewSet(viewsets.ModelViewSet):
             return ProformaCreateSerializer
         elif self.action == 'retrieve':
             return ProformaDetailSerializer
-        return ProformaSerializer
+        return ProformaDetailSerializer
     
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user, updated_by=self.request.user)

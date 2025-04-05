@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 // Liste des entités disponibles
-export const entities = ["TOUTES", "KIP", "KEC", "KAR"];
+export const entities = ["TOUTES", "KIP", "KEC", "KAR", "KES"];
 
 export interface BadgeProps {
   text: string;
@@ -96,7 +96,7 @@ export const getNavigationItems = (currentEntity: string): NavigationItem[] => [
           : undefined,
     })),
   },
-  { name: "Contacts", href: "/contacts", icon: Contact, category: "main" },
+  
   {
     name: "Clients",
     href: "/clients",
@@ -104,6 +104,7 @@ export const getNavigationItems = (currentEntity: string): NavigationItem[] => [
     category: "main",
     badge: { text: "4", variant: "default" },
   },
+  { name: "Contacts", href: "/contacts", icon: Contact, category: "main" },
 
   // Business operations
   {
@@ -119,23 +120,25 @@ export const getNavigationItems = (currentEntity: string): NavigationItem[] => [
         entitySpecific: true,
       },
       {
+        name: "Proformas",
+        href: (entity) => getEntityLink("/proformas", entity),
+        icon: FileText,
+        entitySpecific: true,
+      },
+      {
         name: "Offres",
         href: (entity) => getEntityLink("/offres", entity),
         icon: FileText,
         entitySpecific: true,
       },
+
       {
         name: "Affaires",
         href: (entity) => getEntityLink("/affaires", entity),
         icon: FileText,
         entitySpecific: true,
       },
-      {
-        name: "Proformas",
-        href: (entity) => getEntityLink("/proformas", entity),
-        icon: FileText,
-        entitySpecific: true,
-      },
+      
       {
         name: "Factures",
         href: (entity) => getEntityLink("/factures", entity),

@@ -1,7 +1,9 @@
+from django.utils import timezone
 from django.db import models
 from django.utils.timezone import now
 from django.db.models import Max
 from decimal import Decimal
+from datetime import timedelta
 
 from django.conf import settings
 
@@ -36,7 +38,12 @@ class Proforma(models.Model):
     
     # Informations des fichiers
     fichier = models.FileField(upload_to='proformas/', blank=True, null=True, verbose_name="Fichier")
+    relance = models.DateTimeField(blank=True, null=True, verbose_name="Date de relance")
     
+    DELAIS_RELANCE = {
+        'ENVOYE': 7,  # Première relance après 7 jours
+        'EN_NEGOCIATION': 5,  # Relance tous les 5 jours pendant la négociation
+    }
     # Métadonnées
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='proformas_created', verbose_name="Créé par")
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='proformas_updated', verbose_name="Modifié par")
@@ -50,6 +57,32 @@ class Proforma(models.Model):
     
     def __str__(self):
         return self.reference or f"Proforma #{self.pk}"
+    
+    
+    def set_relance(self):
+        """
+        Configure la prochaine date de relance si l'offre n'est pas gagnée/perdue
+        """
+        if self.statut in ['GAGNE', 'PERDU']:
+            self.relance = None
+            return
+
+        if self.statut in self.DELAIS_RELANCE:
+            # Si une relance existe déjà, on ajoute le délai à la date actuelle
+            # Sinon on l'ajoute à la dernière modification
+            base_date = timezone.now() if not self.relance else self.relance
+            self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
+
+    @property
+    def necessite_relance(self):
+        """
+        Indique si l'offre nécessite une relance maintenant
+        """
+        return (
+            self.relance 
+            and self.relance <= timezone.now() 
+            and self.statut not in ['GAGNE', 'PERDU']
+        )
     
     def save(self, *args, **kwargs):
         if not self.reference:

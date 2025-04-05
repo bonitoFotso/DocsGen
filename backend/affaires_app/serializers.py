@@ -88,7 +88,7 @@ class AffaireSerializer(serializers.ModelSerializer):
     def get_responsable_nom(self, obj):
         """Retourne le nom complet du responsable."""
         if obj.responsable:
-            return f"{obj.responsable.first_name} {obj.responsable.last_name}".strip() or obj.responsable.username
+            return f"{obj.responsable.username}".strip() or obj.responsable.username
         return None
     
     def get_progression(self, obj):
@@ -105,7 +105,6 @@ class AffaireSerializer(serializers.ModelSerializer):
 class AffaireDetailSerializer(AffaireSerializer):
     """Sérialiseur détaillé pour une affaire spécifique."""
     offre = OffreSerializer(read_only=True)
-    client = ClientLightSerializer(source='offre.client', read_only=True)
     created_by = UserBasicSerializer(read_only=True)
     responsable = UserBasicSerializer(read_only=True)
     rapports = RapportSerializer(source='rapport_set', many=True, read_only=True)
@@ -121,7 +120,7 @@ class AffaireDetailSerializer(AffaireSerializer):
     
     class Meta(AffaireSerializer.Meta):
         fields = AffaireSerializer.Meta.fields + [
-            'client', 'created_by', 'notes',
+            'created_by', 'notes',
             'rapports', 'factures',
             'montant_restant_a_facturer', 'montant_restant_a_payer'
         ]

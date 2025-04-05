@@ -193,7 +193,7 @@ class Offre(StatusTrackingModel):
                 offre=self,
                 defaults={
                     'created_by': self.user or self.createur,
-                    'montant': self.montant
+                    'montant_ht': self.montant
                 }
             )
             

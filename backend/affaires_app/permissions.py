@@ -49,7 +49,7 @@ class AffairePermission(permissions.BasePermission):
             return True
         
         # Le créateur de l'affaire a tous les droits dessus
-        if obj.created_by == request.user:
+        if obj.createur == request.user:
             return True
         
         # Le responsable de l'affaire peut la modifier

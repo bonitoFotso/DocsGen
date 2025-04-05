@@ -8,9 +8,11 @@ from django.db import transaction
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
+from document.models import StatusTrackingModel
 from factures_app.models import Facture
 
-class Affaire(models.Model):
+
+class Affaire(StatusTrackingModel):
     """
     Représente un projet contractualisé issu d'une offre acceptée par un client.
     Une affaire gère le cycle de vie complet du projet, incluant les rapports,
@@ -61,27 +63,8 @@ class Affaire(models.Model):
         verbose_name="Date de fin réelle",
         help_text="Date de fin réelle de l'affaire (renseignée à la clôture)"
     )
-    date_creation = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Date de création",
-        help_text="Date de création de l'enregistrement"
-    )
-    date_modification = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Dernière modification",
-        help_text="Date de dernière modification de l'enregistrement"
-    )
     
-    # Utilisateur responsable
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='affaires_creees',
-        verbose_name="Créé par",
-        help_text="Utilisateur ayant créé l'affaire"
-    )
+    # Responsable de l'affaire (différent du createur dans StatusTrackingModel)
     responsable = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -101,8 +84,10 @@ class Affaire(models.Model):
         ('TERMINEE', 'Terminée'),
         ('ANNULEE', 'Annulée'),
     ]
+    
+    # Redéfinir statut pour être cohérent avec le modèle parent
     statut = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=STATUT_CHOICES,
         default='BROUILLON',
         verbose_name="Statut",
@@ -151,6 +136,10 @@ class Affaire(models.Model):
     def __str__(self):
         return f"Affaire {self.reference} - {self.offre.client.nom}"
     
+    def get_status_choices(self):
+        """Implémentation de la méthode abstraite de StatusTrackingModel"""
+        return self.STATUT_CHOICES
+    
     def clean(self):
         """Validation des données avant sauvegarde"""
         if self.date_fin_prevue and self.date_fin_prevue < self.date_debut:
@@ -190,7 +179,7 @@ class Affaire(models.Model):
         return f"AFF{date.year % 100:02d}{date.month:02d}{client_id}{offre_id}{sequence}"
     
     def save(self, *args, **kwargs):
-        """Sauvegarde de base - la logique métier est déplacée dans les signaux"""
+        """Sauvegarde avec génération de référence"""
         creating = not self.pk
         
         # Avant la première sauvegarde
@@ -200,16 +189,52 @@ class Affaire(models.Model):
                 self.reference = self.generate_reference()
             
             # Initialise le montant total depuis l'offre
-            if hasattr(self.offre, 'montant_total') and self.montant_total == 0:
-                self.montant_total = self.offre.montant_total
+            if hasattr(self.offre, 'montant') and self.montant_total == 0:
+                self.montant_total = self.offre.montant
+            
+            ## Si le createur n'est pas défini, utiliser created_by (compatibilité)
+            #if hasattr(self, 'created_by') and self.created_by and not hasattr(self, 'createur'):
+            #    self.createur = self.created_by
         
         # Validation manuelle
         self.full_clean()
         
-        # Sauvegarde l'objet
+        # Sauvegarde l'objet avec la méthode parent
         super().save(*args, **kwargs)
+    
+    def changer_statut(self, nouveau_statut, user=None, date_specifique=None, commentaire="", metadata=None):
+        """
+        Change le statut de l'affaire avec des actions spécifiques selon le statut
+        """
+        # Vérifier si le statut change réellement
+        if self.statut == nouveau_statut:
+            return False
         
+        # Sauvegarder l'ancien statut
+        ancien_statut = self.statut
         
+        # Actions spécifiques selon le nouveau statut
+        if nouveau_statut == 'TERMINEE' and not self.date_fin_reelle:
+            self.date_fin_reelle = date_specifique or now()
+        
+        # Stocker cet ancien statut pour utilisation dans les signaux
+        self._old_statut = ancien_statut
+        
+        # Utiliser la méthode de la classe parent pour changer le statut avec historique
+        changed = self.set_status(
+            nouveau_statut,
+            user=user,
+            date_specifique=date_specifique,
+            commentaire=commentaire,
+            metadata=metadata
+        )
+        
+        if changed and nouveau_statut == 'VALIDE' and ancien_statut != 'VALIDE':
+            # Initialiser le projet si on passe à VALIDE
+            self.initialiser_projet()
+        
+        return changed
+    
     @transaction.atomic
     def initialiser_projet(self):
         """Initialise tous les éléments du projet après validation"""
@@ -217,7 +242,7 @@ class Affaire(models.Model):
         self.cree_facture_initiale()
         
         # Événement de journal
-        #self.log_event("Affaire initialisée", "Création des rapports et de la facture initiale")
+        # self.log_event("Affaire initialisée", "Création des rapports et de la facture initiale")
     
     def cree_rapports(self):
         """Crée les rapports pour chaque produit de l'offre"""
@@ -230,7 +255,7 @@ class Affaire(models.Model):
         with transaction.atomic():
             # Récupération des rapports existants pour ne pas les recréer
             existing_reports = {
-                rapport.produit: rapport 
+                rapport.produit.pk: rapport 
                 for rapport in Rapport.objects.filter(affaire=self)
             }
 
@@ -291,53 +316,39 @@ class Affaire(models.Model):
             except Rapport.DoesNotExist:
                 return None
         
-        # Crée la formation
-        formation = Formation.objects.get_or_create(
-            titre=f"Formation {produit.name}",
-            client=self.offre.client,
-            affaire=self,
+        # Crée la formation avec get_or_create pour éviter les doublons
+        formation, created = Formation.objects.get_or_create(
             rapport=rapport,
-            date_debut=self.date_debut,
-            date_fin=self.date_fin_prevue,
-            description=f"Formation {produit.name} pour {self.offre.client.nom}"
+            defaults={
+                "titre": f"Formation {produit.name}",
+                "client": self.offre.client,
+                "affaire": self,
+                "date_debut": self.date_debut,
+                "date_fin": self.date_fin_prevue,
+                "description": f"Formation {produit.name} pour {self.offre.client.nom}"
+            }
         )
         
         return formation
     
     def cree_facture_initiale(self):
         """Crée la facture initiale pour l'affaire"""
-       
-        
         # Vérifie si une facture existe déjà
         if Facture.objects.filter(affaire=self).exists():
             return None
         
-        # Crée la facture
-        facture = Facture.objects.get_or_create(
+        # Crée la facture avec get_or_create pour éviter les doublons
+        facture, created = Facture.objects.get_or_create(
             affaire=self,
-            statut='BROUILLON',
-            sequence_number = self.sequence_number,
-            montant_ht=self.montant_total
+            defaults={
+                "statut": 'BROUILLON',
+                "sequence_number": self.sequence_number,
+                "montant_ht": self.montant_total,
+                "created_by": self.createur
+            }
         )
         
         return facture
-    
-
-    
-    def mettre_a_jour_statut(self, nouveau_statut, utilisateur=None, commentaire=""):
-        """Met à jour le statut de l'affaire avec traçabilité"""
-        ancien_statut = self.statut
-        self.statut = nouveau_statut
-        
-        # Gestion des dates automatiques selon le statut
-        if nouveau_statut == 'TERMINEE' and not self.date_fin_reelle:
-            self.date_fin_reelle = now()
-        
-        self.save()
-        
-
-        
-        return True
     
     def get_progression(self):
         """Calcule le pourcentage de progression de l'affaire"""
@@ -359,36 +370,50 @@ class Affaire(models.Model):
     def get_montant_restant_a_payer(self):
         """Calcule le montant restant à payer"""
         return self.montant_facture - self.montant_paye
-    
-    
-# Signaux pour gérer les actions liées au changement de statut
+        
+# Les signaux sont remplacés par la logique dans la méthode changer_statut()
+# Cependant, pour maintenir la compatibilité avec le code existant, nous pouvons
+# garder une version simplifiée des signaux qui se coordonne avec StatusTrackingModel
+
 @receiver(pre_save, sender=Affaire)
 def pre_save_affaire(sender, instance, **kwargs):
-    """Actions à effectuer avant la sauvegarde d'une affaire"""
-    print("Pre-save signal for Affaire")
-    if instance.pk:  # Si ce n'est pas une création
+    """
+    Actions à effectuer avant la sauvegarde d'une affaire.
+    Gère la compatibilité avec created_by et createur.
+    """
+    # Si le modèle vient d'être créé et que created_by est défini mais pas createur
+    if not instance.pk and hasattr(instance, 'created_by') and instance.created_by:
+        if not hasattr(instance, 'createur') or not instance.createur:
+            instance.createur = instance.created_by
+    
+    # Vérifier le changement de statut si c'est une mise à jour
+    if instance.pk:
         try:
-            # Récupérer l'instance avant modification
             old_instance = Affaire.objects.get(pk=instance.pk)
             
-            # Stocker l'ancien statut comme attribut temporaire
-            instance._old_statut = old_instance.statut
+            # Si le statut a changé mais qu'on n'a pas utilisé changer_statut()
+            if old_instance.statut != instance.statut and not hasattr(instance, '_old_statut'):
+                instance._old_statut = old_instance.statut
+                
+                # Mettre à jour la date de fin réelle si nécessaire
+                if instance.statut == 'TERMINEE' and not instance.date_fin_reelle:
+                    instance.date_fin_reelle = now()
         except Affaire.DoesNotExist:
-            # Si pour une raison quelconque l'instance n'existe pas (rare)
-            instance._old_statut = None
-    else:
-        # Nouvelle instance
-        instance._old_statut = None
+            pass
 
 
 @receiver(post_save, sender=Affaire)
 def post_save_affaire(sender, instance, created, **kwargs):
-    """Actions à effectuer après la sauvegarde d'une affaire"""
-    print("Post-save signal for Affaire")
+    """
+    Actions à effectuer après la sauvegarde d'une affaire.
+    Déclenche l'initialisation du projet si le statut passe à VALIDE.
+    """
     # Vérifier si l'affaire vient d'être créée avec statut VALIDE
     if created and instance.statut == 'VALIDE':
-        instance.initialiser_projet()
+        # Appeler initialiser_projet en dehors de la transaction courante
+        transaction.on_commit(lambda: instance.initialiser_projet())
     
-    # Vérifier si le statut vient de passer à VALIDE
+    # Vérifier si le statut vient de passer à VALIDE (sans utiliser changer_statut)
     elif hasattr(instance, '_old_statut') and instance._old_statut != 'VALIDE' and instance.statut == 'VALIDE':
-        instance.initialiser_projet()
+        # Appeler initialiser_projet en dehors de la transaction courante
+        transaction.on_commit(lambda: instance.initialiser_projet())

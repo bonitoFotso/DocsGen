@@ -7,10 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit, Calendar, DollarSign, User, Package, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { Opportunite } from '@/types/opportunite';
+import { Opportunite } from '@/types/opportunite.types';
 
 const OpportunityDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    console.log(id);
     const navigate = useNavigate();
     const { opportuniteService, clientService, contactService, productService } = useServices();
 

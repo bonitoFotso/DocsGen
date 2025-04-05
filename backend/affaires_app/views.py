@@ -49,11 +49,13 @@ class AffaireViewSet(viewsets.ModelViewSet):
             return AffaireDetailSerializer
         elif self.action == 'change_statut':
             return ChangeStatutSerializer
-        return AffaireSerializer
+        return AffaireDetailSerializer
 
     def perform_create(self, serializer):
         """Enregistre l'utilisateur courant comme créateur lors de la création."""
         serializer.save(created_by=self.request.user)
+        
+    
     
     @action(detail=True, methods=['post'])
     def change_statut(self, request, pk=None):

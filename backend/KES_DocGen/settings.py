@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "affaires_app",
     "proformas_app",
     "factures_app",
+    "opportunites_app",
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS Middleware

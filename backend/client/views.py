@@ -11,7 +11,7 @@ from factures_app.models import Facture
 from .models import Pays, Region, Ville, Client, Site, Contact
 from document.models import (
     Rapport, 
-    Formation, Participant, AttestationFormation, Opportunite
+    Formation, Participant, AttestationFormation,
 )
 from rest_framework import viewsets
 
@@ -29,7 +29,6 @@ from document.serializers import (
     OffreListSerializer, ProformaListSerializer, AffaireListSerializer,
     FactureListSerializer, RapportListSerializer, FormationListSerializer,
     ParticipantListSerializer, AttestationFormationListSerializer,
-    OpportuniteListSerializer
 )
 
 from offres_app.models import Offre

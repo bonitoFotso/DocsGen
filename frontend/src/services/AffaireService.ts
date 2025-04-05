@@ -28,8 +28,15 @@ export interface IOffre {
   id: number;
   reference: string;
   client: IClient;
+  entity: IEntity;
   montant_total: number;
   statut: string;
+}
+
+export interface IEntity {
+  id: number;
+  code: string;
+  nom: string;
 }
 
 export interface IClient {
@@ -121,6 +128,7 @@ export interface IAffaireFilters {
   page_size?: number;
   ordering?: string;
   search?: string;
+  entity_code?: string;
 }
 
 export interface IAffaireInitData {

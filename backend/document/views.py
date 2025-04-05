@@ -14,12 +14,12 @@ from proformas_app.models import Proforma
 from .models import (
     Entity, Category, Product, 
     Rapport, Formation, 
-    Participant, AttestationFormation, Opportunite
+    Participant, AttestationFormation
 )
 
 from .serializers import (
     EntityListSerializer, EntityDetailSerializer, EntityEditSerializer,
-    CategoryListSerializer, CategoryDetailSerializer, CategoryEditSerializer, OpportuniteSerializer,
+    CategoryListSerializer, CategoryDetailSerializer, CategoryEditSerializer,
     ProductListSerializer, ProductDetailSerializer, ProductEditSerializer,
     OffreListSerializer, OffreDetailSerializer, OffreEditSerializer,
     ProformaListSerializer, ProformaDetailSerializer, ProformaEditSerializer,
@@ -29,7 +29,6 @@ from .serializers import (
     FormationListSerializer, FormationDetailSerializer, FormationEditSerializer,
     ParticipantListSerializer, ParticipantDetailSerializer, ParticipantEditSerializer,
     AttestationFormationListSerializer, AttestationFormationDetailSerializer, AttestationFormationEditSerializer,
-    OpportuniteListSerializer, OpportuniteDetailSerializer
 )
 
 from client.serializers import ClientListSerializer
@@ -101,161 +100,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = OpportuniteListSerializer(opportunites, many=True)
         return Response(serializer.data)
 
-class OpportuniteViewSet(viewsets.ModelViewSet):
-    queryset = Opportunite.objects.all()
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['client', 'statut', 'contact', 'produit_principal']
-    search_fields = ['reference', 'client__nom', 'description']
-    ordering_fields = ['reference', 'date_detection', 'montant_estime', 'probabilite']
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return OpportuniteListSerializer
-        elif self.action in ['create', 'update', 'partial_update']:
-            return OpportuniteSerializer
-        return OpportuniteDetailSerializer
-
-    @action(detail=True, methods=['post'])
-    def qualifier(self, request, pk=None):
-        """Qualifie une opportunité."""
-        opportunite = self.get_object()
-        try:
-            opportunite.qualifier(request.user)
-            opportunite.save()
-            serializer = self.get_serializer(opportunite)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def proposer(self, request, pk=None):
-        """Passe une opportunité en proposition."""
-        opportunite = self.get_object()
-        try:
-            opportunite.proposer(request.user)
-            opportunite.save()
-            serializer = self.get_serializer(opportunite)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def negocier(self, request, pk=None):
-        """Passe une opportunité en négociation."""
-        opportunite = self.get_object()
-        try:
-            opportunite.negocier(request.user)
-            opportunite.save()
-            serializer = self.get_serializer(opportunite)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def gagner(self, request, pk=None):
-        """Marque une opportunité comme gagnée."""
-        opportunite = self.get_object()
-        try:
-            opportunite.gagner(request.user)
-            opportunite.save()
-            serializer = self.get_serializer(opportunite)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def perdre(self, request, pk=None):
-        """Marque une opportunité comme perdue."""
-        opportunite = self.get_object()
-        raison = request.data.get('raison', None)
-        try:
-            opportunite.perdre(request.user, raison=raison)
-            opportunite.save()
-            serializer = self.get_serializer(opportunite)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def creer_offre(self, request, pk=None):
-        """Crée une offre à partir de cette opportunité."""
-        opportunite = self.get_object()
-        try:
-            offre = opportunite.creer_offre()
-            return Response({
-                "status": "success",
-                "id": offre.id,
-                "offre_reference": offre.reference
-            })
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'])
-    def a_relancer(self, request):
-        """Retourne les opportunités qui nécessitent une relance."""
-        opportunites = Opportunite.objects.filter(
-            relance__lte=now(),
-            statut__in=['PROSPECT', 'QUALIFICATION', 'PROPOSITION', 'NEGOCIATION']
-        ).order_by('relance')
-        serializer = OpportuniteListSerializer(opportunites, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def statistiques(self, request):
-        """Retourne des statistiques sur les opportunités."""
-        days = request.query_params.get('days', 30)
-        try:
-            days = int(days)
-        except ValueError:
-            days = 30
-
-        date_debut = now() - timedelta(days=days)
-        
-        # Statistiques par statut
-        statut_stats = Opportunite.objects.filter(
-            date_detection__gte=date_debut
-        ).values('statut').annotate(
-            count=Count('id'),
-            montant_total=Sum('montant_estime')
-        )
-        
-        # Statistiques par produit
-        produit_stats = Opportunite.objects.filter(
-            date_detection__gte=date_debut
-        ).values('produit_principal__name').annotate(
-            count=Count('id'),
-            montant_total=Sum('montant_estime')
-        )
-        
-        # Statistiques de conversion
-        conversion_stats = {
-            'qualifiees': Opportunite.objects.filter(
-                statut__in=['QUALIFICATION', 'PROPOSITION', 'NEGOCIATION', 'GAGNEE']
-            ).count(),
-            'proposees': Opportunite.objects.filter(
-                statut__in=['PROPOSITION', 'NEGOCIATION', 'GAGNEE']
-            ).count(),
-            'negociees': Opportunite.objects.filter(
-                statut__in=['NEGOCIATION', 'GAGNEE']
-            ).count(),
-            'gagnees': Opportunite.objects.filter(statut='GAGNEE').count(),
-            'perdues': Opportunite.objects.filter(statut='PERDUE').count(),
-            'total': Opportunite.objects.count()
-        }
-        
-        return Response({
-            'par_statut': statut_stats,
-            'par_produit': produit_stats,
-            'conversion': conversion_stats,
-            'montant_total': Opportunite.objects.filter(
-                date_detection__gte=date_debut
-            ).aggregate(Sum('montant_estime'))['montant_estime__sum'] or 0,
-            'probabilite_moyenne': Opportunite.objects.filter(
-                date_detection__gte=date_debut
-            ).exclude(statut__in=['GAGNEE', 'PERDUE']).values('probabilite').aggregate(
-                avg_probabilite=Sum('probabilite') / Count('id')
-            )['avg_probabilite'] or 0
-        })
 
 class OffreViewSet(viewsets.ModelViewSet):
     queryset = Offre.objects.all()

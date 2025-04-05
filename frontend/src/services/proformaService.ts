@@ -1,65 +1,8 @@
 import { api } from "@/services";
+import { Proforma } from "@/types/Proforma";
 import { AxiosResponse } from "axios";
 
-// Types pour les proformas
-export interface IProforma {
-  id: number;
-  reference: string;
-  offre: number | IOffre;
-  client_nom: string;
-  entity_code: string;
-  statut: string;
-  date_creation: string;
-  date_validation: string | null;
-  date_expiration: string | null;
-  montant_ht: number;
-  montant_tva: number;
-  montant_ttc: number;
-  taux_tva: number;
-  fichier: string | null;
-  sequence_number: number;
-}
 
-export interface IOffre {
-  id: number;
-  reference: string;
-  client: IClient;
-  entity: IEntity;
-  montant: number;
-  statut: string;
-}
-
-export interface IClient {
-  id: number;
-  nom: string;
-  c_num: string;
-  email: string;
-}
-
-export interface IEntity {
-  id: number;
-  code: string;
-  nom: string;
-}
-
-export interface IUser {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-}
-
-export interface IProformaDetail extends IProforma {
-  notes: string | null;
-  created_by: IUser | null;
-  created_by_name: string | null;
-  updated_by: IUser | null;
-  updated_by_name: string | null;
-  created_at: string;
-  updated_at: string;
-  offre: IOffre;
-}
 
 export interface IProformaCreate {
   offre: number;
@@ -112,7 +55,7 @@ class ProformaService {
       page: 0,
       page_size: 0,
     }
-  ): Promise<AxiosResponse<IProforma[]>> {
+  ): Promise<AxiosResponse<Proforma[]>> {
     // Conversion des filtres en paramètres de requête
     const params = new URLSearchParams();
 
@@ -135,7 +78,7 @@ class ProformaService {
    * @param id - ID de la proforma
    * @returns Promise avec le détail de la proforma
    */
-  async getProformaById(id: number): Promise<AxiosResponse<IProformaDetail>> {
+  async getProformaById(id: number): Promise<AxiosResponse<Proforma>> {
     return api.get(`${this.baseUrl}${id}/`);
   }
 
@@ -146,7 +89,7 @@ class ProformaService {
    */
   async createProforma(
     proformaData: IProformaCreate
-  ): Promise<AxiosResponse<IProforma>> {
+  ): Promise<AxiosResponse<Proforma>> {
     return api.post(this.baseUrl, proformaData);
   }
 
@@ -159,7 +102,7 @@ class ProformaService {
   async updateProforma(
     id: number,
     proformaData: Partial<IProformaCreate>
-  ): Promise<AxiosResponse<IProforma>> {
+  ): Promise<AxiosResponse<Proforma>> {
     return api.patch(`${this.baseUrl}${id}/`, proformaData);
   }
 
@@ -201,7 +144,7 @@ class ProformaService {
   async changeStatus(
     id: number,
     status: string
-  ): Promise<AxiosResponse<{ status: string; proforma: IProforma }>> {
+  ): Promise<AxiosResponse<{ status: string; proforma: Proforma }>> {
     return api.post(`${this.baseUrl}${id}/change_status/`, { status });
   }
 

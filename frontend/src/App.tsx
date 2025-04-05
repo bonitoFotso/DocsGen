@@ -18,7 +18,6 @@ import { PrivateRoute } from "./PrivateRoute";
 import ContactsPage from "./views/contacts/contacts2";
 import ClientManagement from "./views/clients/ClientManagement";
 import ClientDetailsPage from "./views/clients/pages/ClientDetails";
-import OpportunityPage from "./views/opportunites/oportuityPage";
 import OpportunityDetails from "./views/opportunites/opportunityDetails";
 import { Toaster } from "sonner";
 import OpportuniteCreation from "./views/opportunites/OpportuniteCreation";
@@ -29,7 +28,6 @@ import CourrierDetailPage from "./views/courriers/CourrierDetailPage";
 import ClientFormPage from "./views/clients/ClientFormPage";
 import OffreForm from "./views/offres/OffreForm";
 import OffreDetails from "./views/offres/OfferDetails";
-import AffaireListPage from "./views/affaires/AffairesListPage";
 import AffaireDetailPage from "./views/affaires/AffaireDetailPage";
 import AffaireEditPage from "./views/affaires/AffaireEditPage";
 import { TablesDemoPage } from "./views/SimplePage";
@@ -41,6 +39,8 @@ import FactureDetailPage from "./views/factures/FactureDetailPage";
 import FactureCreatePage from "./views/factures/FactureCreatePage";
 import { entities } from "./components/layout/navigation";
 import { EntityProvider } from "./contexts/EntityContext";
+import AffairesDashboard from "./views/affaires/AffairesDashboard";
+import OpportunityManagement from "./views/opportunites/oportuityPage";
 
 function App() {
   const defaultEntity = entities[0].toLowerCase();
@@ -102,9 +102,9 @@ function App() {
                 return (
                   <Route key={entity} path={entityPath}>
                     {/* Commercial - uniquement les vues de liste */}
-                    <Route path="opportunities" element={<OpportunityPage />} />
+                    <Route path="opportunities" element={<OpportunityManagement />} />
                     <Route path="offres" element={<OffreManagement />} />
-                    <Route path="affaires" element={<AffaireListPage />} />
+                    <Route path="affaires" element={<AffairesDashboard />} />
                     <Route path="proformas" element={<ProformaListPage />} />
                     <Route path="factures" element={<FactureListPage />} />
 

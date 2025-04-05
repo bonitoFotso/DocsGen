@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from courrier.serializers import CourrierSerializer
-from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, OpportuniteSerializer, RapportListSerializer
+from document.serializers import AffaireListSerializer, FactureListSerializer, OffreListSerializer, RapportListSerializer
 from .models import Categorie, Pays, Region, Ville, Client, Site, Contact
 
 class PaysListSerializer(serializers.ModelSerializer):
@@ -106,6 +106,35 @@ class SiteEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = Site
         fields = ['nom', 'client', 'localisation', 'description', 'ville']
+        
+class ClientSerializer(serializers.ModelSerializer):
+    ville_nom = serializers.CharField(source='ville.nom', read_only=True)
+    region_nom = serializers.CharField(source='ville.region.nom', read_only=True
+    )
+    pays_nom = serializers.CharField(source='ville.region.pays.nom', read_only=True)
+    
+    class Meta:
+        model = Client
+        fields = [
+            'id',
+            'c_num',
+            'nom',
+            'email',
+            'telephone',
+            'ville_nom',
+            'secteur_activite',
+            'categorie',
+            'agreer',
+            'agreement_fournisseur',
+            'is_client',
+            'bp',
+            'quartier',
+            'matricule',
+            'entite',
+            'pays_nom',
+            'region_nom',
+        ]
+        read_only_fields = ['c_num']
 
 class ClientListSerializer(serializers.ModelSerializer):
     ville_nom = serializers.CharField(source='ville.nom', read_only=True)
@@ -165,7 +194,7 @@ class ClientDetailSerializer(ClientListSerializer):
     affaires = AffaireListSerializer(many=True, read_only=True)
     rapports = RapportListSerializer(many=True, read_only=True)
     ville = VilleListSerializer(read_only=True)
-    opportunites = OpportuniteSerializer(many=True, read_only=True)
+    #opportunites = OpportuniteSerializer(many=True, read_only=True)
     courriers = CourrierSerializer(many=True, read_only=True)
     
     

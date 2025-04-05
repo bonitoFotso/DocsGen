@@ -1,136 +1,88 @@
 from django.contrib import admin
+from django.db.models import Sum
 from django.utils.html import format_html
-from django.urls import reverse
-
-from factures_app.models import Facture
-from .models import Affaire
-from document.models import Rapport, Formation
-
-
-class RapportInline(admin.TabularInline):
-    """Affichage inline des rapports associés à une affaire."""
-    model = Rapport
-    extra = 0
-    fields = ('produit', 'statut', 'date_creation')
-    readonly_fields = ('date_creation',)
-    can_delete = False
-    show_change_link = True
+from .models import Affaire, Facture
 
 
 class FactureInline(admin.TabularInline):
-    """Affichage inline des factures associées à une affaire."""
+    """Inline pour afficher les factures liées à une affaire."""
     model = Facture
     extra = 0
-    fields = ('reference', 'montant_ht', 'statut', 'date_creation')
-    readonly_fields = ('reference', 'date_creation')
+    fields = ['reference', 'date_emission', 'date_echeance', 'statut']
+    readonly_fields = ['reference']
     can_delete = False
     show_change_link = True
 
 
 @admin.register(Affaire)
 class AffaireAdmin(admin.ModelAdmin):
-    """Configuration de l'interface d'administration pour les affaires."""
-    list_display = ('reference', 'client_link', 'statut_display', 'date_debut', 
-                   'date_fin_prevue', 'montant_total', 'progression_display', 'created_by')
-    list_filter = ('statut', 'date_creation', 'date_debut')
-    search_fields = ('reference', 'offre__client__nom')
-    readonly_fields = ('reference', 'date_creation', 'date_modification', 'created_by', 
-                       'montant_restant_facture', 'montant_restant_paye', 'progression')
-    fieldsets = (
-        ('Identification', {
-            'fields': ('reference', 'offre', 'statut', 'responsable')
+    list_display = [
+        'reference','id', 'get_titre', 'client_nom', 'montant_total', 'responsable',
+        'statut_display',
+    ]
+    list_filter = ['statut', 'date_creation']
+    search_fields = ['reference', 'offre__reference', 'offre__client__nom']
+    readonly_fields = ['reference']
+    fieldsets = [
+        (None, {
+            'fields': [
+                'reference', 'offre', 'statut', 'montant_total', 'createur', 'modificateur', 'responsable'
+            ]
         }),
+        
         ('Dates', {
-            'fields': ('date_debut', 'date_fin_prevue', 'date_fin_reelle', 
-                       'date_creation', 'date_modification')
+            'fields': [
+                'date_debut'
+            ],
+            'classes': ['collapse']
         }),
-        ('Finances', {
-            'fields': ('montant_total', 'montant_facture', 'montant_paye', 
-                       'montant_restant_facture', 'montant_restant_paye')
-        }),
-        ('Progression', {
-            'fields': ('progression', 'notes')
-        }),
-        ('Métadonnées', {
-            'fields': ('created_by',)
-        }),
-    )
-    inlines = [RapportInline, FactureInline]
-    actions = ['marquer_en_cours', 'marquer_termine']
+    ]
+    inlines = [FactureInline]
+    date_hierarchy = 'date_debut'
     
-    def client_link(self, obj):
-        """Lien vers le client associé à l'affaire."""
-        client = obj.offre.client
-        url = reverse('admin:clients_client_change', args=[client.pk])
-        return format_html('<a href="{}">{}</a>', url, client.nom)
-    client_link.short_description = 'Client'
+    def get_queryset(self, request):
+        """Optimise les requêtes en préchargeant les relations."""
+        return super().get_queryset(request).select_related('offre', 'offre__client')
+    
+    def client_nom(self, obj):
+        """Affiche le nom du client lié à l'offre."""
+        return obj.offre.client.nom
+    client_nom.short_description = 'Client'
+    client_nom.admin_order_field = 'offre__client__nom'
+    
+    def get_titre(self, obj):
+        """Retourne le titre de l'offre comme titre de l'affaire."""
+        return obj.offre.reference
+    get_titre.short_description = 'Titre'
+    get_titre.admin_order_field = 'offre__titre'
     
     def statut_display(self, obj):
-        """Affichage coloré du statut."""
-        colors = {
-            'BROUILLON': 'gray',
-            'VALIDE': 'blue',
-            'EN_COURS': 'green',
-            'EN_PAUSE': 'orange',
-            'TERMINEE': 'purple',
-            'ANNULEE': 'red'
+        """Affiche le statut avec un code couleur."""
+        statut_colors = {
+            'EN_COURS': 'blue',
+            'TERMINEE': 'green',
+            'ANNULEE': 'red',
+            # Ajoutez d'autres statuts ici si nécessaire
         }
-        return format_html(
-            '<span style="color:white; background-color:{}; padding:3px 6px; border-radius:3px;">{}</span>',
-            colors.get(obj.statut, 'black'),
-            obj.get_statut_display()
-        )
+        color = statut_colors.get(obj.statut, 'black')
+        return format_html('<span style="color:{};">{}</span>', color, obj.get_statut_display())
     statut_display.short_description = 'Statut'
-    
-    def progression_display(self, obj):
-        """Affichage de la progression sous forme de barre."""
-        progression = obj.get_progression()
-        return format_html(
-            '<div style="width:100px; background-color:#f8f8f8; border:1px solid #ddd;">'
-            '<div style="width:{}px; height:15px; background-color:#2196F3;"></div>'
-            '</div> {}%',
-            progression,
-            progression
-        )
-    progression_display.short_description = 'Progression'
-    
-    def montant_restant_facture(self, obj):
-        """Calcul du montant restant à facturer."""
-        return obj.get_montant_restant_a_facturer()
-    montant_restant_facture.short_description = 'Reste à facturer'
-    
-    def montant_restant_paye(self, obj):
-        """Calcul du montant restant à payer."""
-        return obj.get_montant_restant_a_payer()
-    montant_restant_paye.short_description = 'Reste à payer'
-    
-    def progression(self, obj):
-        """Affichage de la progression en pourcentage."""
-        return f"{obj.get_progression()}%"
-    progression.short_description = 'Progression'
+    statut_display.admin_order_field = 'statut'
     
     def save_model(self, request, obj, form, change):
-        """Enregistre l'utilisateur courant comme créateur lors de la création."""
-        if not change and not obj.created_by:
-            obj.created_by = request.user
+        """Génère une référence automatique si non définie."""
+        if not obj.reference:
+            # Génération d'une référence automatique basée sur l'année et un compteur
+            import datetime
+            year = datetime.date.today().year
+            count = Affaire.objects.filter(
+                date_creation__year=year
+            ).count() + 1
+            obj.reference = f'AFF-{year}-{count:04d}'
         super().save_model(request, obj, form, change)
     
-    def marquer_en_cours(self, request, queryset):
-        """Action pour marquer plusieurs affaires comme en cours."""
-        for affaire in queryset:
-            if affaire.statut in ['BROUILLON', 'VALIDE', 'EN_PAUSE']:
-                affaire.mettre_a_jour_statut('EN_COURS', request.user, 'Action en masse')
-        self.message_user(request, f"{queryset.count()} affaire(s) marquée(s) comme en cours.")
-    marquer_en_cours.short_description = "Marquer comme en cours"
-    
-    def marquer_termine(self, request, queryset):
-        """Action pour marquer plusieurs affaires comme terminées."""
-        for affaire in queryset:
-            if affaire.statut in ['EN_COURS', 'EN_PAUSE']:
-                affaire.mettre_a_jour_statut('TERMINEE', request.user, 'Action en masse')
-                if not affaire.date_fin_reelle:
-                    from django.utils.timezone import now
-                    affaire.date_fin_reelle = now()
-                    affaire.save()
-        self.message_user(request, f"{queryset.count()} affaire(s) marquée(s) comme terminée(s).")
-    marquer_termine.short_description = "Marquer comme terminée"
+    #def has_delete_permission(self, request, obj=None):
+    #    """Désactive la suppression pour les affaires avec des factures."""
+    #    if obj and obj.facture_set.exists():
+    #        return False
+    #    return super().has_delete_permission(request, obj)

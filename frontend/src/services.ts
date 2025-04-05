@@ -324,7 +324,7 @@ export const offreService = {
 // Proforma Service
 export const proformaService = {
   getAll: async () => {
-    const { data } = await api.get<ProformaBase[]>('/proformas/');
+    const { data } = await api.get<[IProfo]>('/proformas/');
     return data;
   },
   getById: async (id: number) => {

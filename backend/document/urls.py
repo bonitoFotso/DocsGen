@@ -2,7 +2,6 @@ from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 
 from document import consumers
-from document.models_Offre import OpportuniteViewSet
 from .views import (
     EntityViewSet,
     CategoryViewSet,
@@ -30,7 +29,7 @@ router.register(r'rapports', RapportViewSet, basename='rapport')
 router.register(r'formations', FormationViewSet, basename='formation')
 router.register(r'participants', ParticipantViewSet, basename='participant')
 router.register(r'attestations', AttestationFormationViewSet, basename='attestation')
-router.register(r'opportunites', OpportuniteViewSet, basename='opportunites')
+#router.register(r'opportunites', OpportuniteViewSet, basename='opportunites')
 
 app_name = 'api'
 

@@ -8,7 +8,6 @@ import axios from 'axios';
 // Récupérer l'URL de l'API depuis le fichier .env
 export const API_URL = import.meta.env.VITE_APP_API_URL ;
 
-console.log(API_URL);
 
 // Instance principale d'Axios pour les requêtes avec authentification (JSON)
 const apiClient: AxiosInstance = axios.create({
@@ -29,7 +28,6 @@ const apiClientFile: AxiosInstance = axios.create({
 // 
 const addAuthToken = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
   const auth = localStorage.getItem('accessToken'); // Récupérer les informations d'authentification
-  console.log(auth);
   if (auth && auth) {
     config.headers!.Authorization = `Bearer ${auth}`;
   }
