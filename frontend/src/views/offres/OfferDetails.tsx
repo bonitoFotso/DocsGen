@@ -16,17 +16,51 @@ import ActionsCard from '@/components/offre/ActionsCard';
 import DocumentsCard from '@/components/offre/DocumentsCard';
 import { useOffreDetails } from '@/hooks/useOffreDetails';
 import Loader from '@/common/Loader';
+import NoteDialog from '@/components/dialogue/NoteDialog';
 
 const OffreDetails: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { offreService } = useServices();
+  const [isNoteDialogOpen, setIsNoteDialogOpen] = React.useState(false);
+  const [note, setNote] = React.useState<string>('');
+  // const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = React.useState(false);
+  // const [isSuccessDialogOpen, setIsSuccessDialogOpen] = React.useState(false);
+  // const [isErrorDialogOpen, setIsErrorDialogOpen] = React.useState(false);
+
+  // Fonction pour gérer la sauvegarde de la note
+  const handleSaveNote = (newNote: string) => {
+    setNote(newNote);
+    offreService.update_notes(Number(id), newNote);
+    setIsNoteDialogOpen(false);
+    onReload();
+  };
+
+  
+
   
   // Utiliser notre hook personnalisé pour charger les données
-  const { offre, loading, historique, error } = useOffreDetails({ 
+  const { offre, loading, historique, error, fetchOffre } = useOffreDetails({ 
     id: Number(id), 
     offreService 
   });
+
+  const onReload = () => {
+    fetchOffre();
+  }
+  // Vérification de l'ID
+  if (!id) {
+    return <NotFound onBack={onReload} title="Erreur" subtitle="ID d'offre manquant." />;
+  }
+  // Vérification de l'ID numérique
+  const offreId = Number(id);
+  if (isNaN(offreId)) {
+    return <NotFound onBack={onReload} title="Erreur" subtitle="ID d'offre invalide." />;
+  }
+  // Vérification de l'existence de l'offre
+  if (!offre) {
+    return <NotFound onBack={onReload} title="Erreur" subtitle="Offre non trouvée." />;
+  }
 
   // Gestionnaires d'événements
   const onBack = () => {
@@ -62,9 +96,9 @@ const OffreDetails: React.FC = () => {
     // Logique de suppression avec confirmation
   };
 
-  const onMarkWon = async () => {
+  const onMarkWon = async (date_validation: string) => {
     try {
-      const response = await offreService.markWon(Number(id));
+      const response = await offreService.markWon(Number(id), date_validation);
       const data = response;
       return { success: data.success, current_status: data.current_status };
     } catch (error) {
@@ -74,21 +108,24 @@ const OffreDetails: React.FC = () => {
   };
 
 
-  const onMarkLost = async () => {
-    try {
-      const response = await offreService.markLost(Number(id));
-      const data = response;
-      return { success: data.success, current_status: data.current_status };
-    } catch (error) {
-      console.error('Erreur lors de la marque de l\'offre comme perdue', error);
-      return { success: false };
-    }
+  const onMarkLost = async (date_cloture: string) => {
+    console.log('Marquer l\'offre comme perdue' + date_cloture);
+     try {
+       const response = await offreService.markLost(Number(id), date_cloture);
+       const data = response;
+       return { success: data.success, current_status: data.current_status };
+     } catch (error) {
+       console.error('Erreur lors de la marque de l\'offre comme perdue', error);
+       return { success: false };
+     }
   };
 
   const onSendReminder = async () => {
     try {
-      //const response = await offreService.sendReminder(Number(id));
-      //const data = response;
+      const response = await offreService.sendReminder(Number(id));
+      const data = response;
+      console.log(data)
+      onReload();
       return { success: true };
     } catch (error) {
       console.error('Erreur lors de l\'envoi de la relance', error);
@@ -96,15 +133,17 @@ const OffreDetails: React.FC = () => {
     }
   };
 
-  const onSendOffer = async () => {
-    try {
-      const response = await offreService.send(Number(id));
-      const data = response;
-      return { success: data.success, current_status: data.current_status };
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'offre', error);
-      return { success: false };
-    }
+  const onSendOffer = async (date_envoi: string) => {
+    console.log('Envoi de l\'offre' + date_envoi);
+     try {
+       const response = await offreService.send(Number(id), date_envoi);
+
+       const data = response;
+       return { success: data.success, current_status: data.current_status };
+     } catch (error) {
+       console.error('Erreur lors de l\'envoi de l\'offre', error);
+       return { success: false };
+     }
   };
 
   const onViewClientProfile = () => {
@@ -158,6 +197,19 @@ const OffreDetails: React.FC = () => {
         <div className="col-span-2 space-y-6">
           {/* Carte de détails de l'offre */}
           <OffreDetailCard offre={offre} />
+
+
+          {/* carte des note de l'offre avec bouton pour ouvrir un dialogue et modifier la note*/}
+          <div className="bg-white shadow-sm rounded-lg p-4">
+            <h2 className="text-lg font-semibold">Notes</h2>
+            <p>{offre.notes}</p>
+            <button 
+              className="mt-2 text-blue-600 hover:underline"
+              onClick={() => setIsNoteDialogOpen(true)}
+            >
+              Modifier
+            </button>
+          </div>
           
           {/* Onglets */}
           <Tabs defaultValue="produits">
@@ -189,15 +241,15 @@ const OffreDetails: React.FC = () => {
           <ActionsCard 
             statut={offre.statut}
             necessite_relance={offre.necessite_relance}
-            onMarkWon={async () => {
-              const result = await onMarkWon();
+            onMarkWon={async (date_validation: string) => {
+              const result = await onMarkWon(date_validation);
               return {
                 success: result.success,
                 current_status: result.current_status!
               };
             }}
-            onMarkLost={async () => {
-              const result = await onMarkLost();
+            onMarkLost={async (date_cloture: string) => {
+              const result = await onMarkLost(date_cloture);
               return {
                 success: result.success,
                 current_status: result.current_status!
@@ -209,8 +261,8 @@ const OffreDetails: React.FC = () => {
                 success: result.success,
               };
             }}
-            onSendOffer={async () => {
-              const result = await onSendOffer();
+            onSendOffer={async (date_envoi: string) => {
+              const result = await onSendOffer(date_envoi);
               return {
                 success: result.success,
                 current_status: result.current_status!
@@ -226,6 +278,24 @@ const OffreDetails: React.FC = () => {
           />
         </div>
       </div>
+      {/* dialogue de modification de note  */}
+       <NoteDialog 
+        open={isNoteDialogOpen}
+        onClose={() => setIsNoteDialogOpen(false)}
+        onSave={handleSaveNote}
+        note={offre.notes}
+      />
+      {/* <ConfirmationDialog
+        isOpen={isConfirmationDialogOpen}
+        onClose={() => setIsConfirmationDialogOpen(false)}
+        onConfirm={handleDelete}
+        message="Êtes-vous sûr de vouloir supprimer cette offre ?"
+      /> */}
+      {/* <SuccessDialog
+        isOpen={isSuccessDialogOpen}
+        onClose={() => setIsSuccessDialogOpen(false)}
+        message="L'offre a été supprimée avec succès."
+      /> */}
     </div>
   );
 };

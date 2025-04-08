@@ -59,6 +59,7 @@ class OpportuniteAdmin(admin.ModelAdmin):
         'valeur_ponderee_display',
         'date_creation', 
         'relance_status',
+        'responsable'
         #'has_offre'
     ]
     list_filter = [
@@ -107,7 +108,7 @@ class OpportuniteAdmin(admin.ModelAdmin):
             )
         }),
         (_('Besoins Client'), {
-            'fields': ('besoins_client',),
+            'fields': ('besoins_client','commentaire'),
             'classes': ('collapse',)
         }),
         (_('Dates et Suivi'), {

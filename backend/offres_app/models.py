@@ -33,7 +33,6 @@ class OffreProduit(models.Model):
     def __str__(self):
         return f"{self.produit.code} - {self.quantite}x"
 
-
 class Offre(StatusTrackingModel):
     """Modèle pour les offres commerciales"""
     STATUS_CHOICES = [
@@ -71,6 +70,12 @@ class Offre(StatusTrackingModel):
         help_text="Utilisateur qui a créé l'offre initialement"
     )
     
+    # date 
+    date_envoi = models.DateTimeField(blank=True, null=True, verbose_name="Date d'envoi")
+    date_validation = models.DateTimeField(blank=True, null=True, verbose_name="Date de validation")
+    date_cloture = models.DateTimeField(blank=True, null=True, verbose_name="Date de validation")
+
+    
     # Champs supplémentaires
     notes = models.TextField(blank=True)
     sequence_number = models.PositiveIntegerField(default=1)
@@ -83,14 +88,14 @@ class Offre(StatusTrackingModel):
     )
     
     DELAIS_RELANCE = {
-        'ENVOYE': 7,  # Première relance après 7 jours
+        'ENVOYE': 1,  # Première relance après 7 jours
         'EN_NEGOCIATION': 5,  # Relance tous les 5 jours pendant la négociation
     }
 
     class Meta:
         verbose_name = "Offre commerciale"
         verbose_name_plural = "Offres commerciales"
-        ordering = ['-date_creation']
+        ordering = ['date_creation']
         
     def generer_reference(self):
         """
@@ -122,6 +127,24 @@ class Offre(StatusTrackingModel):
         if self.statut in self.DELAIS_RELANCE:
             # Si une relance existe déjà, on ajoute le délai à la date actuelle
             # Sinon on l'ajoute à la dernière modification
+            if self.date_envoi:
+                base_date = self.date_envoi
+            else:
+                base_date = self.date_creation
+            if self.relance:
+                base_date = self.relance
+            else:
+                # Si aucune relance n'existe, on prend la date de création
+                base_date = self.date_creation
+            # On ajoute le délai de relance
+            self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
+        else:
+            # Si le statut n'est pas dans les délais de relance, on remet à zéro
+            self.relance = None
+        # Si la relance est déjà passée, on la remet à aujourd'hui
+        if self.relance and self.relance <= timezone.now():
+            
+            
             base_date = timezone.now() if not self.relance else self.relance
             self.relance = base_date + timedelta(days=self.DELAIS_RELANCE[self.statut])
 
@@ -201,7 +224,8 @@ class Offre(StatusTrackingModel):
             affaire, affaire_created = Affaire.objects.get_or_create(
                 offre=self,
                 defaults={
-                    'created_by': self.user or self.createur,
+                    'createur': self.user or self.createur,
+                    'modificateur' :self.user or self.createur,
                     'montant_total': self.montant
                 }
             )

@@ -40,14 +40,10 @@ const ClientRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
           <div className="flex items-center gap-1 text-gray-500">
             <Mail className="h-3 w-3" />
             <span className="truncate max-w-32">{opp.client_email}</span>
+            
           </div>
         )}
-        {opp.client_telephone && (
-          <div className="flex items-center gap-1 text-gray-500">
-            <Phone className="h-3 w-3" />
-            <span>{opp.client_telephone}</span>
-          </div>
-        )}
+        
       </div>
     </div>
   );
@@ -77,6 +73,18 @@ const ContactRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
     </div>
   );
 });
+
+// composant de rendu pour les commantaire
+const CommentRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
+  return (
+    <div className="flex flex-col">
+      <div className="text-xs text-gray-500 mt-1">
+        {opp.commentaire || 'Aucun commentaire'}
+      </div>
+    </div>
+  );
+});
+
 
 // Composant de rendu pour les informations financières
 const FinancialRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
@@ -132,12 +140,19 @@ const StatusRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
         <Calendar className="h-3 w-3" />
         <span>Créée: {opp.date_creation}</span>
       </div>
+      {opp.relance && (
+        <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+          <Calendar className="h-3 w-3" />
+          <span>relance: {opp.relance}</span>
+        </div>
+      )}
       {opp.date_cloture && (
         <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
           <Calendar className="h-3 w-3" />
           <span>Clôture: {opp.date_cloture}</span>
         </div>
       )}
+      
     </div>
   );
 });
@@ -167,10 +182,10 @@ const ResponsibleRenderer = memo(({ opp }: { opp: LinearizedOpportunity }) => {
   return (
     <div className="flex flex-col">
       <div className="font-medium">
-        {opp.Responsable || 'Aucun responsable'}
+        {opp.responsable_nom|| 'Aucun responsable'}
       </div>
       <div className="text-xs text-gray-500 mt-1">
-        {opp.Responsable_email || 'Aucun email'}
+        {opp.responsable_email|| 'Aucun email'}
       </div>
     </div>
   );
@@ -249,6 +264,11 @@ const OpportunityManagement = () => {
       render: (opp: LinearizedOpportunity) => <ResponsibleRenderer opp={opp} />,
     },
     {
+      key: 'commentaire' as keyof LinearizedOpportunity,
+      label: 'Commentaire',
+      render: (opp: LinearizedOpportunity) => <CommentRenderer opp={opp} />,
+    },
+    {
       key: 'statut' as keyof LinearizedOpportunity,
       label: 'Statut',
       render: (opp: LinearizedOpportunity) => <StatusRenderer opp={opp} />,
@@ -263,7 +283,6 @@ const OpportunityManagement = () => {
       label: 'Produits',
       render: (opp: LinearizedOpportunity) => <ProductRenderer opp={opp} />,
     },
-    { key: 'entity_code' as keyof LinearizedOpportunity, label: 'Entité' },
   ], []);
 
   // Mémoisation des options de groupement
@@ -271,12 +290,11 @@ const OpportunityManagement = () => {
     { key: 'client_pays' as keyof LinearizedOpportunity, label: 'Grouper par pays' },
     { key: 'client_region' as keyof LinearizedOpportunity, label: 'Grouper par Région' },
     { key: 'client_ville' as keyof LinearizedOpportunity, label: 'Grouper par Ville' },
-    { key: 'client_secteur_activite' as keyof LinearizedOpportunity, label: 'Grouper par Secteur d\'activité' },
-    { key: 'produit_principal_category' as keyof LinearizedOpportunity, label: 'Grouper par Catégorie' },
     { key: 'client_nom' as keyof LinearizedOpportunity, label: 'Grouper par Entreprise' },
+    { key: 'client_secteur_activite' as keyof LinearizedOpportunity, label: 'Grouper par Secteur d\'activité' },
     { key: 'contact_nom' as keyof LinearizedOpportunity, label: 'Grouper par Contact' },
-    { key: 'entity_code' as keyof LinearizedOpportunity, label: 'Grouper par Entité' },
     { key: 'statut' as keyof LinearizedOpportunity, label: 'Grouper par Statut' },
+    { key: 'produit_principal_category' as keyof LinearizedOpportunity, label: 'Grouper par Departement' },
     { key: 'produit_principal_code' as keyof LinearizedOpportunity, label: 'Grouper par Produit principal' },
   ], []);
 

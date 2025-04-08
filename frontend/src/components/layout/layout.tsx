@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { ChevronUp, HelpCircle } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -12,7 +12,7 @@ import {
 
 
 import { Header } from './Header';
-import { Footer } from './Footer';
+// import { Footer } from './Footer';
 import { LayoutProvider, useLayout } from '@/contexts/LayoutContext';
 import { Sidebar } from './sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
@@ -101,8 +101,8 @@ function LayoutContent() {
           
         </main>
         
-        {/* Footer */}
-        <Footer />
+        {/* Footer 
+        <Footer />*/}
       </div>
     </div>
   );

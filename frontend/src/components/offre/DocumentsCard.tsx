@@ -1,6 +1,5 @@
-// components/offre/DocumentsCard.tsx
 import React, { useState, useRef } from 'react';
-import { FileText, Download, Upload, File, FilePlus, FileImage, FileSpreadsheet } from 'lucide-react';
+import { FileText, Download, Upload, File, FilePlus, FileImage, FileSpreadsheet, X, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +11,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DocumentsCardProps {
-  documentUrl?: string;
+  documentUrl: string | null;
   onDocumentUpload?: (file: File) => Promise<string> | void;
 }
 
@@ -30,6 +29,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
   const [uploadedDocumentUrl, setUploadedDocumentUrl] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showUploadInterface, setShowUploadInterface] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
 
@@ -110,6 +110,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
             // Un délai court pour montrer visuellement le processus d'upload
             setTimeout(() => {
               setIsUploading(false);
+              setShowUploadInterface(false);
             }, 500);
           } catch (err) {
             setError("Échec du téléchargement. Veuillez réessayer.");
@@ -173,6 +174,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
             // Un délai court pour montrer visuellement le processus d'upload
             setTimeout(() => {
               setIsUploading(false);
+              setShowUploadInterface(false);
             }, 500);
           } catch (err) {
             setError("Échec du téléchargement. Veuillez réessayer.");
@@ -217,8 +219,19 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
     }
   };
 
+  // Show upload interface to replace file
+  const handleReplaceFile = () => {
+    setShowUploadInterface(true);
+  };
+
+  // Cancel replace and show the current file
+  const cancelReplace = () => {
+    setShowUploadInterface(false);
+    setError(null);
+  };
+
   // Déterminer si on doit afficher le document ou l'interface d'upload
-  const shouldDisplayDocument = uploadedDocumentUrl || documentUrl || (fileInfo && uploadSuccess);
+  const shouldDisplayDocument = !showUploadInterface && (uploadedDocumentUrl || documentUrl || (fileInfo && uploadSuccess));
 
   return (
     <Card>
@@ -263,6 +276,17 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
             </Button>
             {error && (
               <p className="text-sm text-red-500 mt-3">{error}</p>
+            )}
+            
+            {showUploadInterface && (
+              <Button 
+                variant="ghost" 
+                onClick={cancelReplace}
+                className="mt-3 text-xs"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Annuler
+              </Button>
             )}
           </div>
         ) : (
@@ -322,6 +346,19 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
                       <TooltipContent>Télécharger</TooltipContent>
                     </Tooltip>
                   )}
+                  
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleReplaceFile}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Changer de fichier</TooltipContent>
+                  </Tooltip>
                 </TooltipProvider>
               </div>
             </div>
@@ -329,7 +366,7 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
         )}
       </CardContent>
 
-      {!shouldDisplayDocument && !isUploading && (
+      {!shouldDisplayDocument && !isUploading && !showUploadInterface && (
         <CardFooter>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -353,6 +390,19 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </CardFooter>
+      )}
+      
+      {shouldDisplayDocument && (
+        <CardFooter>
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleReplaceFile}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Changer de fichier
+          </Button>
         </CardFooter>
       )}
     </Card>

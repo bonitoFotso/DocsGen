@@ -33,7 +33,8 @@ from document.serializers import (
 
 from offres_app.models import Offre
 from affaires_app.models import Affaire
-
+from opportunites_app.models import Opportunite
+from opportunites_app.serializers import OpportuniteSerializer
 class PaysViewSet(viewsets.ModelViewSet):
     queryset = Pays.objects.all()
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -140,7 +141,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         """Retourne les opportunités d'un client."""
         client = self.get_object()
         opportunites = Opportunite.objects.filter(client=client)
-        serializer = OpportuniteListSerializer(opportunites, many=True)
+        serializer = OpportuniteSerializer(opportunites, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])

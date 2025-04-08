@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Max
 
+from api.user.serializers import UserSerializer
+
 from .models import Offre
 from client.models import Client, Contact
 from document.models import Entity, Product
@@ -82,21 +84,47 @@ class OffreSerializer(serializers.ModelSerializer):
     produits = ProductSerializer(many=True, read_only=True)
     contact = ContactSerializer()
     produit_principal = ProductSerializer()
+    user = UserSerializer()
+    createur =  UserSerializer()
+    
     
     class Meta:
         model = Offre
         fields = [
-            'id', 'reference', 'date_creation', 'date_modification',
+            'id', 'reference', 'date_creation', 'date_modification','user', 'createur',
             'statut', 'montant', 'relance',
             'necessite_relance', 'client',
             'contact', 'entity','produit_principal',
             'produits', 'notes', 'sequence_number','fichier',
+            'date_envoi', 'date_validation', 'date_cloture'
         ]
         read_only_fields = [
             'reference', 'date_creation', 'date_modification',
             'date_validation', 'necessite_relance', 'sequence_number'
         ]
         
+
+class OffreNoteSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour modifier les notes d'une offre"""
+    notes = serializers.CharField(required=True)
+    class Meta:
+        model = Offre
+        fields = ['notes']
+        read_only_fields = ['id', 'date_creation', 'date_modification']
+        extra_kwargs = {
+            'notes': {'required': True}
+        }
+class OffreRelanceSerializer(serializers.ModelSerializer):
+    """Sérialiseur pour modifier la date de relance d'une offre"""
+    #relance = serializers.DateField(required=True)
+    
+    class Meta:
+        model = Offre
+        fields = ['relance']
+        read_only_fields = ['id', 'date_creation', 'date_modification']
+        #extra_kwargs = {
+        #    'relance': {'required': True}
+        #}
 
 
 class OffreCreateSerializer(serializers.ModelSerializer):

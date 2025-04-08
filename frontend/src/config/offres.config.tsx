@@ -8,34 +8,33 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Eye,
-  Edit,
   FileSearch,
   Download,
   Filter,
-  UsersIcon
+  UsersIcon,
+  SendIcon,
+  LockKeyhole
 } from "lucide-react";
 import { StatsConfig } from "@/components/KDcart/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { OffreDetail } from "@/types/offre";
+import { LinearizedOffre } from "./offres.line";
 
 interface OffresConfigProps {
   navigate: (path: string) => void;
-  handleEdit: (offre: OffreDetail) => void;
-  setSelectedOffre: (offre: OffreDetail) => void;
-  setShowDetailsDialog: (show: boolean) => void;
   offres: unknown[];
 }
 
 export const offresConfig = ({
   navigate,
-  handleEdit,
-  setSelectedOffre,
-  setShowDetailsDialog,
   offres
 }: OffresConfigProps) => {
   
+  // render pour les notes qui affiche selement 10 premiers caracteres
+  const renderNotes = (notes: string | null) => {
+    if (!notes) return <span className="text-gray-400">Aucune note</span>;
+    return notes.length > 10 ? `${notes.slice(0, 10)}...` : notes;
+  };
   // Configuration des colonnes pour KDTable
   const columns = [
     // localisations: PAYS, REGION, VILLE
@@ -43,7 +42,7 @@ export const offresConfig = ({
       key: 'pays',
       label: 'Pays',
       width: '120px',
-      render: (value: unknown, row: OffreDetail) => (
+      render: (_value: unknown, row: LinearizedOffre) => (
         <div>
           <div className="font-medium">{row.clientPays}</div>
           <div className="text-xs text-gray-500">{row.clientRegion}</div>
@@ -51,30 +50,21 @@ export const offresConfig = ({
         </div>
       )
     },
-    {
-      key: 'region',
-      label: 'Région',
-      width: '120px',
-      render: (value: unknown, row: OffreDetail) => (
-        <div className="font-medium">{row.clientRegion}</div>
+    { 
+      key: 'reference', 
+      label: 'Référence',
+      width: '200px',
+      render: (_value: unknown, row: LinearizedOffre) => (
+        <div className="font-medium">{row.reference}</div>
       )
     },
-    {
-      key: 'ville',
-      label: 'Ville',
-      width: '120px',
-      render: (value: unknown, row: OffreDetail) => (
-        <div className="font-medium">{row.clientVille}</div>
-      )
-    },
-    
 
     { 
       key: 'statut', 
       label: 'Statut',
       width: '120px',
       align: 'center',
-      render: (value: unknown, row: OffreDetail) => {
+      render: (_value: unknown, row: LinearizedOffre) => {
         const statusConfig = {
           BROUILLON: { 
             bg: 'bg-yellow-100', 
@@ -111,63 +101,74 @@ export const offresConfig = ({
         );
       }
     },
-    { 
-      key: 'reference', 
-      label: 'Référence',
-      width: '200px',
-      render: (value: unknown, row: OffreDetail) => (
-        <div className="font-medium">{row.reference}</div>
-      )
-    },
+    
     // date_creation et date de relance
     {
       key: 'date_creation',
       label: 'Date',
       width: '120px',
-      render: (value: unknown, row: OffreDetail) => {
+      render: (_value: unknown, row: LinearizedOffre) => {
         
         return (
-          <div className="flex flex-col space-y-1">
+          <div className="flex flex-col space-y-2 py-1">
+            {/* Main creation date */}
             <div className="flex items-center text-sm font-medium">
-              <Calendar className="w-4 h-4 mr-1.5 text-blue-500" />
+              <Calendar className="w-4 h-4 mr-1.5 text-blue-600" />
               <span className="text-gray-800">{row.dateCreation}</span>
             </div>
-            {row.dateRelance && (
-              <div className="flex items-center text-xs">
-                <Clock className="w-3.5 h-3.5 mr-1 text-amber-500" />
-                <span className="text-gray-600">Relance: {row.dateRelance}</span>
+            
+            {/* Group secondary dates with consistent styling */}
+            {(row.dateRelance || row.date_envoi || row.date_validation || row.date_cloture) && (
+              <div className="flex flex-col space-y-1.5 pl-1.5 border-l-2 border-gray-200">
+                {row.dateRelance && (
+                  <div className="flex items-center text-xs">
+                    <Clock className="w-3.5 h-3.5 mr-1 text-amber-500" />
+                    <span className="text-gray-600">Relance: {row.dateRelance}</span>
+                  </div>
+                )}
+                
+                {row.date_envoi && (
+                  <div className="flex items-center text-xs">
+                    <SendIcon className="w-3.5 h-3.5 mr-1 text-green-500" />
+                    <span className="text-gray-600">Envoi: {row.date_envoi}</span>
+                  </div>
+                )}
+                
+                {row.date_validation && (
+                  <div className="flex items-center text-xs">
+                    <CheckCircle className="w-3.5 h-3.5 mr-1 text-indigo-500" />
+                    <span className="text-gray-600">Validation: {row.date_validation}</span>
+                  </div>
+                )}
+                
+                {row.date_cloture && (
+                  <div className="flex items-center text-xs">
+                    <LockKeyhole className="w-3.5 h-3.5 mr-1 text-gray-500" />
+                    <span className="text-gray-600">Clôture: {row.date_cloture}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
-          
         );
       }
     },
     {
-      key: 'entity',
-      label: 'Entité',
-      width: '100px',
-      render: (value: unknown, row: OffreDetail) => {
-        const entityColorMap = {
-          'KES': 'bg-blue-100 text-blue-800',
-          'KIP': 'bg-purple-100 text-purple-800',
-          'KEC': 'bg-green-100 text-green-800'
-        };
-        
-        const color = entityColorMap[row.entityCode as keyof typeof entityColorMap] || 'bg-gray-100 text-gray-800';
-        
-        return (
-          <Badge variant="outline" className={`${color} px-2 py-1`}>
-            {row.entityCode}
-          </Badge>
-        );
-      }
+      key: 'userNom',
+      label: 'Responsable',
+      width: '120px',
+      render: (_value: unknown, row: LinearizedOffre) => (
+        <div>
+          <div className="font-medium">{row.userNom}</div>
+          <div className="text-xs text-gray-500">{row.userEmail}</div>
+        </div>
+      )
     },
     {
       key: 'client',
       label: 'Client',
       width: '160px',
-      render: (value: unknown, row: OffreDetail) => (
+      render: (_value: unknown, row: LinearizedOffre) => (
         <div>
           <div className="font-medium">{row.clientNom}</div>
           <div className="text-xs text-gray-500">{row.clientSecteur}</div>
@@ -178,7 +179,7 @@ export const offresConfig = ({
       key: 'contact',
       label: 'Contact',
       width: '160px',
-      render: (value: unknown, row: OffreDetail) => (
+      render: (_value: unknown, row: LinearizedOffre) => (
         <div>
           <div>{row.contactNom}</div>
           <div className="text-xs text-blue-600">{row.contactEmail}</div>
@@ -189,7 +190,7 @@ export const offresConfig = ({
       key: 'produit_principal',
       label: 'Produit',
       width: '160px',
-      render: (value: unknown, row: OffreDetail) => (
+      render: (_value: unknown, row: LinearizedOffre) => (
         <div>
           <div className="font-medium">{row.produitPrincipalName}</div>
           <div className="text-xs text-gray-500">
@@ -205,7 +206,7 @@ export const offresConfig = ({
       label: 'Montant',
       width: '120px',
       align: 'right',
-      render: (value: unknown, row: OffreDetail) => {
+      render: (_value: unknown, row: LinearizedOffre) => {
         const amount = row.montant ? parseFloat(row.montant.toString()) : 0;
         
         return (
@@ -221,11 +222,19 @@ export const offresConfig = ({
       }
     },
     {
+      key: 'notes',
+      label: 'Notes',
+      width: '120px',
+      render: (_value: unknown, row: LinearizedOffre) => (
+        <div className="text-gray-500">{renderNotes(row.notes)}</div>
+      )
+    },
+    {
       key: 'fichier',
       label: 'Fichier',
       width: '60px',
       align: 'center',
-      render: (value: unknown, row: OffreDetail) => {
+      render: (_value: unknown, row: LinearizedOffre) => {
         return row.fichier ? (
           <a 
             href={row.fichier} 
@@ -242,44 +251,7 @@ export const offresConfig = ({
         );
       }
     },
-    {
-      key: 'actions',
-      label: 'Actions',
-      width: '120px',
-      align: 'center',
-      sortable: false,
-      render: (value: unknown, row: OffreDetail) => (
-        <div className="flex justify-center space-x-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            title="Voir les détails"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedOffre(row);
-              setShowDetailsDialog(true);
-            }}
-          >
-            <Eye size={16} />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            title="Modifier"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(row);
-            }}
-          >
-            <Edit size={16} />
-          </Button>
-          
-        </div>
-      )
-    }
+    
   ];
 
   // Options de groupement
@@ -290,6 +262,9 @@ export const offresConfig = ({
     { key: 'statut', label: 'Par Statut' },
     { key: 'entityCode', label: 'Par Entité' },
     { key: 'clientNom', label: 'Par Client' },
+    { key: 'contactNom', label: 'Par Contact' },
+    { key: 'userNom', label: 'Par responsable' },
+    { key: 'produitPrincipalCategory', label: 'Par Departement' },
     { key: 'produitPrincipalName', label: 'Par Produit' },
     
   ];

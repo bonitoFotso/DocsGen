@@ -17,9 +17,9 @@ export interface OpportunitesStatsProps {
 
 const formatMontant = (montant: number): string => {
   if (montant >= 1000000) {
-    return `${(montant / 1000000).toFixed(1)} M€`;
+    return `${(montant / 1000000).toFixed(1)} MFCFA`;
   } else if (montant >= 1000) {
-    return `${(montant / 1000).toFixed(1)} K€`;
+    return `${(montant / 1000).toFixed(1)} KFCFA`;
   }
   return `${montant} €`;
 };
@@ -114,20 +114,13 @@ const OpportunitesStatsDashboard: React.FC<OpportunitesStatsProps> = ({ data }) 
     <div className="p-6  mx-auto">
       
       {/* KPIs - Première ligne */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <StatCard 
           title="Total Opportunités" 
           value={totaux.total_opportunities}
           subValue={totaux.opportunites_en_cours}
           subLabel="En cours"
           color="blue"
-        />
-        <StatCard 
-          title="Montant Total" 
-          value={formatMontant(totaux.total_montant)}
-          subValue={formatMontant(totaux.total_montant_estime)}
-          subLabel="Estimé"
-          color="green"
         />
         <StatCard 
           title="Opportunités Gagnées" 

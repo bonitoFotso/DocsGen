@@ -20,6 +20,12 @@ export interface LinearizedOpportunity {
   relance: string | null;
   description: string | null;
   besoins_client: string | null;
+  commentaire: string | null;
+
+  responsable_id: number;
+  responsable_nom: string;
+  responsable_email: string | undefined;
+
 
   // Client details
   client_id: number;
@@ -77,6 +83,10 @@ export class OpportunityProcessor {
       relance: opp.relance,
       description: opp.description,
       besoins_client: opp.besoins_client,
+      commentaire: opp.commentaire,
+      responsable_id: opp.created_by,
+      responsable_nom: opp.responsable.username,
+      responsable_email: opp.responsable.email,
 
       // Client details
       client_id: opp.client.id,

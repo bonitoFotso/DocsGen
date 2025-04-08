@@ -14,6 +14,7 @@ class Command(BaseCommand):
             kes_inspections = Entity.objects.create(code="KIP", name="KES INSPECTIONS & PROJECTS")
             kes_energy = Entity.objects.create(code="KEC", name="KES ENERGY & CARBON")
             kes_sarl = Entity.objects.create(code="KES", name="KES SARL")
+            kes_ar = Entity.objects.create(code="KAR", name="KES AfriK Recycling")
 
             # Création des catégories pour KES INSPECTIONS & PROJECTS
             self.stdout.write('Creating KES INSPECTIONS & PROJECTS categories...')

@@ -6,8 +6,26 @@ from api.user.models import User
 from .models import (
     ContentType, Entity, Category, Product, 
     Rapport, Formation, Participant, AttestationFormation,
-     AuditLog
+     AuditLog, UserActionLog
 )
+
+@admin.register(UserActionLog)
+class UserActionLogAdmin(admin.ModelAdmin):
+    list_display = ['timestamp', 'user', 'action_type', 'content_type', 'object_id', 'field_name']
+    list_filter = ['action_type', 'content_type', 'user']
+    search_fields = ['user__username', 'field_name', 'description']
+    readonly_fields = ['timestamp', 'user', 'action_type', 'content_type', 'object_id', 
+                      'field_name', 'old_value', 'new_value', 'description', 'ip_address']
+    date_hierarchy = 'timestamp'
+    
+    def has_add_permission(self, request):
+        return False
+        
+    def has_change_permission(self, request, obj=None):
+        return False
+        
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 from django.contrib import admin
 

@@ -269,6 +269,10 @@ export const offreService = {
     const { data } = await api.put<OffreDetail>(`/offres/${id}/`, offre);
     return data;
   },
+  update_notes: async (id: number, notes: string) => {
+    const { data } = await api.put<OffreDetail>(`/off/offres/${id}/notes/`, { notes });
+    return data;
+  },
   upload: async (id: number, file: File) => {
     const { data } = await apiClientFile.post<OffreDetail>(`/off/offres/${id}/upload/`, { file });
     return data;
@@ -307,16 +311,20 @@ export const offreService = {
     const { data } = await api.post<OffreDetail>(`/offres/${id}/archiver/`);
     return data;
   },
-  markWon: async (id: number) => {
-    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/gagner/`);
+  markWon: async (id: number, date_validation: string) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/gagner/`, { date_validation });
     return data;
   },
-  markLost: async (id: number) => {
-    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/perdre/`);
+  markLost: async (id: number, date_cloture: string) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/perdre/`, { date_cloture });
     return data;
   },
-  send: async (id: number) => {
-    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/envoyer/`);
+  send: async (id: number, date_envoi: string) => {
+    const { data } = await api.put<OffreStatusResponse>(`/off/offres/${id}/envoyer/`, { date_envoi });
+    return data;
+  },
+  sendReminder: async (id: number) => {
+    const { data } = await api.put<OffreDetail>(`/off/offres/${id}/relance/`);
     return data;
   },
 };
@@ -324,7 +332,7 @@ export const offreService = {
 // Proforma Service
 export const proformaService = {
   getAll: async () => {
-    const { data } = await api.get<[IProfo]>('/proformas/');
+    const { data } = await api.get<[ProformaDetail]>('/proformas/');
     return data;
   },
   getById: async (id: number) => {

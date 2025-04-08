@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.utils.timezone import now
 from decimal import Decimal
 
+from affaires_app.serializers import UserBasicSerializer
 import client
 
 from .models import Opportunite
@@ -52,11 +53,12 @@ class OpportuniteDetailSerializer(OpportuniteSerializer):
     entity = EntityDetailSerializer(read_only=True)
     produit_principal = ProductListSerializer(read_only=True)
     produits = ProductListSerializer(many=True, read_only=True)
+    responsable = UserBasicSerializer(read_only=True)
     
     class Meta(OpportuniteSerializer.Meta):
         fields = OpportuniteSerializer.Meta.fields + [
             'description', 'besoins_client', 'sequence_number', 'produits',
-            'date_detection'
+            'date_detection', 'responsable', 'commentaire'
         ]
         read_only_fields = OpportuniteSerializer.Meta.read_only_fields + [
             'sequence_number', 'date_detection'

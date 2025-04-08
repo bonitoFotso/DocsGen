@@ -15,6 +15,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+import { DatePicker } from '@/components/ui/date-picker';
+import { fr } from 'date-fns/locale';
+import { format } from 'date-fns';
+import { Label } from '../ui/label';
+
 // Types pour les statuts d'offre pour éviter les erreurs de chaîne
 export type OffreStatus = 'BROUILLON' | 'ENVOYE' | 'GAGNE' | 'PERDU';
 
@@ -39,10 +44,10 @@ interface ActionConfig {
 interface ActionsCardProps {
   statut: OffreStatus;
   necessite_relance: boolean;
-  onMarkWon?: () => Promise<{success: boolean; current_status: OffreStatus}>;
-  onMarkLost?: () => Promise<{success: boolean; current_status: OffreStatus}>;
-  onSendReminder?: () => Promise<{success: boolean}>;
-  onSendOffer?: () => Promise<{success: boolean; current_status: OffreStatus}>;
+  onMarkWon: (date_validation: string) => Promise<{success: boolean; current_status?: OffreStatus}>;
+  onMarkLost: (date_cloture: string) => Promise<{success: boolean; current_status?: OffreStatus}>;
+  onSendReminder: () => Promise<{success: boolean}>;
+  onSendOffer: (date_envoi: string) => Promise<{success: boolean; current_status?: OffreStatus}>;
   isLoading?: boolean;
   onStatusChange?: (newStatus: OffreStatus) => void;
 }
@@ -62,6 +67,7 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
   const [necessite_relance, setNecessiteRelance] = useState<boolean>(initialNecessiteRelance);
   const [loading, setLoading] = useState<{[key: string]: boolean}>({});
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // Synchronisation avec les props externes
   useEffect(() => {
@@ -74,6 +80,15 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
   
   // Détermine si une action est en cours de chargement
   const isLoading = externalLoading || Object.values(loading).some(v => v);
+  
+  // Implémentation des fonctions de traitement si elles ne sont pas fournies
+  const handleMarkWon = onMarkWon ;
+
+  const handleMarkLost = onMarkLost;
+
+  const handleSendOffer = onSendOffer ;
+
+
   // Configuration des statuts
   const statusConfigs: { [key in OffreStatus]: StatusConfig } = {
     'GAGNE': {
@@ -95,6 +110,7 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
   };
 
   // Configuration des actions avec gestion asynchrone et rechargement
+  // Configuration des actions avec gestion asynchrone et rechargement
   const getActionConfigs = (): ActionConfig[] => [
     {
       type: 'send',
@@ -105,15 +121,19 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
       dialogTitle: 'Confirmer l\'action',
       dialogDescription: 'Êtes-vous sûr de vouloir envoyer cette offre au client ?',
       dialogActionClass: 'bg-blue-600 hover:bg-blue-700',
-      showCondition: (status) => status === 'BROUILLON' && !!onSendOffer,
+      showCondition: (status) => status === 'BROUILLON',
       onAction: async () => {
-        if (!onSendOffer) return;
-        
+        if (!handleSendOffer) {
+          console.error('Fonction d\'envoi non disponible');
+          setActiveDialog(null);
+          return;
+        }
+
         try {
           setLoading(prev => ({ ...prev, send: true }));
-          const response = await onSendOffer();
+          const response = await handleSendOffer(format(selectedDate, 'yyyy-MM-dd'));
           
-          if (response.success) {
+          if (response.success && response.current_status) {
             // Mise à jour locale du statut
             setStatut(response.current_status);
             // Notification au parent
@@ -136,15 +156,13 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
       dialogTitle: 'Confirmer l\'action',
       dialogDescription: 'Êtes-vous sûr de vouloir marquer cette offre comme gagnée ?',
       dialogActionClass: 'bg-green-600 hover:bg-green-700',
-      showCondition: (status) => status === 'ENVOYE' && !!onMarkWon,
+      showCondition: (status) => status === 'ENVOYE',
       onAction: async () => {
-        if (!onMarkWon) return;
-        
         try {
           setLoading(prev => ({ ...prev, won: true }));
-          const response = await onMarkWon();
+          const response = await handleMarkWon(format(selectedDate, 'yyyy-MM-dd'));
           
-          if (response.success) {
+          if (response.success && response.current_status) {
             // Mise à jour locale du statut
             setStatut(response.current_status);
             // Notification au parent
@@ -167,15 +185,13 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
       dialogTitle: 'Confirmer l\'action',
       dialogDescription: 'Êtes-vous sûr de vouloir marquer cette offre comme perdue ?',
       dialogActionClass: 'bg-red-600 hover:bg-red-700',
-      showCondition: (status) => status === 'ENVOYE' && !!onMarkLost,
+      showCondition: (status) => status === 'ENVOYE',
       onAction: async () => {
-        if (!onMarkLost) return;
-        
         try {
           setLoading(prev => ({ ...prev, lost: true }));
-          const response = await onMarkLost();
+          const response = await handleMarkLost(format(selectedDate, 'yyyy-MM-dd'));
           
-          if (response.success) {
+          if (response.success && response.current_status) {
             // Mise à jour locale du statut
             setStatut(response.current_status);
             // Notification au parent
@@ -198,9 +214,13 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
       dialogTitle: 'Confirmer l\'action',
       dialogDescription: 'Êtes-vous sûr de vouloir envoyer une relance pour cette offre ?',
       dialogActionClass: '',
-      showCondition: (_, needsReminder) => needsReminder && !!onSendReminder,
+      showCondition: (_, needsReminder) => needsReminder,
       onAction: async () => {
-        if (!onSendReminder) return;
+        if (!onSendReminder) {
+          console.error('Fonction de relance non disponible');
+          setActiveDialog(null);
+          return;
+        }
         
         try {
           setLoading(prev => ({ ...prev, reminder: true }));
@@ -224,10 +244,10 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
   };
   
   // Obtenir les actions disponibles pour le statut actuel
-  const availableActions = getActionConfigs().filter(
-    action => action.showCondition(statut, necessite_relance)
+  const availableActions = getActionConfigs().filter(action => 
+    action.showCondition(statut, necessite_relance)
   );
-
+  
   return (
     <>
       <Card>
@@ -261,19 +281,37 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
           ))}
         </CardFooter>
       </Card>
-
+  
       {/* Dialogues de confirmation */}
       {availableActions.map((action) => (
         <AlertDialog 
           key={action.type}
           open={activeDialog === action.type} 
-          onOpenChange={(open) => setActiveDialog(open ? action.type : null)}
+          onOpenChange={(open) => {
+            setActiveDialog(open ? action.type : null);
+            if (!open) setSelectedDate(new Date());
+          }}
         >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{action.dialogTitle}</AlertDialogTitle>
               <AlertDialogDescription>
                 {action.dialogDescription}
+                
+                {/* Ajout du DatePicker pour les actions concernées */}
+                {(['send', 'won', 'lost'].includes(action.type)) && (
+                  <div className="mt-4">
+                    <Label className="block mb-2">Date d'effet :</Label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onSelect={(date: Date | null) => date && setSelectedDate(date)}
+                      locale={fr}
+                    />
+                    <p className="text-muted-foreground text-sm mt-1">
+                      {format(selectedDate, "dd MMMM yyyy", { locale: fr })}
+                    </p>
+                  </div>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

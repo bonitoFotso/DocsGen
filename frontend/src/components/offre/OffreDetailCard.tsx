@@ -129,6 +129,20 @@ const OffreDetailCard: React.FC<OffreDetailCardProps> = ({ offre }) => {
               </div>
             </div>
           )}
+
+          {offre.user && (
+            <div className="space-y-1">
+              <div className="text-sm text-muted-foreground">responsable</div>
+              <div className="flex items-center">
+                <span className="font-medium">{offre.user.username}</span>
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {offre.user.email}
+                </Badge>
+              </div>
+            </div>
+          )}
+                
+          
         </div>
       </CardContent>
     </Card>

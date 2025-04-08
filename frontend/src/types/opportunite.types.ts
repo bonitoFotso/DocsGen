@@ -40,6 +40,12 @@ export interface OpportuniteDetail extends Omit<Opportunite, 'client' | 'contact
   contact: Contact;
   entity: Entity;
   produit_principal: Produit;
+  commentaire: string | null;
+  responsable: {
+    id: number;
+    username: string;
+    email: string | undefined;
+  };
 }
 
 /**

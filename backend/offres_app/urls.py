@@ -5,6 +5,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     OffreFileUploadView,
     OffreLostView,
+    OffreNoteView,
+    OffreRelanceProlongationView,
     OffreViewSet,
     OffreInitDataView,
     ClientListView,
@@ -16,7 +18,6 @@ from .views import (
     OffreSubmitView,
     OffreStatusChangeView
 )
-
 # Création du routeur pour le viewset
 router = DefaultRouter()
 router.register(r'offres', OffreViewSet)
@@ -46,6 +47,10 @@ urlpatterns = [
     path('off/offres/<int:pk>/upload/', OffreFileUploadView.as_view(), name='offre-upload'),
     path('off/offres/<int:pk>/gagner/', OffreWonView.as_view(), name='offre-submit'),
     path('off/offres/<int:pk>/perdre/', OffreLostView.as_view(), name='offre-submit'),
+    path('off/offres/<int:pk>/relancer/', OffreLostView.as_view(), name='offre-submit'),
+    path('off/offres/<int:pk>/relance/', OffreRelanceProlongationView.as_view(), name='relance-offre'),
+    path('off/offres/<int:pk>/notes/', OffreNoteView.as_view(), name='offre-submit'),
+    
 
 
 ]

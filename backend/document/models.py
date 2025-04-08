@@ -7,6 +7,67 @@ from django_fsm import FSMField, transition
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from client.models import AuditableMixin, Client, Contact
+
+
+
+from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+
+User = settings.AUTH_USER_MODEL
+
+class UserActionLog(models.Model):
+    """
+    Model for tracking user actions on any model in the system.
+    Records the user, action type, affected model, field changed, and old/new values.
+    """
+    ACTION_TYPES = (
+        ('CREATE', 'Création'),
+        ('UPDATE', 'Modification'),
+        ('DELETE', 'Suppression'),
+        ('STATUS_CHANGE', 'Changement de statut'),
+    )
+    
+    # Who performed the action
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='action_logs')
+    
+    # When the action occurred
+    timestamp = models.DateTimeField(default=timezone.now)
+    
+    # Type of action performed
+    action_type = models.CharField(max_length=20, choices=ACTION_TYPES)
+    
+    # Generic relation to the affected model
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # The specific field that was changed (if applicable)
+    field_name = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Old and new values
+    old_value = models.TextField(blank=True, null=True)
+    new_value = models.TextField(blank=True, null=True)
+    
+    # Additional information or context
+    description = models.TextField(blank=True, null=True)
+    
+    # IP address of the user (optional)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = "Journal d'action utilisateur"
+        verbose_name_plural = "Journal des actions utilisateurs"
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['user']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} a {self.action_type} {self.content_type} (ID: {self.object_id}) le {self.timestamp}"
 class Entity(AuditableMixin, models.Model):
     code = models.CharField(
         max_length=3,
@@ -51,7 +112,6 @@ from django.core.exceptions import ValidationError
 import json
 from django.conf import settings
 
-User = settings.AUTH_USER_MODEL
 
 
 class StatusChange(models.Model):

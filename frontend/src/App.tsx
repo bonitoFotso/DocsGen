@@ -41,6 +41,7 @@ import { entities } from "./components/layout/navigation";
 import { EntityProvider } from "./contexts/EntityContext";
 import AffairesDashboard from "./views/affaires/AffairesDashboard";
 import OpportunityManagement from "./views/opportunites/oportuityPage";
+import PortalSelection from "./components/layout/PortalSelection";
 
 function App() {
   const defaultEntity = entities[0].toLowerCase();
@@ -52,6 +53,8 @@ function App() {
           <Toaster position="top-right" richColors />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* Portail */}
+            <Route path="portail" element={<PortalSelection />} />
             <Route
               path="/"
               element={
@@ -60,6 +63,10 @@ function App() {
                 </PrivateRoute>
               }
             >
+              
+
+              {/* Authentification */}
+              {/* Page d'accueil */}
               <Route index element={<Dashboard />} />
 
               {/* Routes groupées par fonctionnalité */}
@@ -101,6 +108,8 @@ function App() {
                 const entityPath = entity.toLowerCase();
                 return (
                   <Route key={entity} path={entityPath}>
+                    {/* dashbord */}
+                    <Route index element={<Dashboard />} />
                     {/* Commercial - uniquement les vues de liste */}
                     <Route path="opportunities" element={<OpportunityManagement />} />
                     <Route path="offres" element={<OffreManagement />} />

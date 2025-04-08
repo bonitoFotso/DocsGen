@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ErrorAlert } from "@/components/ui/ErrorAlert";
 import { useOffres } from "@/hooks/useOffres";
 import { FileText, PlusCircle } from "lucide-react";
@@ -7,7 +6,6 @@ import KesContainer from "@/components/KesContainer";
 import { KDStats } from "@/components/KDcart/KDstats";
 import { useEntityFromUrl } from "@/hooks/useEntityFromUrl";
 import KDTable from "@/components/table/KDTable2";
-import { OffreDetailsDialog } from "./components/OffreDetailsDialog";
 import { offresConfig } from "@/config/offres.config";
 import { OffreDetail } from "@/types/offre";
 import { linearizeOffre } from "@/config/offres.line";
@@ -17,19 +15,13 @@ const OffreManagement = () => {
     offres,
     isLoading,
     error,
-    handleEdit,
     setError,
   } = useOffres();
 
   const navigate = useNavigate();
   const currentEntity = useEntityFromUrl();
-  const [selectedOffre, setSelectedOffre] = useState<OffreDetail | null>(null);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
-  // fonction pour aller a la page de details de l'offre
-  const handleViewDetails = (offreId: number) => {
-    navigate(`/offres/${offreId}`);
-  };
+
 
     // Filtrage des offres par entité
     const filteredOffres = currentEntity === "TOUTES" 
@@ -39,9 +31,6 @@ const OffreManagement = () => {
   // Configuration from imported config file
   const { columns, groupByOptions, headerActions, emptyState, statsConfig } = offresConfig({
     navigate,
-    handleEdit,
-    setSelectedOffre,
-    setShowDetailsDialog,
     offres: filteredOffres,
       
   });
@@ -51,7 +40,8 @@ const OffreManagement = () => {
 const linearizedOffres = linearizeOffre(filteredOffres);
 
   // Gérer le clic sur une ligne
-  const handleRowClick = (offre: OffreDetail) => {
+  const handleRowClick = (row: unknown) => {
+    const offre = row as OffreDetail;
     navigate(`/offres/${offre.id}`);
   };
 

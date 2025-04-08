@@ -86,6 +86,12 @@ class Opportunite(models.Model):
         verbose_name="Besoins du client"
     )
     
+    commentaire = models.TextField(
+        blank=True, 
+        null=True,
+        verbose_name="Commentaire"
+    )
+    
     # Montants et probabilité
     montant = models.DecimalField(
         max_digits=15, 
@@ -101,6 +107,13 @@ class Opportunite(models.Model):
         default=0, 
         help_text="Probabilité de conversion en %",
         verbose_name="Probabilité"
+    )
+    
+    responsable = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='opportunites_responsables',
+        verbose_name="Responsable"
     )
     
     # Statut et dates

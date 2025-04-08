@@ -12,7 +12,7 @@ export interface Produit {
 }
 
 export interface OffreDetail {
-  fichier: string | undefined;
+  fichier: string | null;
   id: number;
   reference: string;
   statut: 'BROUILLON' | 'ENVOYE' | 'GAGNE' | 'PERDU';
@@ -31,6 +31,13 @@ export interface OffreDetail {
   proforma?: ProformaBase;
   affaire?: AffaireBase;
   notes: string;
+  date_envoi: string |null;
+  date_cloture: string |null;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+  };
 }
 
 export interface OffreInitData {

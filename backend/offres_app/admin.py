@@ -9,14 +9,14 @@ from .models import Offre, OffreProduit
 class OffreProduitInline(admin.TabularInline):
     model = OffreProduit
     extra = 1
-    fields = ('produit', 'prix_unitaire', 'montant')
+    fields = ('produit', 'prix_unitaire')
     
-    def get_fields(self, request, obj=None):
-        """Rend montant readonly seulement quand l'objet existe déjà"""
-        fields = super().get_fields(request, obj)
-        if obj is None:  # Si c'est un nouvel objet
-            return [f for f in fields if f != 'montant']
-        return fields
+    #def get_fields(self, request, obj=None):
+    #    """Rend montant readonly seulement quand l'objet existe déjà"""
+    #    fields = super().get_fields(request, obj)
+    #    if obj is None:  # Si c'est un nouvel objet
+    #        return [f for f in fields if f != 'montant']
+    #    return fields
 
 
 @admin.register(Offre)
@@ -35,7 +35,7 @@ class OffreAdmin(admin.ModelAdmin):
             'fields': ('statut', 'notes')
         }),
         ('Dates', {
-            'fields': ('date_creation', 'date_modification', 'date_validation', 'relance')
+            'fields': ('date_creation', 'date_modification', 'relance')
         }),
     )
     
@@ -82,10 +82,10 @@ class OffreProduitAdmin(admin.ModelAdmin):
     list_filter = ('offre__statut',)
     search_fields = ('offre__reference', 'produit__nom')
     
-    def afficher_montant(self, obj):
-        """Afficher le montant de façon sécurisée"""
-        try:
-            return obj.montant
-        except (TypeError, ValueError):
-            return "—"
-    afficher_montant.short_description = "Montant"
+    #def afficher_montant(self, obj):
+    #    """Afficher le montant de façon sécurisée"""
+    #    try:
+    #        return obj.montant
+    #    except (TypeError, ValueError):
+    #        return "—"
+    #afficher_montant.short_description = "Montant"
