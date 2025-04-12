@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from api import user
 from api.user.models import User
 from api.user.serializers import UserSerializer
+from document.utils import log_user_action
 from offres_app.models import Offre
 from offres_app.serializers import OffreSerializer
 
@@ -54,6 +55,14 @@ class AffaireViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Enregistre l'utilisateur courant comme créateur lors de la création."""
         serializer.save(created_by=self.request.user)
+        aff = serializer.instance
+        log_user_action(
+            user=self.request.user,
+            action_type='CREATE',
+            instance=aff,
+            description=f"creations de l'offre {aff.reference}",
+            request=self.request
+        )
         
     
     

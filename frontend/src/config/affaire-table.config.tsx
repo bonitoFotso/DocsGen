@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { IAffaire } from '@/types/affaire';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import {
   Eye,
@@ -13,13 +12,13 @@ import {
   CheckCircle,
   PauseCircle,
   XCircle,
-  AlertCircle,
   FileText,
   Building,
   MapPin,
   User,
   DollarSign,
-  Package
+  Package,
+  Notebook
 } from 'lucide-react';
 import {
   Tooltip,
@@ -27,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { AffaireLine } from './affaires.line';
 
 // Types des statuts pour un affichage cohérent
 export const statusDisplayMap: Record<string, string> = {
@@ -78,7 +78,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'localisation',
     label: 'Localisation',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <MapPin size={14} className="text-gray-500" />
@@ -110,7 +110,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'dates',
     label: 'Dates',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2 text-sm">
           <Calendar size={14} className="text-gray-500" />
@@ -118,12 +118,12 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
         </div>
         <div className="flex items-center gap-2 text-sm">
           <Calendar size={14} className="text-gray-500" />
-          <span>Fin prévue: {row.date_fin_prevue ? format(new Date(row.date_fin_prevue), "dd/MM/yyyy") : "-"}</span>
+          <span>Fin prévue: {row.dateFinPrevue ? format(new Date(row.dateFinPrevue), "dd/MM/yyyy") : "-"}</span>
         </div>
-        {row.date_fin_reelle && (
+        {row.dateFinReelle && (
           <div className="flex items-center gap-2 text-sm">
             <Calendar size={14} className="text-gray-500" />
-            <span>Fin réelle: {format(new Date(row.date_fin_reelle), "dd/MM/yyyy")}</span>
+            <span>Fin réelle: {format(new Date(row.dateFinReelle), "dd/MM/yyyy")}</span>
           </div>
         )}
       </div>
@@ -132,7 +132,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'client',
     label: 'Client',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Building size={14} className="text-gray-500" />
@@ -146,7 +146,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'contact',
     label: 'Contact',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <User size={14} className="text-gray-500" />
@@ -160,7 +160,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'responsable',
     label: 'Responsable',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex items-center gap-2">
         <User size={14} className="text-primary" />
         <div>{row.responsable}</div>
@@ -170,7 +170,7 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
   {
     key: 'produit',
     label: 'Produit',
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Package size={14} className="text-gray-500" />
@@ -183,14 +183,14 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
     )
   },
   {
-    key: 'entity',
-    label: 'Entité',
-    render: (_: unknown, row: IAffaire) => (
+    key: 'notes',
+    label: 'Notes',
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex items-center gap-2">
-        <Building size={14} className="text-gray-500" />
+        <Notebook size={14} className="text-gray-500" />
         <div className="flex flex-col">
-          <div>{row.entityCode}</div>
-          <div className="text-xs text-gray-500">{row.entityName}</div>
+          <div>{row.notes}</div>
+          <div className="text-xs text-gray-500">{row.notes}</div>
         </div>
       </div>
     )
@@ -199,57 +199,22 @@ export const getAffaireColumns = ({ navigate, handleViewDetails, handleEdit }: G
     key: 'montants',
     label: 'Montants',
     align: 'right' as const,
-    render: (_: unknown, row: IAffaire) => (
+    render: (_: unknown, row: AffaireLine) => (
       <div className="flex flex-col gap-1 items-end">
         <div className="flex items-center gap-2">
           <DollarSign size={14} className="text-gray-500" />
-          <div className="font-medium">{formatCurrency(row.montant)}</div>
+          <div className="font-medium">{formatCurrency(parseInt(row.montant))}</div>
         </div>
         <div className="text-xs text-amber-600">
-          À facturer: {formatCurrency(row.montantRestantAFacturer)}
+          À facturer: {formatCurrency(parseInt(row.montantRestantAFacturer))}
         </div>
         <div className="text-xs text-red-600">
-          À payer: {formatCurrency(row.montantRestantAPayer)}
+          À payer: {formatCurrency(parseInt(row.montantRestantAPayer))}
         </div>
       </div>
     )
   },
-  {
-    key: 'progression',
-    label: 'Progression',
-    render: (_: unknown, row: IAffaire) => (
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <Progress
-            value={row.progression}
-            className={cn(
-              "h-2 w-24",
-              row.progression >= 100 ? "bg-green-200 dark:bg-green-950" : "",
-              row.en_retard ? "bg-red-200 dark:bg-red-950" : ""
-            )}
-            indicatorClassName={cn(
-              row.progression >= 100 ? "bg-green-600" : "",
-              row.en_retard ? "bg-red-600" : ""
-            )}
-          />
-          <span className="text-xs font-medium">{row.progression}%</span>
-          {row.en_retard && (
-            <Tooltip>
-              <TooltipTrigger>
-                <AlertCircle size={16} className="text-red-500" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Affaire en retard</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-        <div className="text-xs text-gray-500">
-          Modifié le: {row.dateModification}
-        </div>
-      </div>
-    )
-  },
+  
   {
     key: 'actions',
     label: 'Actions',
@@ -317,8 +282,8 @@ export const affaireGroupByOptions = [
   { key: 'clientRegion', label: 'Par région' },
   { key: 'clientVille', label: 'Par ville' },
   { key: 'entityCode', label: 'Par Entity' },
-  { key: 'produitCode', label: 'Par Produit' },
-  { key: 'responsable', label: 'Par Responsable' },
+  { key: 'produitName', label: 'Par Produit' },
+  { key: 'produitCategory', label: 'Par Departement' },
 
   { key: 'statut', label: 'Par Statut' },
   { key: 'clientNom', label: 'Par Client' },

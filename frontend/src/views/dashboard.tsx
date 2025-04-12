@@ -25,6 +25,7 @@ import {
   Bar,
 } from "recharts";
 import { Card } from "@/common/CustomCard";
+import { useEntityFromUrl } from "@/hooks/useEntityFromUrl";
 const mockMonthlyData = [
   { month: "Jan", documents: 65 },
   { month: "Fév", documents: 59 },
@@ -68,16 +69,24 @@ const mockNotifications = [
 ];
 
 export function Dashboard() {
+
+    const currentEntity = useEntityFromUrl();
+
+    // titre du tableau de boad en fonction de l'entité
+    const title = currentEntity
+      ? `Vue d'ensemble de l'activité - ${currentEntity}`
+      : "Vue d'ensemble de l'activité";
+  
   return (
-    <div className="min-h-screen  p-2 lg:p-2">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="p-2 lg:p-2">
+      <div className="mx-auto space-y-8">
         {/* En-tête */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               Tableau de bord
             </h1>
-            <p className="text-gray-500 mt-1">Vue d'ensemble de l'activité</p>
+            <p className="text-gray-500 mt-1">{title}</p>
           </div>
 
           <div className="flex items-center gap-3">

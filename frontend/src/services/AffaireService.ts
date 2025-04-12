@@ -1,11 +1,12 @@
 import { api } from '@/services';
+import { OffreDetail } from '@/types/offre';
 import { AxiosResponse } from 'axios';
 
 // Types pour les affaires
 export interface IAffaire {
   id: number;
   reference: string;
-  offre: number | IOffre;
+  offre: OffreDetail;
   client_nom: string;
   date_debut: string;
   date_fin_prevue: string | null;

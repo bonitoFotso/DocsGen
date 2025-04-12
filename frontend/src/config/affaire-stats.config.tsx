@@ -97,7 +97,7 @@ export const getAffaireStatsConfig = (dashboardData: IDashboardData | null): Sta
         type: "amount" as const,
         calculation: () => dashboardData.resume_financier.montant_total,
         icon: <CreditCard className="h-4 w-4 text-purple-500" />,
-        prefix: "€ ",
+        prefix: "XAF ",
         tooltipText: "Montant total de toutes les affaires",
         colorClass: "bg-white text-black",
       },

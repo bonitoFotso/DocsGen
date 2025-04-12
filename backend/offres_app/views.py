@@ -63,7 +63,6 @@ class OffreViewSet(viewsets.ModelViewSet):
         )
         return super().perform_update(serializer)
         
-        
     @action(detail=True, methods=['put'])
     def update_status(self, request, pk=None):
         """

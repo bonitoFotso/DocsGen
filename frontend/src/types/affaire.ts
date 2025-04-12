@@ -19,12 +19,11 @@ export interface IOffre {
   fichier: string | null;
 }
 
-export interface IClient {
+export interface Client {
   id: number;
   c_num: string;
   nom: string;
   email: string;
-  telephone: string;
   ville_nom: string;
   region_nom: string;
   pays_nom: string;

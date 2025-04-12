@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useEffect, ReactNode, useMemo } from 'react';
+import { useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -24,6 +24,7 @@ import {
   Download,
   RefreshCw,
   Settings,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,7 +51,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from 'react';
 
-interface Column<T> {
+// Types
+export interface Column<T> {
   key: keyof T;
   label: string;
   render?: (item: T) => ReactNode;
@@ -60,22 +62,24 @@ interface Column<T> {
   className?: string;
 }
 
-interface SortConfig<T> {
+export interface SortConfig<T> {
   key: keyof T | null;
   direction: 'asc' | 'desc';
 }
 
-interface KDTableProps<T> {
+export interface GroupOption<T> {
+  key: keyof T;
+  label: string;
+}
+
+export interface KDTableProps<T> {
   data: T[];
   columns: Column<T>[];
   title?: ReactNode;
   description?: ReactNode;
   keyExtractor: (item: T) => string | number;
   searchKeys?: Array<keyof T>;
-  groupingOptions?: Array<{
-    key: keyof T;
-    label: string;
-  }>;
+  groupingOptions?: Array<GroupOption<T>>;
   defaultGroupBy?: keyof T | 'none';
   defaultSort?: SortConfig<T>;
   searchPlaceholder?: string;
@@ -97,30 +101,54 @@ interface KDTableProps<T> {
   selectedItems?: T[];
   onItemSelect?: (item: T) => void;
   rowClassName?: (item: T) => string;
+  language?: {
+    loading?: string;
+    noResults?: string;
+    noResultsSearch?: string;
+    clearSearch?: string;
+    resetFilters?: string;
+    showingItems?: string;
+    itemsPerPage?: string;
+  };
 }
 
-const DOTS = "...";
+export interface GroupedData<T> {
+  group: string;
+  data: T[];
+}
 
-// Fonction utilitaire pour générer la plage de pages
+// Constants
+const DOTS = "...";
+const DEFAULT_LANGUAGE = {
+  loading: "Chargement des données...",
+  noResults: "Aucun résultat trouvé",
+  noResultsSearch: "Aucun résultat ne correspond à votre recherche.",
+  clearSearch: "Effacer la recherche",
+  resetFilters: "Réinitialiser tous les filtres",
+  showingItems: "Affichage {start} à {end} sur {total} éléments",
+  itemsPerPage: "par page",
+};
+
+// Utility functions
 const generatePaginationRange = (
   totalPages: number,
   currentPage: number,
   siblingCount: number = 1
-) => {
-  // Pages totales inférieures à 7, afficher toutes les pages
+): (number | string)[] => {
+  // Total pages less than 7, show all pages
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
-  // Calculer le début et la fin de la plage de pages autour de la page actuelle
+  // Calculate the start and end of the page range around the current page
   const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
   const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
 
-  // Ne pas afficher les points si les nombres sont consécutifs
+  // Don't show dots if numbers are consecutive
   const shouldShowLeftDots = leftSiblingIndex > 2;
   const shouldShowRightDots = rightSiblingIndex < totalPages - 1;
 
-  // Différents cas de plage de pagination
+  // Different pagination range cases
   if (!shouldShowLeftDots && shouldShowRightDots) {
     const leftRange = Array.from({ length: 4 }, (_, i) => i + 1);
     return [...leftRange, DOTS, totalPages - 1, totalPages];
@@ -138,10 +166,54 @@ const generatePaginationRange = (
     return [1, DOTS, ...middleRange, DOTS, totalPages];
   }
 
-  // Par défaut, retourner une plage simple
+  // Default, return a simple range
   return Array.from({ length: totalPages }, (_, i) => i + 1);
 };
 
+// Sort function with type safety
+const sortData = <T extends Record<string, any>>(
+  data: T[], 
+  sortConfig: SortConfig<T>
+): T[] => {
+  if (!sortConfig.key) return data;
+  
+  return [...data].sort((a, b) => {
+    const aValue = a[sortConfig.key!];
+    const bValue = b[sortConfig.key!];
+    
+    // Handle different data types for sorting
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    // Convert to strings for comparison
+    const aString = String(aValue || '').toLowerCase();
+    const bString = String(bValue || '').toLowerCase();
+    
+    return sortConfig.direction === 'asc' 
+      ? aString.localeCompare(bString) 
+      : bString.localeCompare(aString);
+  });
+};
+
+// Search function
+const searchData = <T extends Record<string, any>>(
+  data: T[],
+  searchTerm: string,
+  searchKeys: Array<keyof T>
+): T[] => {
+  if (!searchTerm || searchKeys.length === 0) return data;
+  
+  const searchLower = searchTerm.toLowerCase();
+  return data.filter(item => 
+    searchKeys.some(key => {
+      const value = item[key];
+      return value != null && String(value).toLowerCase().includes(searchLower);
+    })
+  );
+};
+
+// Main Component
 function KDTable<T extends Record<string, any>>({
   data,
   columns,
@@ -169,7 +241,15 @@ function KDTable<T extends Record<string, any>>({
   dense = false,
   onRowClick,
   rowClassName,
+  language = {},
 }: KDTableProps<T>) {
+  // Merge default language with provided language
+  const translations = useMemo(
+    () => ({ ...DEFAULT_LANGUAGE, ...language }),
+    [language]
+  );
+  
+  // State
   const [filteredData, setFilteredData] = useState<T[]>(data);
   const [groupBy, setGroupBy] = useState<keyof T | 'none'>(defaultGroupBy);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -180,54 +260,37 @@ function KDTable<T extends Record<string, any>>({
   const [showSearch, setShowSearch] = useState(false);
   const [activeFilters, setActiveFilters] = useState<Set<keyof T>>(new Set());
 
-  // Mise à jour des données filtrées lorsque les données sources ou les filtres changent
+  // Apply filters when source data or filters change
   useEffect(() => {
-    let result = [...data];
-
-    // Appliquer la recherche globale
-    if (search && searchKeys.length > 0) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(item => {
-        return searchKeys.some(key => {
-          const value = item[key];
-          return value && value.toString().toLowerCase().includes(searchLower);
-        });
-      });
-    }
-
-    // Appliquer le tri
-    if (sortConfig.key) {
-      result.sort((a, b) => {
-        const aValue = a[sortConfig.key!]?.toString().toLowerCase() ?? '';
-        const bValue = b[sortConfig.key!]?.toString().toLowerCase() ?? '';
-
-        if (sortConfig.direction === 'asc') {
-          return aValue.localeCompare(bValue);
-        }
-        return bValue.localeCompare(aValue);
-      });
-    }
-
-    setFilteredData(result);
-    // Réinitialiser la pagination à la première page quand les filtres changent
+    // Apply search filter
+    const searchFiltered = searchData(data, search, searchKeys);
+    
+    // Apply sorting
+    const sortedData = sortData(searchFiltered, sortConfig);
+    
+    setFilteredData(sortedData);
+    // Reset to first page when filters change
     setCurrentPage(1);
   }, [data, search, sortConfig, searchKeys]);
 
-  const handleSort = (key: keyof T) => {
+  // Memoized sort handler to prevent recreation on each render
+  const handleSort = useCallback((key: keyof T) => {
     setSortConfig(current => ({
       key,
       direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
     }));
-  };
+  }, []);
 
-  const getSortIcon = (key: keyof T) => {
+  // Memoize sort icons to prevent re-renders
+  const getSortIcon = useCallback((key: keyof T) => {
     if (sortConfig.key !== key) return <ArrowUpDown className="w-4 h-4" />;
     return sortConfig.direction === 'asc' ?
       <ArrowUp className="w-4 h-4" /> :
       <ArrowDown className="w-4 h-4" />;
-  };
+  }, [sortConfig]);
 
-  const toggleGroup = (groupId: string) => {
+  // Toggle group expansion
+  const toggleGroup = useCallback((groupId: string) => {
     setExpandedGroups(prev => {
       const newSet = new Set(prev);
       if (newSet.has(groupId)) {
@@ -237,17 +300,18 @@ function KDTable<T extends Record<string, any>>({
       }
       return newSet;
     });
-  };
+  }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const groupData = () => {
+  // Memoize grouping logic for better performance
+  const groupedData = useMemo<GroupedData<T>[]>(() => {
     if (groupBy === 'none') return [{ group: 'all', data: filteredData }];
 
     const groups = new Map<string, T[]>();
 
     filteredData.forEach(item => {
       const groupValue = item[groupBy as keyof T];
-      const groupKey = groupValue?.toString() || '';
+      const groupKey = groupValue != null ? String(groupValue) : '';
+      
       if (!groups.has(groupKey)) {
         groups.set(groupKey, []);
       }
@@ -260,73 +324,77 @@ function KDTable<T extends Record<string, any>>({
         group,
         data: items
       }));
-  };
+  }, [filteredData, groupBy]);
 
-  // Calcul de la pagination
+  // Pagination calculations
   const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
 
-  // Générer les données paginées
+  // Memoize paginated data
   const paginatedGroups = useMemo(() => {
-    const groupedData = groupData();
-
     if (!pagination || groupBy !== 'none') {
       return groupedData;
     }
 
-    // Ne paginer que lorsque pas de groupement
+    // Only paginate when not grouping
     return [{
       group: 'all',
       data: filteredData.slice(startIndex, endIndex)
     }];
-  }, [groupData, pagination, groupBy, filteredData, startIndex, endIndex]);
+  }, [groupedData, pagination, groupBy, filteredData, startIndex, endIndex]);
 
-  // Générer la plage de pages
+  // Memoize pagination range
   const paginationRange = useMemo(() => {
     return generatePaginationRange(totalPages, currentPage);
   }, [totalPages, currentPage]);
 
-  // Gestionnaire pour changer de page
-  const handlePageChange = (page: number) => {
+  // Page change handler
+  const handlePageChange = useCallback((page: number) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
-  };
+  }, [totalPages]);
 
-  // Gestionnaire pour changer la taille de page
-  const handlePageSizeChange = (value: string) => {
+  // Page size change handler
+  const handlePageSizeChange = useCallback((value: string) => {
     const newSize = parseInt(value);
     setPageSize(newSize);
-    setCurrentPage(1); // Réinitialiser à la première page
-  };
+    setCurrentPage(1); // Reset to first page
+  }, []);
 
-  // Style pour les lignes en fonction des props
-  const getRowClassName = (item: T) => {
-    let classes = "";
-    if (hoverable) classes += " hover:bg-gray-50";
-    if (onRowClick) classes += " cursor-pointer";
-    if (rowClassName) classes += ` ${rowClassName(item)}`;
-    return classes;
-  };
+  // Clear all filters
+  const clearAllFilters = useCallback(() => {
+    setActiveFilters(new Set());
+    setSearch("");
+  }, []);
 
-  // Style pour les cellules en fonction de l'alignement
-  const getCellClassName = (column: Column<T>) => {
-    let classes = "";
-    if (column.align === "center") classes += " text-center";
-    if (column.align === "right") classes += " text-right";
-    if (column.className) classes += ` ${column.className}`;
-    return classes;
-  };
+  // Row class name based on props
+  const getRowClassName = useCallback((item: T, index: number) => {
+    const classes = [];
+    
+    if (hoverable) classes.push("hover:bg-gray-50");
+    if (onRowClick) classes.push("cursor-pointer");
+    if (striped && index % 2 === 1) classes.push("bg-gray-50");
+    if (rowClassName) classes.push(rowClassName(item));
+    
+    return classes.join(" ");
+  }, [hoverable, onRowClick, striped, rowClassName]);
 
-  // Style pour les lignes zébrées
-  const getStripedClassName = (index: number) => {
-    return striped && index % 2 === 1 ? " bg-gray-50" : "";
-  };
+  // Cell class name based on alignment
+  const getCellClassName = useCallback((column: Column<T>) => {
+    const classes = [];
+    
+    if (column.align === "center") classes.push("text-center");
+    if (column.align === "right") classes.push("text-right");
+    if (column.className) classes.push(column.className);
+    
+    return classes.join(" ");
+  }, []);
 
-  // Gérer l'état vide
-  const renderEmptyState = () => {
+  // Empty state renderer
+  const renderEmptyState = useCallback(() => {
     if (isLoading) {
       return (
         <TableRow>
@@ -335,7 +403,7 @@ function KDTable<T extends Record<string, any>>({
               <div className="relative flex items-center justify-center w-10 h-10">
                 <RefreshCw className="w-5 h-5 animate-spin" />
               </div>
-              <p className="text-sm text-muted-foreground">Chargement des données...</p>
+              <p className="text-sm text-muted-foreground">{translations.loading}</p>
             </div>
           </TableCell>
         </TableRow>
@@ -355,13 +423,13 @@ function KDTable<T extends Record<string, any>>({
                   <p className="text-lg font-medium">{noResultsMessage}</p>
                   {search && (
                     <p className="text-sm text-muted-foreground">
-                      Aucun résultat ne correspond à votre recherche.
+                      {translations.noResultsSearch}
                     </p>
                   )}
                 </div>
                 {search && (
                   <Button variant="outline" onClick={() => setSearch("")}>
-                    Effacer la recherche
+                    {translations.clearSearch}
                   </Button>
                 )}
               </div>
@@ -372,10 +440,10 @@ function KDTable<T extends Record<string, any>>({
     }
 
     return null;
-  };
+  }, [isLoading, filteredData.length, columns.length, translations, noResultsMessage, search, emptyStateContent]);
 
-  // Rendu des filtres actifs
-  const renderActiveFilters = () => {
+  // Active filters renderer
+  const renderActiveFilters = useCallback(() => {
     if (activeFilters.size === 0 && !search) return null;
 
     return (
@@ -389,7 +457,7 @@ function KDTable<T extends Record<string, any>>({
               className="h-4 w-4 p-0 hover:bg-transparent"
               onClick={() => setSearch("")}
             >
-              <ChevronDown className="h-3 w-3" />
+              <X className="h-3 w-3" />
             </Button>
           </Badge>
         )}
@@ -406,7 +474,7 @@ function KDTable<T extends Record<string, any>>({
                 setActiveFilters(newFilters);
               }}
             >
-              <ChevronDown className="h-3 w-3" />
+              <X className="h-3 w-3" />
             </Button>
           </Badge>
         ))}
@@ -415,27 +483,28 @@ function KDTable<T extends Record<string, any>>({
             variant="ghost"
             size="sm"
             className="text-xs text-muted-foreground"
-            onClick={() => {
-              setActiveFilters(new Set());
-              setSearch("");
-            }}
+            onClick={clearAllFilters}
           >
-            Réinitialiser tous les filtres
+            {translations.resetFilters}
           </Button>
         )}
       </div>
     );
-  };
+  }, [activeFilters, search, translations, clearAllFilters]);
 
-  const renderPagination = () => {
+  // Pagination renderer
+  const renderPagination = useCallback(() => {
     if (!pagination || totalItems === 0) return null;
 
+    const itemsText = translations.showingItems
+      .replace('{start}', String(startIndex + 1))
+      .replace('{end}', String(endIndex))
+      .replace('{total}', String(totalItems));
+
     return (
-      <div className="flex items-center justify-between py-4">
+      <div className="flex flex-wrap items-center justify-between py-4 gap-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>
-            Affichage {startIndex + 1} à {endIndex} sur {totalItems} éléments
-          </span>
+          <span>{itemsText}</span>
           <Select
             value={pageSize.toString()}
             onValueChange={handlePageSizeChange}
@@ -451,7 +520,7 @@ function KDTable<T extends Record<string, any>>({
               ))}
             </SelectContent>
           </Select>
-          <span>par page</span>
+          <span>{translations.itemsPerPage}</span>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -519,7 +588,20 @@ function KDTable<T extends Record<string, any>>({
         </div>
       </div>
     );
-  };
+  }, [
+    pagination, 
+    totalItems, 
+    translations, 
+    startIndex, 
+    endIndex, 
+    pageSize, 
+    handlePageSizeChange, 
+    pageSizeOptions, 
+    currentPage, 
+    paginationRange, 
+    handlePageChange, 
+    totalPages
+  ]);
 
   return (
     <Card className={`w-full ${className}`}>
@@ -533,14 +615,23 @@ function KDTable<T extends Record<string, any>>({
             {tableActions}
             
             {searchKeys.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8"
-                onClick={() => setShowSearch(!showSearch)}
-              >
-                <Search size={16} />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8"
+                      onClick={() => setShowSearch(!showSearch)}
+                    >
+                      <Search size={16} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Rechercher</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             
             {onRefresh && (
@@ -585,13 +676,22 @@ function KDTable<T extends Record<string, any>>({
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8"
-                >
-                  <Settings size={16} />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8"
+                      >
+                        <Settings size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Options</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Options du tableau</DropdownMenuLabel>
@@ -643,10 +743,12 @@ function KDTable<T extends Record<string, any>>({
         </div>
 
         <div className="flex flex-col gap-4 mt-4">
-          {/* Recherche globale */}
+          {/* Global search */}
           {showSearch && searchKeys.length > 0 && (
             <div className="relative w-full max-w-sm">
-              <Input className="peer pe-9 ps-9" type="search"
+              <Input 
+                className="peer pe-9 ps-9" 
+                type="search"
                 placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -660,16 +762,16 @@ function KDTable<T extends Record<string, any>>({
                   aria-label="Clear search"
                   onClick={() => setSearch("")}
                 >
-                  <ChevronDown size={16} strokeWidth={2} aria-hidden="true" />
+                  <X size={16} strokeWidth={2} aria-hidden="true" />
                 </button>
               )}
             </div>
           )}
 
-          {/* Affichage des filtres actifs */}
+          {/* Active filters display */}
           {renderActiveFilters()}
 
-          {/* Boutons de groupement */}
+          {/* Grouping buttons */}
           {groupingOptions.length > 0 && !dense && (
             <div className="flex flex-wrap gap-2">
               <Button
@@ -720,10 +822,10 @@ function KDTable<T extends Record<string, any>>({
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                // État de chargement
+                // Loading state
                 Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={`skeleton-${index}`} className={`${dense ? "h-10" : ""}`}>
-                    {columns.map((_column, colIndex) => (
+                  <TableRow key={`skeleton-${index}`} className={dense ? "h-10" : ""}>
+                    {columns.map((_, colIndex) => (
                       <TableCell key={`skeleton-${index}-${colIndex}`}>
                         <Skeleton className="h-4 w-full" />
                       </TableCell>
@@ -731,7 +833,7 @@ function KDTable<T extends Record<string, any>>({
                   </TableRow>
                 ))
               ) : (
-                // Données normales
+                // Normal data
                 paginatedGroups.length > 0 ? (
                   paginatedGroups.map(({ group, data: groupItems }) => (
                     <React.Fragment key={group}>
@@ -764,7 +866,7 @@ function KDTable<T extends Record<string, any>>({
                         groupItems.map((item, index) => (
                           <TableRow 
                             key={keyExtractor(item)} 
-                            className={`${getRowClassName(item)}${getStripedClassName(index)}${dense ? " h-10" : ""}`}
+                            className={getRowClassName(item, index)}
                             onClick={() => onRowClick && onRowClick(item)}
                           >
                             {columns.map(column => (
@@ -774,7 +876,7 @@ function KDTable<T extends Record<string, any>>({
                               >
                                 {column.render ?
                                   column.render(item) :
-                                  (item[column.key] ?? '-')}
+                                  (item[column.key] != null ? String(item[column.key]) : '-')}
                               </TableCell>
                             ))}
                           </TableRow>
@@ -796,4 +898,5 @@ function KDTable<T extends Record<string, any>>({
   );
 }
 
-export default KDTable;
+// Memoized component for better performance
+export default React.memo(KDTable) as typeof KDTable;

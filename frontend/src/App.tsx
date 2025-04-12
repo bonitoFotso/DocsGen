@@ -87,7 +87,7 @@ function App() {
               {/* Pages détaillées et formulaires (indépendantes des entités) */}
               <Route path="opportunities/:id" element={<OpportunityDetails />} />
               <Route path="opportunities/:id/edit" element={<OpportuniteEditionPage />} />
-              <Route path="opportunities/new" element={<OpportuniteCreation />} />
+              <Route path="opportunities/create" element={<OpportuniteCreation />} />
               
               <Route path="offres/:id" element={<OffreDetails />} />
               <Route path="offres/:id/edit" element={<OffreForm />} />

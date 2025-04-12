@@ -54,6 +54,7 @@ import {
   Clock,
   CheckCircle2
 } from 'lucide-react';
+import ClientInfoCard from '@/components/offre/ClientInfoCard';
 
 
 
@@ -103,6 +104,12 @@ const AffaireDetailPage: React.FC = () => {
   // Gérer l'export en PDF
   const handleExportPdf = () => {
     exportPdf();
+  };
+
+  const onViewClientProfile = () => {
+    if (affaire?.offre?.client?.id) {
+      navigate(`/clients/${affaire.offre.client.id}`);
+    }
   };
 
   // Obtenir les transitions autorisées pour le statut actuel
@@ -428,7 +435,8 @@ const AffaireDetailPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+        <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-2 space-y-6">
         {/* Main Content */}
         <Tabs defaultValue="informations" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 w-full md:w-[400px]">
@@ -695,6 +703,20 @@ const AffaireDetailPage: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        </div>
+        <div className="col-span-1 space-y-6">
+          {/* Informations client */}
+          <ClientInfoCard 
+            client={affaire.offre.client} 
+            contact={affaire.offre.contact}
+            onViewClientProfile={onViewClientProfile}
+          />
+
+        </div>
+        </div>
+        
+        
       </div>
     </div>
   );
